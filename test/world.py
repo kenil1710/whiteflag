@@ -50,12 +50,12 @@ class World:
 
     # --- time -------------------------------------------------------------
     def set_time(self, epoch):
-        y, m, d = module("ChainReader")._civil_from_days(epoch // 86400)
+        y, m, d = module("WhiteFlagRegistry")._civil_from_days(epoch // 86400)
         s = epoch % 86400
         self.now_iso = "%04d-%02d-%02dT%02d:%02d:%02dZ" % (y, m, d, s // 3600, (s % 3600) // 60, s % 60)
 
     def now(self):
-        return module("ChainReader")._epoch_from_iso(self.now_iso)
+        return module("WhiteFlagRegistry")._epoch_from_iso(self.now_iso)
 
     def advance(self, seconds):
         self.set_time(self.now() + seconds)

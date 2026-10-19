@@ -1,8 +1,6 @@
-"""Runtime stub for the BackedBy offline suite.
-
-Shared with the author's other GenLayer suites, with the web stub
-serving fixed pages and a JSON-RPC mock chain. Faithful where the runner has bitten
-before:
+"""Runtime stub for the WhiteFlag offline suite: the genlayer module, a web
+stub serving JSON-RPC mock chains (transactions, receipts, block headers, the
+finalized head). Faithful where the runner has bitten before:
   * TreeMap[key] on a missing key RAISES KeyError; `.get()` answers None for
     struct maps and the zero value for scalar maps.
   * Structs read out of a TreeMap are REFERENCES: mutating them mutates storage.
@@ -115,14 +113,8 @@ class _TreeMap(dict):
 
     def __getitem__(self, key):
         """Indexing a key the map does not hold RAISES KeyError, exactly as the
-        runner does.
-
-        This stub used to auto-create the entry instead, and that single line
-        of convenience hid a real revert: `self.by_owner[sender].append(...)`
-        passed 431 offline tests and then died on chain inside `create_will`,
-        on the one path that had already banked a deposit. `get_or_insert_default`
-        is the spelling that inserts. A stub that is more forgiving than the
-        runner is a stub that certifies bugs."""
+        runner does. A stub that auto-created the entry would pass code that
+        dies on chain; `get_or_insert_default` is the spelling that inserts."""
         return dict.__getitem__(self, self._k(key))
 
     def __delitem__(self, key):
@@ -148,10 +140,8 @@ class _DynArray(list):
 
     On chain a DynArray of structs cannot be appended to with a constructed
     value, so the runtime allocates a zeroed element in place and hands back a
-    REFERENCE to it. Reproducing that matters for more than API coverage: the
-    returned object must be the SAME object the array holds, or a later
-    mutation through the reference would be invisible in the array, and every
-    test would pass while every will written on chain stayed zero."""
+    REFERENCE to it: the returned object must be the SAME object the array
+    holds, or a later mutation through the reference would be invisible."""
 
     _elem_type = None
 
@@ -325,6 +315,7 @@ class MockChain:
       slots[(addr, slot)]           32-byte word hex
       calls[(addr, data)]           return hex, or REVERT
       blocks[n] = (hash, timestamp)
+      txs[hash] = {"tx": {...}, "receipt": {...} | None}   (None receipt = pending)
     """
 
     REVERT = object()
@@ -341,6 +332,7 @@ class MockChain:
         self.fail = None      # fn(method, params) -> error dict | "http500" | None
         self.fns = {}         # (addr, 4-byte selector) -> fn(data, block) -> hex | REVERT
         self.batch_cap = 10
+        self.txs = {}
         self.log = []
 
     def set_block(self, n, ts):
@@ -368,6 +360,13 @@ class MockChain:
                 return {"jsonrpc": "2.0", "id": req["id"], "result": None}
             h, ts = self.blocks[n]
             return {"jsonrpc": "2.0", "id": req["id"], "result": {"number": hex(n), "hash": h, "timestamp": hex(ts)}}
+        if m == "eth_getTransactionByHash":
+            e = self.txs.get(str(p[0]).lower())
+            return {"jsonrpc": "2.0", "id": req["id"], "result": json.loads(json.dumps(e["tx"])) if e else None}
+        if m == "eth_getTransactionReceipt":
+            e = self.txs.get(str(p[0]).lower())
+            r = e["receipt"] if e else None
+            return {"jsonrpc": "2.0", "id": req["id"], "result": json.loads(json.dumps(r)) if r else None}
         blk = int(p[-1], 16) if isinstance(p[-1], str) and p[-1].startswith("0x") else -1
         if m == "eth_getCode":
             c = self._state("code", p[0].lower(), blk)
@@ -422,7 +421,7 @@ def _web_request(url, method="GET", body=None, headers=None, **_k):
         status, text = WEB.get(url)
         return _Response(status, text)
     if method != "POST":
-        raise AssertionError("BackedBy only issues GET and JSON-RPC POST requests")
+        raise AssertionError("WhiteFlag only issues JSON-RPC POST requests")
     WEB.log.append(url)
     if "*" in WEB.down or url in WEB.down:
         raise RuntimeError("connection refused")
@@ -450,7 +449,7 @@ def _web_get(url, **_k):
 
 
 def _web_render(url, **_k):
-    raise AssertionError("BackedBy must not use web.render")
+    raise AssertionError("WhiteFlag must not use web.render")
 
 
 class _Model:
@@ -466,8 +465,7 @@ class _Model:
         self.raise_next = 0
 
     def __call__(self, prompt, **kwargs):
-        if kwargs.get("response_format") != "json":
-            raise AssertionError("BackedBy must ask for response_format='json'")
+        raise AssertionError("WhiteFlag never asks a model")
         self.prompts.append(prompt)
         n = len(self.prompts)
         if self.raise_next > 0:
