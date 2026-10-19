@@ -1,0 +1,30 @@
+{
+  "registry": "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2",
+  "gate": "0x886095700276BA236Fc00cfd710AEb2f2d594E37",
+  "started_at": "2026-10-19T11:53:44.571Z",
+  "offers": {},
+  "steps": [
+    {
+      "label": "refused-create",
+      "fn": "create_offer",
+      "args": [
+        "bad",
+        "Refused on purpose",
+        "[\"ethereum\"]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\"}]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\"}]",
+        "[{\"chain\":\"ethereum\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"1\",\"weight\":\"300000\"}]",
+        1000,
+        1704067200,
+        1706745600,
+        "EXPLOITER_OR_NAMED",
+        "{}"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "credited�\u000150000000000000000\u0002ok\b\u0006reason�\u0001RECOVERY_IS_EXPLOITER",
+      "hash": "0x9d6bdc6f4b3c7780c65b85f19eb9a83ecd181ff28567f9b92e567e7c13c82549"
+    }
+  ],
+  "payouts": []
+}

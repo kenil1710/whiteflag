@@ -1,0 +1,102 @@
+# WhiteFlag
+
+**A whitehat bounty that pays only for what came back.** A protocol that was hacked locks a bounty in GEN on
+GenLayer. The exploiter returns funds on any supported chain. GenLayer validators read every returned transfer from
+two independent RPCs per chain, and code pays the bounty pro rata to the returned value and refunds the rest to the
+protocol. Nobody decides anything after the offer is opened: no admin, no vote, no model.
+
+Live: **https://whiteflag-ledger.vercel.app** · Rules: [docs/RULES.md](docs/RULES.md) · Seeds: [docs/SEEDS.md](docs/SEEDS.md) ·
+Final check: [docs/FINAL_CHECK.md](docs/FINAL_CHECK.md)
+
+## What and why
+
+After an exploit, protocols post on-chain messages: "keep 10%, return the rest within 48 hours, no legal action".
+GMX did it in 2025 and got about 90% back; Curve, Metronome and Alchemix did it jointly in 2023; Seneca, KyberSwap
+and UwU Lend did it too. The offer is a promise in a transaction's input data. The exploiter cannot see the bounty
+locked anywhere, cannot know how much counts as "returned", and has to trust the protocol to pay a share of funds it
+already gave back. The protocol cannot prove to anyone that what came back was what was stolen.
+
+WhiteFlag turns the offer into an escrow with arithmetic. The bounty is locked up front. Returns are facts on public
+chains: a transaction from a listed exploiter address that moved a listed token to a listed recovery address, in a
+finalized block, inside the return window. Validators agree on those facts by reading them twice each, and the payout
+follows from a formula frozen at creation. If nothing comes back, the protocol gets its GEN back; if half comes
+back, half the bounty is paid and half refunded.
+
+Six real incidents are on the canonical registry with their real addresses, amounts, offers and return transactions
+([docs/FEASIBILITY.md](docs/FEASIBILITY.md)): GMX V1 (89.02% returned, across Arbitrum and Ethereum), the Alchemix
+alETH pool of the Curve/Vyper exploit (100%), Seneca (83.67%), KyberSwap Elastic, Curve CRV/ETH and UwU Lend (nothing).
+
+## How the rules work
+
+1. **The offer is frozen.** Incident, chains, exploiter addresses, recovery addresses, stolen tokens (chain, token,
+   amount, the protocol's value weight), bounty share, return window, claim window, payout rule. The bounty is the
+   GEN sent with `create_offer`. No cancel; the protocol may only extend the deadline (180 days at most) or add a
+   recovery address.
+2. **Anyone proves returns.** `submit_proofs` takes up to 5 transaction hashes. Every validator reads each transaction,
+   its receipt, its block header and the finalized head from both RPCs of its chain, and the answers must be
+   identical. A proof counts only if the transaction succeeded, its block is finalized, its time is inside the
+   window, it was sent by an exploiter address, and it moved a listed token (native value, or a Transfer log of the
+   listed token contract) from an exploiter address to a recovery address. Each (chain, tx, log) counts once per
+   offer. Anything unreadable or inconsistent is rejected with a reason and can be resubmitted.
+3. **The fraction is arithmetic.** `sum(min(returned, stolen) * weight) / sum(stolen * weight)`, integer math;
+   owed = bounty × fraction.
+4. **Settlement.** Anyone settles after the deadline plus a finality grace (2 h), or at once at 100%:
+   SETTLED_FULL, SETTLED_PARTIAL or SETTLED_NONE. The remainder goes back to the protocol in the same transaction.
+5. **Claim.** Only a listed exploiter address can claim, paid to itself or to a payout address named in the same call.
+   After the 1 h claim window, anyone refunds the owed bounty to the protocol. Every GEN has an exit.
+6. **SafeHarborGate.** Other contracts ask it whether an incident is resolved: NO_OFFER, OPEN, SETTLED_FULL,
+   SETTLED_PARTIAL, SETTLED_NONE (or UNREADABLE), never favorable on missing data, pinned to the protocol that opened
+   the offer with `check_for`.
+7. **Keeper.** A GitHub Actions job ([.github/workflows/keeper.yml](.github/workflows/keeper.yml)) settles and refunds
+   every hour, checkpointing each step on the [keeper-state](https://github.com/kenil1710/whiteflag/tree/keeper-state)
+   branch. Everything it does, anyone can do.
+
+## Addresses (GenLayer Studio Dev, chain 61997)
+
+Every contract was deployed from commit `ce7a77282beee2a8c9b121aa95ac9639388a64d0`.
+
+| Contract | Address | Deployed file | sha256 | Constructor |
+|---|---|---|---|---|
+| WhiteFlagRegistry | [`0x461399B65edA1C0634a47A658d34624eC4C24a31`](https://explorer-studio-dev.genlayer.com/address/0x461399B65edA1C0634a47A658d34624eC4C24a31) | `build/WhiteFlagRegistry.py` | `dba2a5da09d13de0` | `["CANONICAL"]` |
+| WhiteFlagRegistryDemo | [`0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2`](https://explorer-studio-dev.genlayer.com/address/0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2) | `build/WhiteFlagRegistry.py` | `dba2a5da09d13de0` | `["DEMO"]` |
+| SafeHarborGate | [`0x54035218daFDf7fB68F01cF36E70044f51878c75`](https://explorer-studio-dev.genlayer.com/address/0x54035218daFDf7fB68F01cF36E70044f51878c75) | `build/SafeHarborGate.py` | `f4b6411127c1f7b3` | `["0x461399B65edA1C0634a47A658d34624eC4C24a31", 900000]` |
+| SafeHarborGateDemo | [`0x886095700276BA236Fc00cfd710AEb2f2d594E37`](https://explorer-studio-dev.genlayer.com/address/0x886095700276BA236Fc00cfd710AEb2f2d594E37) | `build/SafeHarborGate.py` | `f4b6411127c1f7b3` | `["0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2", 900000]` |
+
+The canonical registry runs the 1 h claim window and holds the real incidents; the demo registry runs a 3 minute
+window and holds the [demo run](docs/demo-run.log), in which every path was exercised and every payout was checked at
+its recipient ([docs/payouts.json](docs/payouts.json)).
+
+## How to verify
+
+- **Source.** `node tools/verify_source.mjs` reads each address's code from Studio Dev and compares it byte for byte
+  with `build/` at the deploy commit and at HEAD. The site does the same live at
+  [/verify](https://whiteflag-ledger.vercel.app/verify). `build/` is `contracts/` with the shared helpers inlined
+  (`python3 tools/build.py`).
+- **Returns.** Every case file on the site links each counted return to Etherscan or Arbiscan; `node tools/feasibility.mjs`
+  re-reads every real return from both RPCs and judges it with the same rule.
+- **Tests.** `sh test/run_offline.sh`: contract tests against the deployed build files and mock chains (every rule and
+  boundary, RPC disagreement, fund conservation), the attack round ([docs/ATTACK_REPORT.md](docs/ATTACK_REPORT.md)),
+  meaning tests (the gate never favorable on missing data, docs equal to code), and the keeper (outages, more than 50
+  offers, crashes, transactions accepted but not final).
+- **Everything at once.** `node tools/final_check.mjs`, result in [docs/FINAL_CHECK.md](docs/FINAL_CHECK.md).
+- **API.** `/api/incident?id=<offer>` returns an incident as JSON read from chain; `&format=svg` returns a badge:
+  ![badge](https://whiteflag-ledger.vercel.app/api/incident?id=1&format=svg)
+
+## Scope
+
+- WhiteFlag verifies returns and pays the bounty. It does not enforce legal promises; only listed exploiter addresses
+  and tokens count. A return from an address the offer does not list, through an internal call, or of a token the
+  offer does not list does not move the fraction.
+- Chains: Ethereum and Arbitrum One, each read from two RPCs run by different operators. Adding a chain means adding
+  two RPCs that serve old receipts and the `finalized` tag from GenVM under validator load.
+- The weights are the protocol's own valuation, frozen when the offer opens. A partial return of a token that later
+  changes price keeps the weight it had.
+- A listed exploiter address can claim the whole owed bounty; the protocol lists only addresses the exploiter controls.
+- Studio keeps GEN sent with a failing call, so `create_offer` never fails: a refused offer credits its GEN back for
+  `withdraw_refund`, and GEN that reached the registry any other way can only be swept to the deployer.
+
+## Repository
+
+`contracts/` source · `build/` deployed bytes · `data/incidents.json` the real incidents · `test/` offline suite and
+on-chain scripts (deploy, seed, demo) · `tools/` feasibility, keeper, verification, final check · `frontend/` the site ·
+`docs/` everything written down.
