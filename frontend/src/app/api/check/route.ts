@@ -7,7 +7,6 @@
  */
 import { asReg, regAddr } from "@/lib/deployments";
 import { allProofs, offer } from "@/lib/server";
-// @ts-expect-error plain ES module shared with the repository's tools
 import { readBoth, judge } from "@/lib/verify.mjs";
 
 export const dynamic = "force-dynamic";
@@ -26,9 +25,10 @@ export async function GET(req: Request) {
   const results = [];
   for (const it of items) {
     if (!o.chains.includes(it.chain)) { results.push({ ...it, verdict: "CHAIN_NOT_IN_OFFER" }); continue; }
-    const b = await readBoth(it.chain, it.hash);
+    type Proj = { block: number; time: number; from: string; to: string; status: number };
+    const b = (await readBoth(it.chain, it.hash)) as { reason?: string; detail?: string; proj: Proj; finalized: number[] };
     if (b.reason) { results.push({ ...it, verdict: b.reason, detail: b.detail ?? "" }); continue; }
-    const j = judge(o, it.chain, it.hash, b.proj, b.finalized, used);
+    const j = judge(o, it.chain, it.hash, b.proj, b.finalized, used) as { reason?: string; credits?: unknown[] };
     results.push({ ...it, verdict: j.reason ?? "WOULD_COUNT", credits: j.credits ?? [], block: b.proj.block, time: b.proj.time, from: b.proj.from, to: b.proj.to, status: b.proj.status, finalized: b.finalized });
   }
   return Response.json({ offer: id, status: o.status, results, read_at: Math.floor(Date.now() / 1000) }, { headers: { "cache-control": "no-store" } });
