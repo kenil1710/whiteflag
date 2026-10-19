@@ -14,11 +14,12 @@
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { createClient, createAccount } from "genlayer-js";
+import { createRequire } from "node:module";
 import { CHAINS, accounts, fundOnStudio, outcomeOf, retry, argOf, sleep } from "../test/harness.mjs";
 import { payoutFees } from "./lib/payout.mjs";
 import { runKeeper, emptyState } from "./lib/keeper_core.mjs";
 
+const { createClient, createAccount } = createRequire(new URL("../test/package.json", import.meta.url))("genlayer-js");
 const root = new URL("..", import.meta.url).pathname;
 const dir = argOf("state", root + "state");
 const push = process.argv.includes("--push");

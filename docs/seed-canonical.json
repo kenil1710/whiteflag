@@ -10,9 +10,232 @@
           "fn": "create_offer",
           "hash": "0x888dbd9433e2834f19e2631e83ee295ae1d790797edb197234786c2c6d47e069",
           "status": "ACCEPTED"
+        },
+        {
+          "fn": "submit_proofs",
+          "hash": "0x48fa22da3a8ca70c53b0c8f1a6b3fbfa09d50d2623e380a7d5502aa8b8b22db4",
+          "status": "ACCEPTED",
+          "items": [
+            [
+              "arbitrum",
+              "0x62b8450259ee85838c7be3335e659a65be66268a1a5c6792ca731df199211841"
+            ],
+            [
+              "arbitrum",
+              "0x255d0af85ae52c22e0206cad52d22f8620c002b8e23efcc3162916d8559321b3"
+            ],
+            [
+              "ethereum",
+              "0x15ccc802345d0e3ddb641f6cbde251f7d26838ceeec9e902c983414e66c42ce0"
+            ],
+            [
+              "ethereum",
+              "0xa551b21c6d711eaea1709a94bd061c0cbc52d9c4171ea738d1948b70ce412ab3"
+            ],
+            [
+              "ethereum",
+              "0x3a4fe19fb4d7550cb24dd34c4a3dccea71522c004235474e5651466af44c0357"
+            ]
+          ]
+        },
+        {
+          "fn": "submit_proofs",
+          "hash": "0x6d974eac2b611d2ca23247728785a3899e6c2cdfd592185d0f76b3f3e7e53273",
+          "status": "ACCEPTED",
+          "items": [
+            [
+              "ethereum",
+              "0x7b4abbdc00a051f33083416acae11819958f86855408865e86a08a551e3b7f2c"
+            ],
+            [
+              "ethereum",
+              "0x1bfee76a4a485e3002933c2651d9a4c9bd5b546d7da9998d7f6488075786af15"
+            ],
+            [
+              "ethereum",
+              "0xa91e0e24d3b1898af0dda20e07f6a8606a3f506e9641dd19ffd4f87e4c788214"
+            ],
+            [
+              "ethereum",
+              "0xceafc389d50eb1dea3df64f1565a0c39df206f05848f02ea7a72babda6313b22"
+            ],
+            [
+              "ethereum",
+              "0x2f210f0faf9e7d4643cec1c6b4ea7faa64e095bfda2837db454884d2c3c3c99e"
+            ]
+          ]
         }
       ],
       "offer_id": 1
+    },
+    "alchemix-aleth-2023": {
+      "case_no": 2,
+      "name": "Alchemix alETH-ETH (Curve/Vyper)",
+      "txs": [
+        {
+          "fn": "create_offer",
+          "hash": "0x4e8c71de32e9ba97cf361151e31fd314869486b519c12ee5ab930a510c4ef958",
+          "status": "ACCEPTED"
+        },
+        {
+          "fn": "submit_proofs",
+          "hash": "0x14adf80cff07e1839c2764724ca0145ee0af003281276f4c0c382a4417b9d7f5",
+          "status": "ACCEPTED",
+          "items": [
+            [
+              "ethereum",
+              "0x4197ed0ef9b60ab1cacdc31d6d3ce06413b333b14b8947be5c0cfe29cb88b088"
+            ],
+            [
+              "ethereum",
+              "0xaf7d9a75b66118d76383406259c5860afae1a4ecd0c058593da05a2613b18fc2"
+            ],
+            [
+              "ethereum",
+              "0x9d0b241e96cb8a2fcd181e1af6c6d4e52b193190209ab028ddf174fd6b184b44"
+            ],
+            [
+              "ethereum",
+              "0x25bc0a257301b4168e2e1862669c68dacb46aace6921f9efc6dd152c040a45c2"
+            ],
+            [
+              "ethereum",
+              "0x4ab8367b391ad733ab98433f51f2c4d56cec93941d31c9d19b0e3ff6e8771639"
+            ]
+          ]
+        },
+        {
+          "fn": "submit_proofs",
+          "hash": "0x2874e551792ed729d52170951ab6cf40b030bc6b71ba200c083c8879fbb648ba",
+          "status": "ACCEPTED",
+          "items": [
+            [
+              "ethereum",
+              "0xfa8560f76f1f4ac1a4ed5bb0bded5afc0e9d7aee8b2e098e3fe92c28088aadec"
+            ],
+            [
+              "ethereum",
+              "0xfb647fd4e2df611e9c3178c169ded85699284845aeb6a5be5a612ce2ace8d2cb"
+            ],
+            [
+              "ethereum",
+              "0x0bf820a8fb3656d2f57be119d801a08bfbd0d78b6653c62b928df70a2f10df0b"
+            ],
+            [
+              "ethereum",
+              "0xdbf1d8dca9858119e3852d52f18821754640013d9914d692589b13f8181a08e8"
+            ],
+            [
+              "ethereum",
+              "0x7ad3111bb69abd88f4095e2cec8e8c058ad3e17e8ba7fbd538a4828658d564ff"
+            ]
+          ]
+        },
+        {
+          "fn": "submit_proofs",
+          "hash": "0x9f13b3b0176b3de82085345bb1bad8213e8bf1482fcd0f010d5d431d41ffb2d3",
+          "status": "ACCEPTED",
+          "items": [
+            [
+              "ethereum",
+              "0xd83072cfc1126e23f18d13529c8fa832015a06f0a6988c65f53b4a8a0c403665"
+            ]
+          ]
+        },
+        {
+          "fn": "add_recovery",
+          "hash": "0x5d99c9e6de66daedcde073ad597aacabce825d62a56a9972ff89e8d550838fe7",
+          "status": "ACCEPTED"
+        },
+        {
+          "fn": "submit_proofs",
+          "hash": "0xb9cc777cdc7ab94a03cdd47139d84634c86de481052ad39f23d3616c64700a29",
+          "status": "ACCEPTED",
+          "items": [
+            [
+              "ethereum",
+              "0xd83072cfc1126e23f18d13529c8fa832015a06f0a6988c65f53b4a8a0c403665"
+            ]
+          ]
+        },
+        {
+          "fn": "settle",
+          "hash": "0x001bdcf9e41c9f5bc7565467c219e36a9101fc42d3e1ce83012223edb05ec669",
+          "status": "ACCEPTED"
+        }
+      ],
+      "offer_id": 2
+    },
+    "seneca-2024": {
+      "case_no": 3,
+      "name": "Seneca",
+      "txs": [
+        {
+          "fn": "create_offer",
+          "hash": "0x8c94574040ab8b292bd59c17268c83dbbb4051dec268184fece2ae69d8ca574e",
+          "status": "ACCEPTED"
+        },
+        {
+          "fn": "submit_proofs",
+          "hash": "0x7d7054f66b14d655fc29362a15bb45023cb1ab56db83cddf8a19313344c70fa3",
+          "status": "ACCEPTED",
+          "items": [
+            [
+              "ethereum",
+              "0xab7f14e2b75e70c8b136c8facb7a94d1947b812749660d0cb961e1a0db7c2f64"
+            ],
+            [
+              "ethereum",
+              "0xcf3f1f4d4db1782fa16d34e180c7c632a944e61f60ff7aae4e50bf145b0184f2"
+            ],
+            [
+              "ethereum",
+              "0x8e19428c50722538b0a98690c3621d644543950e9d852adad956a5ee70dd7cd8"
+            ],
+            [
+              "ethereum",
+              "0x775cc19c5c29deda98220cf3d244cb2f3f0e63e1c842060abeb26f84df2fb76d"
+            ]
+          ]
+        }
+      ],
+      "offer_id": 3
+    },
+    "kyberswap-elastic-2023": {
+      "case_no": 4,
+      "name": "KyberSwap Elastic",
+      "txs": [
+        {
+          "fn": "create_offer",
+          "hash": "0xf43dd8414368b9ed1f6af5b5929f504bf806c0163333ea4850b60e64f14ff2e3",
+          "status": "ACCEPTED"
+        }
+      ],
+      "offer_id": 4
+    },
+    "curve-crv-eth-2023": {
+      "case_no": 5,
+      "name": "Curve CRV/ETH (Curve/Vyper)",
+      "txs": [
+        {
+          "fn": "create_offer",
+          "hash": "0x054804ae3bb83b61aa0899b8d3df62bb0d8533a04ab066d17d489c3c3fc71443",
+          "status": "ACCEPTED"
+        }
+      ],
+      "offer_id": 5
+    },
+    "uwu-lend-2024": {
+      "case_no": 6,
+      "name": "UwU Lend",
+      "txs": [
+        {
+          "fn": "create_offer",
+          "hash": "0xfeedc600397bcaf7815c2a1d3845585f804682d7ae6a41e85c64ccebdef83606",
+          "status": "ACCEPTED"
+        }
+      ],
+      "offer_id": 6
     }
   }
 }
