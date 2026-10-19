@@ -106,14 +106,16 @@ PAGE_MAX = 50
 # chain -> (chain id, (RPC A, RPC B)). A proof is read from BOTH RPCs of its
 # chain and refused unless they answer identically. The two are run by
 # different operators and serve old transactions, receipts, JSON-RPC batches
-# and the "finalized" tag (docs/FEASIBILITY.md). tools/lib/chains.mjs holds the
-# same table.
+# of a dozen calls and the "finalized" tag, from GenVM with every validator
+# reading at once (docs/FEASIBILITY.md). tools/lib/chains.mjs holds the same
+# table.
 CHAINS = {
-    "ethereum": (1, ("https://eth-pokt.nodies.app", "https://rpc.mevblocker.io")),
-    "arbitrum": (42161, ("https://arb-pokt.nodies.app", "https://arbitrum-one.public.blastapi.io")),
+    "ethereum": (1, ("https://rpc.mevblocker.io", "https://eth-mainnet.public.blastapi.io")),
+    "arbitrum": (42161, ("https://arb1.arbitrum.io/rpc", "https://arbitrum-one.public.blastapi.io")),
 }
 TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 RPC_TRIES = 4
+BATCH_MAX = 12          # calls per JSON-RPC batch (every listed RPC answers 12 from GenVM)
 ZERO = "0x" + "0" * 40
 
 
@@ -271,33 +273,44 @@ def parse_batch(doc: typing.Any, n: int) -> list:
 
 
 def rpc_send(url: str, calls: list) -> list:
-    """One endpoint, one batch. Retried (up to RPC_TRIES) on a transport
-    failure, a 429 or 5xx, or an answer that is not a usable batch."""
+    """One endpoint, every call, in batches of at most BATCH_MAX. A batch is
+    retried (up to RPC_TRIES) on a transport failure, a 429 or 5xx, or an
+    answer that is not a usable batch."""
     if not rpc_url_allowed(url):
         raise ReadFailed("rpc not allowed")
-    body = json.dumps([{"jsonrpc": "2.0", "id": j, "method": calls[j][0], "params": calls[j][1]}
-                       for j in range(len(calls))])
-    why = ""
-    for _ in range(RPC_TRIES):
-        try:
-            res = gl.nondet.web.request(url, method="POST", body=body,
-                                        headers={"Content-Type": "application/json"})
-        except Exception:
-            why = "transport"
-            continue
-        st = _status(res)
-        if st != 200:
-            why = "http " + str(st)
-            if st != 429 and st < 500:
+    out = []
+    i = 0
+    while i < len(calls):
+        chunk = calls[i:i + BATCH_MAX]
+        body = json.dumps([{"jsonrpc": "2.0", "id": j, "method": chunk[j][0], "params": chunk[j][1]}
+                           for j in range(len(chunk))])
+        got = None
+        why = ""
+        for _ in range(RPC_TRIES):
+            try:
+                res = gl.nondet.web.request(url, method="POST", body=body,
+                                            headers={"Content-Type": "application/json"})
+            except Exception:
+                why = "transport"
+                continue
+            st = _status(res)
+            if st != 200:
+                why = "http " + str(st)
+                if st != 429 and st < 500:
+                    break
+                continue
+            try:
+                got = parse_batch(json.loads(_raw(res).decode("utf-8", errors="replace")), len(chunk))
                 break
-            continue
-        try:
-            return parse_batch(json.loads(_raw(res).decode("utf-8", errors="replace")), len(calls))
-        except ReadFailed as e:
-            why = str(e)
-        except Exception:
-            why = "json"
-    raise ReadFailed(why)
+            except ReadFailed as e:
+                why = str(e)
+            except Exception:
+                why = "json"
+        if got is None:
+            raise ReadFailed(why)
+        out = out + got
+        i += BATCH_MAX
+    return out
 
 
 def project(tx: typing.Any, rc: typing.Any, hdr: typing.Any) -> typing.Any:
@@ -341,57 +354,111 @@ def project(tx: typing.Any, rc: typing.Any, hdr: typing.Any) -> typing.Any:
             "from": frm, "to": to, "value": str(val), "logs": logs}
 
 
-def read_one(url: str, chain_id: int, h: str) -> dict:
-    """One RPC: [tx, receipt, finalized head, chain id], then the receipt's
-    block header. {"reason": ...} or {"proj": ..., "finalized": n}."""
-    got = rpc_send(url, [["eth_getTransactionByHash", [h]], ["eth_getTransactionReceipt", [h]],
-                         ["eth_getBlockByNumber", ["finalized", False]], ["eth_chainId", []]])
-    if _hex_int(got[3]) != chain_id:
-        return {"reason": "WRONG_CHAIN_ID"}
-    fin = got[2]
+def _host(url: str) -> str:
+    rest = url[url.find("//") + 2:] if url.find("//") >= 0 else url
+    cut = rest.find("/")
+    return rest if cut < 0 else rest[:cut]
+
+
+def read_view(url: str, chain_id: int, hashes: list) -> list:
+    """One RPC, every hash of one chain: one batch [tx, receipt] per hash +
+    finalized head + chain id, then one batch of the receipts' block headers.
+    -> per hash {"reason": ...} or {"proj": ..., "finalized": n}. A transport
+    or JSON-RPC failure raises ReadFailed for the whole chain."""
+    calls = []
+    for h in hashes:
+        calls.append(["eth_getTransactionByHash", [h]])
+        calls.append(["eth_getTransactionReceipt", [h]])
+    calls.append(["eth_getBlockByNumber", ["finalized", False]])
+    calls.append(["eth_chainId", []])
+    got = rpc_send(url, calls)
+    n = len(hashes)
+    if _hex_int(got[2 * n + 1]) != chain_id:
+        return [{"reason": "WRONG_CHAIN_ID"} for _ in hashes]
+    fin = got[2 * n]
     fin_n = _hex_int(fin.get("number")) if isinstance(fin, dict) else -1
     if fin_n < 0:
-        return {"reason": "RPC_UNREADABLE"}
-    tx = got[0]
-    rc = got[1]
-    if tx is None:
-        return {"reason": "TX_NOT_FOUND"}
-    if rc is None:
-        return {"reason": "TX_PENDING"}
-    if not isinstance(rc, dict):
-        return {"reason": "RPC_UNREADABLE"}
-    hdr = rpc_send(url, [["eth_getBlockByNumber", [rc.get("blockNumber"), False]]])[0]
-    p = project(tx, rc, hdr)
-    if p is None:
-        return {"reason": "RPC_UNREADABLE"}
-    return {"proj": p, "finalized": fin_n}
+        raise ReadFailed("no finalized head")
+    blocks = []
+    for i in range(n):
+        rc = got[2 * i + 1]
+        if got[2 * i] is not None and isinstance(rc, dict):
+            b = rc.get("blockNumber")
+            if isinstance(b, str) and _hex_int(b) >= 0 and b not in blocks:
+                blocks.append(b)
+    hdrs = {}
+    if len(blocks) > 0:
+        hs = rpc_send(url, [["eth_getBlockByNumber", [b, False]] for b in blocks])
+        for j in range(len(blocks)):
+            hdrs[blocks[j]] = hs[j]
+    out = []
+    for i in range(n):
+        tx = got[2 * i]
+        rc = got[2 * i + 1]
+        if tx is None:
+            out.append({"reason": "TX_NOT_FOUND"})
+            continue
+        if rc is None:
+            out.append({"reason": "TX_PENDING"})
+            continue
+        if not isinstance(rc, dict):
+            raise ReadFailed("bad receipt")
+        p = project(tx, rc, hdrs.get(rc.get("blockNumber")))
+        if p is None:
+            out.append({"reason": "RPC_UNREADABLE"})
+            continue
+        out.append({"proj": p, "finalized": fin_n})
+    return out
 
 
-def read_proof(chain: str, h: str) -> dict:
-    """Both RPCs of the chain. {"reason": ...} on any error, a missing or
-    pending transaction, or a disagreement; else {"read": projection,
-    "final": the block is at or below BOTH RPCs' finalized heads}."""
-    if chain not in CHAINS:
-        return {"reason": "UNSUPPORTED_CHAIN"}
-    cid = CHAINS[chain][0]
-    views = []
-    for url in CHAINS[chain][1]:
-        try:
-            views.append(read_one(url, cid, h))
-        except ReadFailed:
-            return {"reason": "RPC_UNREADABLE"}
-        except Exception:
-            return {"reason": "RPC_UNREADABLE"}
-    a = views[0]
-    b = views[1]
-    if "reason" in a or "reason" in b:
-        if "reason" in a and "reason" in b and a["reason"] == b["reason"]:
-            return {"reason": a["reason"]}
-        return {"reason": "RPC_DISAGREE"}
-    if _canon(a["proj"]) != _canon(b["proj"]):
-        return {"reason": "RPC_DISAGREE"}
-    fin = a["finalized"] if a["finalized"] < b["finalized"] else b["finalized"]
-    return {"read": a["proj"], "final": a["proj"]["block"] <= fin}
+def read_proofs(items: list) -> list:
+    """[[chain, hash], ...] -> per item, read from BOTH RPCs of its chain:
+    {"reason": ..., "detail": ...} on any error, a missing or pending
+    transaction, or a disagreement; else {"read": projection, "final": the
+    block is at or below BOTH RPCs' finalized heads}."""
+    out = [None for _ in items]
+    chains = []
+    for it in items:
+        if it[0] not in chains:
+            chains.append(it[0])
+    for ch in chains:
+        idx = [i for i in range(len(items)) if items[i][0] == ch]
+        if ch not in CHAINS:
+            for i in idx:
+                out[i] = {"reason": "UNSUPPORTED_CHAIN", "detail": ""}
+            continue
+        cid = CHAINS[ch][0]
+        hashes = [items[i][1] for i in idx]
+        views = []
+        failed = ""
+        for url in CHAINS[ch][1]:
+            try:
+                views.append(read_view(url, cid, hashes))
+            except ReadFailed as e:
+                failed = _host(url) + ": " + str(e)[:60]
+                break
+            except Exception:
+                failed = _host(url) + ": unexpected answer"
+                break
+        if failed != "":
+            for i in idx:
+                out[i] = {"reason": "RPC_UNREADABLE", "detail": failed}
+            continue
+        for k in range(len(idx)):
+            a = views[0][k]
+            b = views[1][k]
+            if "reason" in a or "reason" in b:
+                if "reason" in a and "reason" in b and a["reason"] == b["reason"]:
+                    out[idx[k]] = {"reason": a["reason"], "detail": ""}
+                else:
+                    out[idx[k]] = {"reason": "RPC_DISAGREE", "detail": "one RPC has the transaction, the other does not"}
+                continue
+            if _canon(a["proj"]) != _canon(b["proj"]):
+                out[idx[k]] = {"reason": "RPC_DISAGREE", "detail": "the two RPCs answer differently"}
+                continue
+            fin = a["finalized"] if a["finalized"] < b["finalized"] else b["finalized"]
+            out[idx[k]] = {"read": a["proj"], "final": a["proj"]["block"] <= fin}
+    return out
 # ==== end shared rpc ====
 
 
@@ -577,6 +644,7 @@ class Proof:
     submitted_at: u64
     status: str
     reason: str
+    detail: str
     credits_json: str
     block: u64
     block_time: u64
@@ -892,7 +960,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
         frozen = json.loads(_canon(clean))
 
         def leader() -> list:
-            return [read_proof(x[0], x[1]) for x in frozen]
+            return read_proofs(frozen)
 
         def validator(res: gl.vm.Result) -> bool:
             if not isinstance(res, gl.vm.Return):
@@ -900,7 +968,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
             got = res.calldata
             if not isinstance(got, list) or len(got) != len(frozen):
                 return False
-            mine = [read_proof(x[0], x[1]) for x in frozen]
+            mine = read_proofs(frozen)
             for i in range(len(frozen)):
                 a = got[i]
                 b = mine[i]
@@ -952,6 +1020,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
             self.proofs[u64(pid)] = Proof(
                 proof_id=u64(pid), offer_id=o.offer_id, chain=ch, tx_hash=h, submitter=who, submitted_at=u64(now),
                 status=st, reason="" if st == P_COUNTED else str(j["reason"]),
+                detail="" if st == P_COUNTED else clean_text(r.get("detail", ""), 100),
                 credits_json=_canon(j.get("credits", [])), block=u64(int(p["block"]) if p is not None else 0),
                 block_time=u64(int(p["time"]) if p is not None else 0), tx_from=p["from"] if p is not None else "",
                 tx_to=p["to"] if p is not None else "")
@@ -971,6 +1040,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 self._bump("proofs_rejected")
                 self._bump("reject:" + str(j["reason"]))
             out.append({"proof_id": pid, "chain": ch, "tx": h, "status": st, "reason": "" if st == P_COUNTED else j["reason"],
+                        "detail": "" if st == P_COUNTED else clean_text(r.get("detail", ""), 100),
                         "credits": j.get("credits", [])})
         o.returned_json = _canon(returned)
         parts = fraction_parts(json.loads(o.tokens_json), returned)
@@ -1239,7 +1309,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
     def _proof_view(self, p: Proof) -> dict:
         return {"proof_id": int(p.proof_id), "offer_id": int(p.offer_id), "chain": p.chain, "tx_hash": p.tx_hash,
                 "submitter": p.submitter, "submitted_at": int(p.submitted_at), "status": p.status,
-                "reason": p.reason, "credits": json.loads(p.credits_json), "block": int(p.block),
+                "reason": p.reason, "detail": p.detail, "credits": json.loads(p.credits_json), "block": int(p.block),
                 "block_time": int(p.block_time), "from": p.tx_from, "to": p.tx_to}
 
     @gl.public.view

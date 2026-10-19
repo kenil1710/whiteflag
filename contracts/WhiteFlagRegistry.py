@@ -286,6 +286,7 @@ class Proof:
     submitted_at: u64
     status: str
     reason: str
+    detail: str
     credits_json: str
     block: u64
     block_time: u64
@@ -601,7 +602,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
         frozen = json.loads(_canon(clean))
 
         def leader() -> list:
-            return [read_proof(x[0], x[1]) for x in frozen]
+            return read_proofs(frozen)
 
         def validator(res: gl.vm.Result) -> bool:
             if not isinstance(res, gl.vm.Return):
@@ -609,7 +610,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
             got = res.calldata
             if not isinstance(got, list) or len(got) != len(frozen):
                 return False
-            mine = [read_proof(x[0], x[1]) for x in frozen]
+            mine = read_proofs(frozen)
             for i in range(len(frozen)):
                 a = got[i]
                 b = mine[i]
@@ -661,6 +662,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
             self.proofs[u64(pid)] = Proof(
                 proof_id=u64(pid), offer_id=o.offer_id, chain=ch, tx_hash=h, submitter=who, submitted_at=u64(now),
                 status=st, reason="" if st == P_COUNTED else str(j["reason"]),
+                detail="" if st == P_COUNTED else clean_text(r.get("detail", ""), 100),
                 credits_json=_canon(j.get("credits", [])), block=u64(int(p["block"]) if p is not None else 0),
                 block_time=u64(int(p["time"]) if p is not None else 0), tx_from=p["from"] if p is not None else "",
                 tx_to=p["to"] if p is not None else "")
@@ -680,6 +682,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 self._bump("proofs_rejected")
                 self._bump("reject:" + str(j["reason"]))
             out.append({"proof_id": pid, "chain": ch, "tx": h, "status": st, "reason": "" if st == P_COUNTED else j["reason"],
+                        "detail": "" if st == P_COUNTED else clean_text(r.get("detail", ""), 100),
                         "credits": j.get("credits", [])})
         o.returned_json = _canon(returned)
         parts = fraction_parts(json.loads(o.tokens_json), returned)
@@ -948,7 +951,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
     def _proof_view(self, p: Proof) -> dict:
         return {"proof_id": int(p.proof_id), "offer_id": int(p.offer_id), "chain": p.chain, "tx_hash": p.tx_hash,
                 "submitter": p.submitter, "submitted_at": int(p.submitted_at), "status": p.status,
-                "reason": p.reason, "credits": json.loads(p.credits_json), "block": int(p.block),
+                "reason": p.reason, "detail": p.detail, "credits": json.loads(p.credits_json), "block": int(p.block),
                 "block_time": int(p.block_time), "from": p.tx_from, "to": p.tx_to}
 
     @gl.public.view

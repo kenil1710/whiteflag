@@ -1,12 +1,12 @@
 {
-  "at": "2026-10-19T10:32:38.648Z",
+  "at": "2026-10-19T11:09:14.768Z",
   "rpcs": {
     "ethereum": [
-      "https://eth-pokt.nodies.app",
-      "https://rpc.mevblocker.io"
+      "https://rpc.mevblocker.io",
+      "https://eth-mainnet.public.blastapi.io"
     ],
     "arbitrum": [
-      "https://arb-pokt.nodies.app",
+      "https://arb1.arbitrum.io/rpc",
       "https://arbitrum-one.public.blastapi.io"
     ]
   },
@@ -38,8 +38,8 @@
           "to": "0x17fc002b466eec40dae837fc4be5c67993ddbd6f",
           "status": 1,
           "finalized": [
-            516255661,
-            516255661
+            516262487,
+            516262487
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -65,8 +65,8 @@
           "to": "0x17fc002b466eec40dae837fc4be5c67993ddbd6f",
           "status": 1,
           "finalized": [
-            516255661,
-            516255661
+            516262487,
+            516262487
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -92,8 +92,8 @@
           "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -119,8 +119,8 @@
           "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -146,8 +146,8 @@
           "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -173,8 +173,8 @@
           "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -200,8 +200,8 @@
           "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -227,8 +227,8 @@
           "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -254,8 +254,8 @@
           "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -283,8 +283,8 @@
           "to": "0x1da7653d18b59bc19424d0017b21a045ad8db038",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "NO_RETURN_TO_RECOVERY",
           "credits": [],
@@ -324,8 +324,8 @@
           "to": "0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -351,8 +351,8 @@
           "to": "0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -378,8 +378,8 @@
           "to": "0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -405,8 +405,8 @@
           "to": "0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -432,8 +432,8 @@
           "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -459,8 +459,8 @@
           "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -486,8 +486,8 @@
           "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -513,8 +513,8 @@
           "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -540,8 +540,8 @@
           "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -567,8 +567,8 @@
           "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -596,8 +596,8 @@
           "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
           "status": 0,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "TX_FAILED",
           "credits": [],
@@ -637,8 +637,8 @@
           "to": "0xb7af0aa318706d94469d8d851015f9aa12d9c53a",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -664,8 +664,8 @@
           "to": "0xb7af0aa318706d94469d8d851015f9aa12d9c53a",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -691,8 +691,8 @@
           "to": "0xb7af0aa318706d94469d8d851015f9aa12d9c53a",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "COUNTED",
           "credits": [
@@ -720,8 +720,8 @@
           "to": "0x0c77350c4bde539ffcee261a149dbc6e6afda517",
           "status": 1,
           "finalized": [
-            26225974,
-            26225974
+            26226164,
+            26226164
           ],
           "verdict": "NO_RETURN_TO_RECOVERY",
           "credits": [],

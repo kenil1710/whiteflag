@@ -4,14 +4,16 @@
 # chain -> (chain id, (RPC A, RPC B)). A proof is read from BOTH RPCs of its
 # chain and refused unless they answer identically. The two are run by
 # different operators and serve old transactions, receipts, JSON-RPC batches
-# and the "finalized" tag (docs/FEASIBILITY.md). tools/lib/chains.mjs holds the
-# same table.
+# of a dozen calls and the "finalized" tag, from GenVM with every validator
+# reading at once (docs/FEASIBILITY.md). tools/lib/chains.mjs holds the same
+# table.
 CHAINS = {
-    "ethereum": (1, ("https://eth-pokt.nodies.app", "https://rpc.mevblocker.io")),
-    "arbitrum": (42161, ("https://arb-pokt.nodies.app", "https://arbitrum-one.public.blastapi.io")),
+    "ethereum": (1, ("https://rpc.mevblocker.io", "https://eth-mainnet.public.blastapi.io")),
+    "arbitrum": (42161, ("https://arb1.arbitrum.io/rpc", "https://arbitrum-one.public.blastapi.io")),
 }
 TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 RPC_TRIES = 4
+BATCH_MAX = 12          # calls per JSON-RPC batch (every listed RPC answers 12 from GenVM)
 ZERO = "0x" + "0" * 40
 
 

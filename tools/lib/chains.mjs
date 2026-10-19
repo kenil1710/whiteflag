@@ -2,8 +2,8 @@
 // operators) and their explorers. contracts/shared/common.py holds the same
 // table; test/test_static.py fails if the two drift apart.
 export const CHAINS = {
-  ethereum: { id: 1, rpcs: ["https://eth-pokt.nodies.app", "https://rpc.mevblocker.io"], explorer: "https://etherscan.io" },
-  arbitrum: { id: 42161, rpcs: ["https://arb-pokt.nodies.app", "https://arbitrum-one.public.blastapi.io"], explorer: "https://arbiscan.io" },
+  ethereum: { id: 1, rpcs: ["https://rpc.mevblocker.io", "https://eth-mainnet.public.blastapi.io"], explorer: "https://etherscan.io" },
+  arbitrum: { id: 42161, rpcs: ["https://arb1.arbitrum.io/rpc", "https://arbitrum-one.public.blastapi.io"], explorer: "https://arbiscan.io" },
 };
 
 export const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
@@ -13,7 +13,7 @@ export const addrUrl = (chain, a) => `${CHAINS[chain].explorer}/address/${a}`;
 
 let rid = 0;
 /** One JSON-RPC call against one URL, retried on transport errors and rate limits. Throws on anything else. */
-export async function rpc(url, method, params, { tries = 5 } = {}) {
+export async function rpc(url, method, params, { tries = 8 } = {}) {
   let last;
   for (let i = 0; i < tries; i++) {
     try {
@@ -30,7 +30,7 @@ export async function rpc(url, method, params, { tries = 5 } = {}) {
     } catch (e) {
       last = e;
       if (e.final) throw e;
-      await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
+      await new Promise((r) => setTimeout(r, 2500 * (i + 1)));
     }
   }
   throw last;

@@ -16,11 +16,11 @@ const s = mac.summary;
 L.push(`- ${s.readable} of ${s.incidents} incidents fully readable: every offer message and every listed transaction answered identically by both RPCs of its chain.`);
 L.push(`- ${s.with_returns} incidents with returns (1 full, 2 partial by the WhiteFlag formula), ${s.without_returns} with none.`);
 L.push(`- ${s.return_txs_read}/${s.return_txs} return transactions read and counted by the rule; ${s.rejects_as_expected}/${s.rejects} known non-returns rejected for the expected reason.`);
-L.push(`- Inside GenVM: ${vm.results.filter((r) => r.match).length}/${vm.results.length} transactions read from both RPCs with a projection byte-identical (sha256) to the one read from outside.`);
+L.push(`- Inside GenVM: ${vm.results.filter((r) => r.match).length}/${vm.results.length} transactions read through the registry's own read path (both RPCs per chain, batched, every validator re-reading and agreeing), with a projection byte-identical (sha256) to the one read from outside, every block finalized.`);
 L.push(`- Requirement (>= 5 readable, >= 2 with returns, >= 1 without): **${s.feasible ? "met" : "NOT met"}**.`, "");
 L.push("## RPCs", "", "| Chain | RPC A | RPC B |", "|---|---|---|");
 for (const [c, r] of Object.entries(mac.rpcs)) L.push(`| ${c} | \`${r[0]}\` | \`${r[1]}\` |`);
-L.push("", "Both serve old transactions and receipts, JSON-RPC batches and the `finalized` tag, from GenVM and from outside. Run by different operators (Nodies/POKT; MEV Blocker and Blast).", "");
+L.push("", "Ethereum: MEV Blocker and Blast. Arbitrum: Offchain Labs' public endpoint and Blast. Each serves old transactions and receipts, JSON-RPC batches of 12 calls and the `finalized` tag, from outside and from GenVM while every validator reads at once. Measured and dropped: Nodies (refuses batches under that load: every proof of the first on-chain trial came back unreadable), dRPC (batches of at most 3 on its free tier), BlockPI (5 calls per batch), PublicNode (no answer for these transactions on Ethereum).", "");
 for (const inc of data.incidents) {
   const r = mac.incidents.find((x) => x.id === inc.id);
   L.push(`## Incident #${String(inc.case_no).padStart(2, "0")}: ${inc.name}`, "");

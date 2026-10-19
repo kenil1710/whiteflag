@@ -66,6 +66,7 @@ class Chains:
         self.c = {}
         for name, fin in FINALIZED.items():
             ch = stub.MockChain(CHAIN_IDS[name], fin, NOW - 900)
+            ch.batch_cap = RG.BATCH_MAX
             self.c[name] = ch
             for url in RG.CHAINS[name][1]:
                 stub.WEB.chains[url] = ch

@@ -52,33 +52,44 @@ def parse_batch(doc: typing.Any, n: int) -> list:
 
 
 def rpc_send(url: str, calls: list) -> list:
-    """One endpoint, one batch. Retried (up to RPC_TRIES) on a transport
-    failure, a 429 or 5xx, or an answer that is not a usable batch."""
+    """One endpoint, every call, in batches of at most BATCH_MAX. A batch is
+    retried (up to RPC_TRIES) on a transport failure, a 429 or 5xx, or an
+    answer that is not a usable batch."""
     if not rpc_url_allowed(url):
         raise ReadFailed("rpc not allowed")
-    body = json.dumps([{"jsonrpc": "2.0", "id": j, "method": calls[j][0], "params": calls[j][1]}
-                       for j in range(len(calls))])
-    why = ""
-    for _ in range(RPC_TRIES):
-        try:
-            res = gl.nondet.web.request(url, method="POST", body=body,
-                                        headers={"Content-Type": "application/json"})
-        except Exception:
-            why = "transport"
-            continue
-        st = _status(res)
-        if st != 200:
-            why = "http " + str(st)
-            if st != 429 and st < 500:
+    out = []
+    i = 0
+    while i < len(calls):
+        chunk = calls[i:i + BATCH_MAX]
+        body = json.dumps([{"jsonrpc": "2.0", "id": j, "method": chunk[j][0], "params": chunk[j][1]}
+                           for j in range(len(chunk))])
+        got = None
+        why = ""
+        for _ in range(RPC_TRIES):
+            try:
+                res = gl.nondet.web.request(url, method="POST", body=body,
+                                            headers={"Content-Type": "application/json"})
+            except Exception:
+                why = "transport"
+                continue
+            st = _status(res)
+            if st != 200:
+                why = "http " + str(st)
+                if st != 429 and st < 500:
+                    break
+                continue
+            try:
+                got = parse_batch(json.loads(_raw(res).decode("utf-8", errors="replace")), len(chunk))
                 break
-            continue
-        try:
-            return parse_batch(json.loads(_raw(res).decode("utf-8", errors="replace")), len(calls))
-        except ReadFailed as e:
-            why = str(e)
-        except Exception:
-            why = "json"
-    raise ReadFailed(why)
+            except ReadFailed as e:
+                why = str(e)
+            except Exception:
+                why = "json"
+        if got is None:
+            raise ReadFailed(why)
+        out = out + got
+        i += BATCH_MAX
+    return out
 
 
 def project(tx: typing.Any, rc: typing.Any, hdr: typing.Any) -> typing.Any:
@@ -122,55 +133,109 @@ def project(tx: typing.Any, rc: typing.Any, hdr: typing.Any) -> typing.Any:
             "from": frm, "to": to, "value": str(val), "logs": logs}
 
 
-def read_one(url: str, chain_id: int, h: str) -> dict:
-    """One RPC: [tx, receipt, finalized head, chain id], then the receipt's
-    block header. {"reason": ...} or {"proj": ..., "finalized": n}."""
-    got = rpc_send(url, [["eth_getTransactionByHash", [h]], ["eth_getTransactionReceipt", [h]],
-                         ["eth_getBlockByNumber", ["finalized", False]], ["eth_chainId", []]])
-    if _hex_int(got[3]) != chain_id:
-        return {"reason": "WRONG_CHAIN_ID"}
-    fin = got[2]
+def _host(url: str) -> str:
+    rest = url[url.find("//") + 2:] if url.find("//") >= 0 else url
+    cut = rest.find("/")
+    return rest if cut < 0 else rest[:cut]
+
+
+def read_view(url: str, chain_id: int, hashes: list) -> list:
+    """One RPC, every hash of one chain: one batch [tx, receipt] per hash +
+    finalized head + chain id, then one batch of the receipts' block headers.
+    -> per hash {"reason": ...} or {"proj": ..., "finalized": n}. A transport
+    or JSON-RPC failure raises ReadFailed for the whole chain."""
+    calls = []
+    for h in hashes:
+        calls.append(["eth_getTransactionByHash", [h]])
+        calls.append(["eth_getTransactionReceipt", [h]])
+    calls.append(["eth_getBlockByNumber", ["finalized", False]])
+    calls.append(["eth_chainId", []])
+    got = rpc_send(url, calls)
+    n = len(hashes)
+    if _hex_int(got[2 * n + 1]) != chain_id:
+        return [{"reason": "WRONG_CHAIN_ID"} for _ in hashes]
+    fin = got[2 * n]
     fin_n = _hex_int(fin.get("number")) if isinstance(fin, dict) else -1
     if fin_n < 0:
-        return {"reason": "RPC_UNREADABLE"}
-    tx = got[0]
-    rc = got[1]
-    if tx is None:
-        return {"reason": "TX_NOT_FOUND"}
-    if rc is None:
-        return {"reason": "TX_PENDING"}
-    if not isinstance(rc, dict):
-        return {"reason": "RPC_UNREADABLE"}
-    hdr = rpc_send(url, [["eth_getBlockByNumber", [rc.get("blockNumber"), False]]])[0]
-    p = project(tx, rc, hdr)
-    if p is None:
-        return {"reason": "RPC_UNREADABLE"}
-    return {"proj": p, "finalized": fin_n}
+        raise ReadFailed("no finalized head")
+    blocks = []
+    for i in range(n):
+        rc = got[2 * i + 1]
+        if got[2 * i] is not None and isinstance(rc, dict):
+            b = rc.get("blockNumber")
+            if isinstance(b, str) and _hex_int(b) >= 0 and b not in blocks:
+                blocks.append(b)
+    hdrs = {}
+    if len(blocks) > 0:
+        hs = rpc_send(url, [["eth_getBlockByNumber", [b, False]] for b in blocks])
+        for j in range(len(blocks)):
+            hdrs[blocks[j]] = hs[j]
+    out = []
+    for i in range(n):
+        tx = got[2 * i]
+        rc = got[2 * i + 1]
+        if tx is None:
+            out.append({"reason": "TX_NOT_FOUND"})
+            continue
+        if rc is None:
+            out.append({"reason": "TX_PENDING"})
+            continue
+        if not isinstance(rc, dict):
+            raise ReadFailed("bad receipt")
+        p = project(tx, rc, hdrs.get(rc.get("blockNumber")))
+        if p is None:
+            out.append({"reason": "RPC_UNREADABLE"})
+            continue
+        out.append({"proj": p, "finalized": fin_n})
+    return out
 
 
-def read_proof(chain: str, h: str) -> dict:
-    """Both RPCs of the chain. {"reason": ...} on any error, a missing or
-    pending transaction, or a disagreement; else {"read": projection,
-    "final": the block is at or below BOTH RPCs' finalized heads}."""
-    if chain not in CHAINS:
-        return {"reason": "UNSUPPORTED_CHAIN"}
-    cid = CHAINS[chain][0]
-    views = []
-    for url in CHAINS[chain][1]:
-        try:
-            views.append(read_one(url, cid, h))
-        except ReadFailed:
-            return {"reason": "RPC_UNREADABLE"}
-        except Exception:
-            return {"reason": "RPC_UNREADABLE"}
-    a = views[0]
-    b = views[1]
-    if "reason" in a or "reason" in b:
-        if "reason" in a and "reason" in b and a["reason"] == b["reason"]:
-            return {"reason": a["reason"]}
-        return {"reason": "RPC_DISAGREE"}
-    if _canon(a["proj"]) != _canon(b["proj"]):
-        return {"reason": "RPC_DISAGREE"}
-    fin = a["finalized"] if a["finalized"] < b["finalized"] else b["finalized"]
-    return {"read": a["proj"], "final": a["proj"]["block"] <= fin}
+def read_proofs(items: list) -> list:
+    """[[chain, hash], ...] -> per item, read from BOTH RPCs of its chain:
+    {"reason": ..., "detail": ...} on any error, a missing or pending
+    transaction, or a disagreement; else {"read": projection, "final": the
+    block is at or below BOTH RPCs' finalized heads}."""
+    out = [None for _ in items]
+    chains = []
+    for it in items:
+        if it[0] not in chains:
+            chains.append(it[0])
+    for ch in chains:
+        idx = [i for i in range(len(items)) if items[i][0] == ch]
+        if ch not in CHAINS:
+            for i in idx:
+                out[i] = {"reason": "UNSUPPORTED_CHAIN", "detail": ""}
+            continue
+        cid = CHAINS[ch][0]
+        hashes = [items[i][1] for i in idx]
+        views = []
+        failed = ""
+        for url in CHAINS[ch][1]:
+            try:
+                views.append(read_view(url, cid, hashes))
+            except ReadFailed as e:
+                failed = _host(url) + ": " + str(e)[:60]
+                break
+            except Exception:
+                failed = _host(url) + ": unexpected answer"
+                break
+        if failed != "":
+            for i in idx:
+                out[i] = {"reason": "RPC_UNREADABLE", "detail": failed}
+            continue
+        for k in range(len(idx)):
+            a = views[0][k]
+            b = views[1][k]
+            if "reason" in a or "reason" in b:
+                if "reason" in a and "reason" in b and a["reason"] == b["reason"]:
+                    out[idx[k]] = {"reason": a["reason"], "detail": ""}
+                else:
+                    out[idx[k]] = {"reason": "RPC_DISAGREE", "detail": "one RPC has the transaction, the other does not"}
+                continue
+            if _canon(a["proj"]) != _canon(b["proj"]):
+                out[idx[k]] = {"reason": "RPC_DISAGREE", "detail": "the two RPCs answer differently"}
+                continue
+            fin = a["finalized"] if a["finalized"] < b["finalized"] else b["finalized"]
+            out[idx[k]] = {"read": a["proj"], "final": a["proj"]["block"] <= fin}
+    return out
 # ==== end shared rpc ====
