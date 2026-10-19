@@ -5,34 +5,34 @@
   "explorer": "https://explorer-studio-dev.genlayer.com/",
   "contracts": {
     "WhiteFlagRegistryDemo": {
-      "address": "0x9D3fa25E88506C5698e365EB68B2bcf2a5900338",
-      "deploy_tx": "0xf9dcc6b0de35879fe307cb5e70018743be6c3078d500d3f3dc79cebc18bfcd5a",
+      "address": "0xf6c9D9be890a3bB7D6ffD2dCe4763f70884099E4",
+      "deploy_tx": "0xc8b8aa7c26874c932fa00a9882b758c836aaa956ca69e6b3f6a26c028875cc93",
       "file": "build/WhiteFlagRegistry.py",
       "source": "contracts/WhiteFlagRegistry.py",
-      "commit": "aeaccc7ae7906561643651dc0eaff79d5cca9c2a",
-      "bytes": 54515,
-      "sha256": "9b9a737cb2de42370eb4026a3ba49b8d15a711df5c2fafa914e7b1fafbbf7b60",
+      "commit": "07953fd94c739341a5eeda0bcd3ad894b1ed0ad4",
+      "bytes": 57310,
+      "sha256": "ddac7550a4df5b0f92c168ce54d53bad9a5473ad8923153c0fb50b973f5ac40d",
       "constructor_args": [
         "DEMO"
       ],
       "deployer": "0xd663687D6cf172E849C84180d316757e33FD9f4e",
-      "deployed_at": "2026-10-19T10:50:49.439Z",
+      "deployed_at": "2026-10-19T11:16:58.540Z",
       "mode": "DEMO"
     },
     "SafeHarborGateDemo": {
-      "address": "0xe77831B1eE5C47605E2057112A99A8D30f19c497",
-      "deploy_tx": "0xa18cdc5c71d28f9c2b2ed0ed5b8288de7018bccdd5c1441d604879eb92401128",
+      "address": "0xf3E41290F815C6b3F1EB1d52279bDfADb3b80fC3",
+      "deploy_tx": "0x80d94b62f92b6a303c5b7fe56090b9d0ee36ed6de434eaf990615a667f5cfe59",
       "file": "build/SafeHarborGate.py",
       "source": "contracts/SafeHarborGate.py",
-      "commit": "aeaccc7ae7906561643651dc0eaff79d5cca9c2a",
-      "bytes": 12280,
-      "sha256": "8d43d682d5f1d0de8f9cb5e6830e645efdcf53b12b6c42160ddb4e6c4285d5fb",
+      "commit": "07953fd94c739341a5eeda0bcd3ad894b1ed0ad4",
+      "bytes": 12452,
+      "sha256": "031a23d63f38fea5c0909c4309cd60092eaba0093731d807936b12c781e43cd6",
       "constructor_args": [
-        "0x9D3fa25E88506C5698e365EB68B2bcf2a5900338",
+        "0xf6c9D9be890a3bB7D6ffD2dCe4763f70884099E4",
         900000
       ],
       "deployer": "0xd663687D6cf172E849C84180d316757e33FD9f4e",
-      "deployed_at": "2026-10-19T10:51:07.844Z",
+      "deployed_at": "2026-10-19T11:17:06.008Z",
       "mode": "DEMO"
     }
   },
@@ -73,6 +73,43 @@
       "mode": "DEMO",
       "superseded_by": "0xe77831B1eE5C47605E2057112A99A8D30f19c497",
       "why": "redeployed"
+    },
+    {
+      "name": "WhiteFlagRegistryDemo",
+      "address": "0x9D3fa25E88506C5698e365EB68B2bcf2a5900338",
+      "deploy_tx": "0xf9dcc6b0de35879fe307cb5e70018743be6c3078d500d3f3dc79cebc18bfcd5a",
+      "file": "build/WhiteFlagRegistry.py",
+      "source": "contracts/WhiteFlagRegistry.py",
+      "commit": "aeaccc7ae7906561643651dc0eaff79d5cca9c2a",
+      "bytes": 54515,
+      "sha256": "9b9a737cb2de42370eb4026a3ba49b8d15a711df5c2fafa914e7b1fafbbf7b60",
+      "constructor_args": [
+        "DEMO"
+      ],
+      "deployer": "0xd663687D6cf172E849C84180d316757e33FD9f4e",
+      "deployed_at": "2026-10-19T10:50:49.439Z",
+      "mode": "DEMO",
+      "superseded_by": "0xf6c9D9be890a3bB7D6ffD2dCe4763f70884099E4",
+      "why": "Nodies RPCs refused batches under validator load"
+    },
+    {
+      "name": "SafeHarborGateDemo",
+      "address": "0xe77831B1eE5C47605E2057112A99A8D30f19c497",
+      "deploy_tx": "0xa18cdc5c71d28f9c2b2ed0ed5b8288de7018bccdd5c1441d604879eb92401128",
+      "file": "build/SafeHarborGate.py",
+      "source": "contracts/SafeHarborGate.py",
+      "commit": "aeaccc7ae7906561643651dc0eaff79d5cca9c2a",
+      "bytes": 12280,
+      "sha256": "8d43d682d5f1d0de8f9cb5e6830e645efdcf53b12b6c42160ddb4e6c4285d5fb",
+      "constructor_args": [
+        "0x9D3fa25E88506C5698e365EB68B2bcf2a5900338",
+        900000
+      ],
+      "deployer": "0xd663687D6cf172E849C84180d316757e33FD9f4e",
+      "deployed_at": "2026-10-19T10:51:07.844Z",
+      "mode": "DEMO",
+      "superseded_by": "0xf3E41290F815C6b3F1EB1d52279bDfADb3b80fC3",
+      "why": "Nodies RPCs refused batches under validator load"
     }
   ]
 }

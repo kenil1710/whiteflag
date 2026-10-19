@@ -50,13 +50,15 @@ export function manualAllocation(payee, maxGasPrice) {
     feeParams: encodeExternalFeeParams(EXT_GAS_LIMIT, maxGasPrice), onAcceptance: false };
 }
 
-/** Fees for `functionName` on `address` that fund a payout to `payee`. Throws rather than return fees that do not. */
+/** Fees for `functionName` on `address` that fund a payout to `payee`. Throws rather than return fees that do not.
+ *  Studio simulates a write with a fixed clock (2024-11-26T06:42:42Z, measured), so a call that is only allowed
+ *  after a deadline (settle, refund_unclaimed) cannot be simulated: then the allocation is built by hand. */
 export async function payoutFees(wallet, { address, functionName = "claim", args = [], payee }) {
   const pick = (e) => ({ distribution: e.distribution, ...(e.messageAllocations ? { messageAllocations: e.messageAllocations } : {}), feeValue: e.feeValue });
-  let est = await wallet.estimateTransactionFeesForWrite({ address, functionName, args, value: 0n });
-  let fees = pick(est);
-  if (payoutFeesProblem(fees, payee)) {
-    const price = big(est.policy?.receiptGasPrice) * 12n / 10n || 300_000_000n;
+  let est = null, fees = null;
+  try { est = await wallet.estimateTransactionFeesForWrite({ address, functionName, args, value: 0n }); fees = pick(est); } catch { est = null; }
+  if (!fees || payoutFeesProblem(fees, payee)) {
+    const price = (est ? big(est.policy?.receiptGasPrice) * 12n / 10n : 0n) || 360_000_000n;
     est = await wallet.estimateTransactionFees({ messageAllocations: [manualAllocation(payee, price)] });
     fees = pick(est);
   }
