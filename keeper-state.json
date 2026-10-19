@@ -115,6 +115,18 @@
   },
   "runs": [
     {
+      "started_at": 1792422080,
+      "finished_at": 1792422335,
+      "resumed": 0,
+      "scanned": 14,
+      "due": 5,
+      "submitted": 5,
+      "done": 5,
+      "pending": 0,
+      "failed": 0,
+      "errors": []
+    },
+    {
       "started_at": 1792414236,
       "finished_at": 1792414240,
       "resumed": 1,
@@ -153,13 +165,13 @@
   ],
   "unprocessed": [],
   "last_run": {
-    "started_at": 1792414236,
-    "finished_at": 1792414240,
-    "resumed": 1,
+    "started_at": 1792422080,
+    "finished_at": 1792422335,
+    "resumed": 0,
     "scanned": 14,
-    "due": 0,
-    "submitted": 0,
-    "done": 1,
+    "due": 5,
+    "submitted": 5,
+    "done": 5,
     "pending": 0,
     "failed": 0,
     "errors": []
@@ -169,5 +181,5 @@
     "0x461399B65edA1C0634a47A658d34624eC4C24a31",
     "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2"
   ],
-  "saved_at": "2026-10-19T15:05:35.092Z"
+  "saved_at": "2026-10-19T15:05:35.104Z"
 }
