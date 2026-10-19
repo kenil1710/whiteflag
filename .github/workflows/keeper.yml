@@ -1,7 +1,8 @@
 name: keeper
 on:
   schedule:
-    - cron: "11 * * * *"
+    # hourly; GitHub may start a scheduled run some minutes late
+    - cron: "23 * * * *"
   workflow_dispatch: {}
 concurrency:
   group: keeper
