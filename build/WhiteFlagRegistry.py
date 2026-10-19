@@ -23,14 +23,15 @@ import typing
 # sender is a listed exploiter address, and it moved a listed token from an
 # exploiter address to a recovery address (the native value of the
 # transaction, or an ERC-20 Transfer log emitted by the listed token
-# contract). Each (chain, tx, log index) counts once in this registry. Any
+# contract). Each (chain, tx, log index) counts once per offer. Any
 # read error or disagreement rejects the proof with a reason; it may be
 # submitted again.
 #
 #   fraction = sum(min(returned, stolen) * weight) / sum(stolen * weight)
 #   owed     = bounty * fraction            (integer math, rounded down)
 #
-# SETTLE (anyone): once the offer's settle time has passed, or at once when
+# SETTLE (anyone): once the offer's settle time has passed - the later of
+# deadline + finality grace and created + minimum open time - or at once when
 # the fraction reaches 100%. OPEN -> SETTLED_FULL / SETTLED_PARTIAL /
 # SETTLED_NONE. The remainder (bounty - owed) goes back to the protocol in the
 # same transaction. CLAIM: only a listed exploiter address may claim, paid to
@@ -72,7 +73,7 @@ COUNT_KEYS = ("offers", "create_refused", "extensions", "recoveries_added", "pro
               "settled", "settled:" + ST_FULL, "settled:" + ST_PARTIAL, "settled:" + ST_NONE, "claims",
               "unclaimed_refunds", "credit_withdrawals", "sweeps") + tuple("reject:" + r for r in REASONS)
 
-# mode -> (claim_window_s, min_open_s, rate_n, rate_window_s, sweep_delay_s)
+# mode -> (claim_window_s, min_open_s, rate_n, rate_window_s, sweep_delay_s, finality_grace_s)
 #   claim_window_s  how long the owed bounty stays claimable after settlement
 #   min_open_s      an offer can be settled no earlier than created + this
 #                   (unless 100% returned), so an offer opened after its
@@ -81,9 +82,12 @@ COUNT_KEYS = ("offers", "create_refused", "extensions", "recoveries_added", "pro
 #   sweep_delay_s   sweep_stray waits this long after the registry's last
 #                   send, so a send posted but not yet finalized (the balance
 #                   still holds it) is never mistaken for stray value
+#   finality_grace_s settle waits this long after the deadline, so a return
+#                   made just before it can finalize (Arbitrum's finalized
+#                   head trails by up to about an hour) and be proved
 MODES = {
-    "CANONICAL": (3600, 10800, 20, 3600, 172800),
-    "DEMO": (180, 60, 20, 600, 3600),
+    "CANONICAL": (3600, 10800, 20, 3600, 172800, 7200),
+    "DEMO": (180, 60, 20, 600, 3600, 60),
 }
 
 MAX_ITEMS = 5               # proofs per submission
@@ -91,7 +95,7 @@ MAX_EXPLOITERS = 24
 MAX_RECOVERIES = 24
 MAX_TOKENS = 12
 MAX_SPAN_S = 3653 * 86400   # deadline - start (ten years: historic incidents open late)
-MAX_EXTEND_S = 731 * 86400  # how far a deadline may be pushed past the original
+MAX_EXTEND_S = 180 * 86400  # how far a deadline may be pushed past the original
 MAX_NAME = 80
 MAX_META = 800
 MIN_BOUNTY = 10 ** 15       # 0.001 GEN
@@ -348,6 +352,8 @@ def project(tx: typing.Any, rc: typing.Any, hdr: typing.Any) -> typing.Any:
         amt = 0 if d == "0x" else _hex_int(d)
         if t1 == "" or t2 == "" or li < 0 or la == "" or amt < 0:
             return None
+        if t1[2:26] != "0" * 24 or t2[2:26] != "0" * 24:
+            continue        # not a canonical address topic: not an ERC-20 Transfer of an address
         logs.append({"i": li, "address": la, "from": "0x" + t1[26:], "to": "0x" + t2[26:], "amount": str(amt)})
     st = str(rc.get("status", "")).lower()
     return {"status": 1 if st == "0x1" else 0, "block": blk, "block_hash": bh, "time": ts,
@@ -541,7 +547,7 @@ def fraction_parts(tokens: list, returned: dict) -> list:
 
 def judge(offer: dict, chain: str, h: str, r: dict, used: dict) -> dict:
     """The rule, on one consensus-agreed read. used: keys already counted
-    (this registry plus earlier items of the same submission). ->
+    (this offer, plus earlier items of the same submission). ->
     {"reason": ...} or {"credits": [...]} (only credits not yet used)."""
     if "reason" in r:
         return {"reason": str(r["reason"])}
@@ -660,6 +666,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
     rate_n: u64
     rate_window_s: u64
     sweep_delay_s: u64
+    finality_grace_s: u64
     last_send_at: u64
     n_offers: u64
     n_proofs: u64
@@ -692,6 +699,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
         self.rate_n = u64(p[2])
         self.rate_window_s = u64(p[3])
         self.sweep_delay_s = u64(p[4])
+        self.finality_grace_s = u64(p[5])
         self.n_offers = u64(0)
         self.n_proofs = u64(0)
 
@@ -718,7 +726,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 "tokens": json.loads(o.tokens_json)}
 
     def _settle_at(self, o: Offer) -> int:
-        a = int(o.deadline)
+        a = int(o.deadline) + int(self.finality_grace_s)
         b = int(o.created_at) + int(self.min_open_s)
         return a if a > b else b
 
@@ -999,7 +1007,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 for lg in r["read"]["logs"]:
                     pre_keys.append(ch + ":" + h + ":" + str(lg["i"]))
                 for k in pre_keys:
-                    if used.get(k, False) or int(self.used.get(k, u64(0))) > 0:
+                    if used.get(k, False) or int(self.used.get(str(int(o.offer_id)) + "|" + k, u64(0))) > 0:
                         pre[k] = True
             j = judge(offer, ch, h, r, pre)
             if "credits" in j:
@@ -1029,7 +1037,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
             o.n_proofs = u64(int(o.n_proofs) + 1)
             if st == P_COUNTED:
                 for c in j["credits"]:
-                    self.used[c["key"]] = u64(pid)
+                    self.used[str(int(o.offer_id)) + "|" + c["key"]] = u64(pid)
                     tk = ch + ":" + c["token"]
                     returned[tk] = str(int(returned.get(tk, "0")) + int(c["amount"]))
                 self.counted_tx[str(int(o.offer_id)) + "|" + ch + ":" + h] = u64(pid)
@@ -1353,6 +1361,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 "max_exploiters": MAX_EXPLOITERS, "max_recoveries": MAX_RECOVERIES, "max_tokens": MAX_TOKENS,
                 "max_span_s": MAX_SPAN_S, "max_extend_s": MAX_EXTEND_S, "min_bounty": str(MIN_BOUNTY),
                 "payout_rules": list(PAYOUT_RULES), "page_max": PAGE_MAX, "sweep_delay_s": int(self.sweep_delay_s),
+                "finality_grace_s": int(self.finality_grace_s),
                 "last_send_at": int(self.last_send_at), "reasons": list(REASONS),
                 "chains": {k: {"chain_id": CHAINS[k][0], "rpcs": list(CHAINS[k][1])} for k in CHAINS}}
 

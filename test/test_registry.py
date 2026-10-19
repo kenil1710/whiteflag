@@ -402,12 +402,13 @@ class Proofs(Base):
         self.d.prove(self.oid, "ethereum", h)
         self.refused(self.d.prove, self.oid, "ethereum", h, reason="ALREADY_COUNTED")
 
-    def test_same_log_counts_once_across_offers(self):
+    def test_same_log_counts_in_each_offer_it_satisfies(self):
+        # uniqueness is per offer: a copycat offer cannot use up a real offer's return
         oid2 = self.two_token_offer()
         h = self.erc20()
-        self.d.prove(self.oid, "ethereum", h)
-        self.reject(h, "ALREADY_COUNTED", oid=oid2)
-        self.assertEqual(self.d.get(oid2)["returned"], {})
+        self.d.prove(oid2, "ethereum", h)
+        self.assertEqual(self.d.prove(self.oid, "ethereum", h)["status"], "COUNTED")
+        self.assertEqual(self.d.get(self.oid)["returned"], self.d.get(oid2)["returned"])
 
     def test_duplicate_item_in_batch(self):
         h = self.native()
@@ -616,14 +617,31 @@ class Settle(Base):
     def test_too_early(self):
         oid = self.d.offer(deadline=NOW + 1000)
         msg = self.refused(self.d.settle, oid, reason="TOO_EARLY_UNTIL_")
-        self.assertIn(str(NOW + 1000), msg)
+        self.assertIn(str(NOW + 1000 + RG.MODES["DEMO"][5]), msg)
 
-    def test_exactly_at_deadline(self):
+    def test_exactly_at_deadline_plus_grace(self):
+        g = RG.MODES["DEMO"][5]
         oid = self.d.offer(deadline=NOW + 1000)
-        self.d.w.set_time(NOW + 999)
-        self.refused(self.d.settle, oid, reason="TOO_EARLY")
         self.d.w.set_time(NOW + 1000)
+        self.refused(self.d.settle, oid, reason="TOO_EARLY")
+        self.d.w.set_time(NOW + 1000 + g - 1)
+        self.refused(self.d.settle, oid, reason="TOO_EARLY")
+        self.d.w.set_time(NOW + 1000 + g)
         self.assertEqual(self.d.settle(oid)["status"], "SETTLED_NONE")
+
+    def test_canonical_finality_grace_two_hours(self):
+        d = F.Deployment("CANONICAL")
+        oid = d.offer(deadline=NOW + 10 ** 5)
+        self.assertEqual(d.get(oid)["settle_at"], NOW + 10 ** 5 + 7200)
+
+    def test_return_just_before_deadline_still_counts(self):
+        # returned 1 s before the deadline, finalized and proved during the grace
+        oid = self.d.offer(deadline=NOW + 100, tokens=json.dumps([tok(stolen=10 * ETH)]))
+        h = self.native(5 * ETH, ts=NOW + 99)
+        self.d.w.set_time(NOW + 130)
+        self.assertEqual(self.d.prove(oid, "ethereum", h)["status"], "COUNTED")
+        self.d.w.set_time(NOW + 100 + RG.MODES["DEMO"][5])
+        self.assertEqual(self.d.settle(oid)["status"], "SETTLED_PARTIAL")
 
     def test_historic_offer_waits_min_open(self):
         oid = self.d.offer()
@@ -707,7 +725,7 @@ class Settle(Base):
         oid = self.d.offer(deadline=NOW + 100)
         self.d.w.call(self.d.reg, "extend_deadline", oid, NOW + 500, sender=PROTOCOL)
         self.d.w.set_time(NOW + 200)
-        self.refused(self.d.settle, oid, reason="TOO_EARLY_UNTIL_" + str(NOW + 500))
+        self.refused(self.d.settle, oid, reason="TOO_EARLY_UNTIL_" + str(NOW + 500 + RG.MODES["DEMO"][5]))
 
 
 # =============================================================================

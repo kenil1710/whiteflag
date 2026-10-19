@@ -12,7 +12,7 @@ Reverted = world.Reverted
 
 
 def good(**over):
-    base = {"found": True, "offer_id": 1, "status": "SETTLED_PARTIAL", "bounty": "100", "owed": "40",
+    base = {"found": True, "offer_id": 1, "protocol": F.PROTOCOL, "incident": "x", "status": "SETTLED_PARTIAL", "bounty": "100", "owed": "40",
             "claimed": "0", "refunded_at_settle": "60", "unclaimed_refunded": "0", "fraction_ppm": 400000,
             "claim_deadline": NOW + 100}
     base.update(over)

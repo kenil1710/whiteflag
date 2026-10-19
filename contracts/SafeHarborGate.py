@@ -17,6 +17,10 @@ import typing
 # self-consistent. A missing offer, a failed read, a malformed answer or an
 # open offer is never favorable and never reported as settled or recovered.
 #
+# Anyone can open an offer under any incident name, so a consumer must pin
+# WHO opened it: check_for / is_favorable_for(offer_id, protocol) are
+# favorable only when the offer's creator is the expected protocol address.
+#
 # attest(offer_id) stores the state with the time it was read, so a consumer
 # can point at one on-chain record. Anyone may attest; it only reads.
 
@@ -40,7 +44,8 @@ def gate_state(raw: typing.Any, offer_id: int, min_ppm: int) -> dict:
     """The registry's get_offer answer -> the gate's structured state. Pure:
     tests call it on every malformed shape."""
     base = {"offer_id": offer_id, "state": "UNREADABLE", "favorable": False, "fraction_ppm": 0,
-            "bounty": "0", "owed": "0", "paid": "0", "refunded": "0", "claim_deadline": 0, "why": ""}
+            "bounty": "0", "owed": "0", "paid": "0", "refunded": "0", "claim_deadline": 0, "protocol": "",
+            "incident": "", "why": ""}
     if isinstance(raw, str):
         try:
             raw = json.loads(raw)
@@ -57,6 +62,12 @@ def gate_state(raw: typing.Any, offer_id: int, min_ppm: int) -> dict:
     if raw.get("found") is not True or _num(raw.get("offer_id")) != offer_id:
         base["why"] = "registry answer is not this offer"
         return base
+    proto = _addr(raw.get("protocol", ""))
+    if proto == "" or not isinstance(raw.get("incident"), str):
+        base["why"] = "registry answer has no protocol address or incident"
+        return base
+    base["protocol"] = proto
+    base["incident"] = clean_text(raw.get("incident", ""), 80)
     st = raw.get("status")
     bounty = _num(raw.get("bounty"))
     owed = _num(raw.get("owed"))
@@ -86,6 +97,7 @@ def gate_state(raw: typing.Any, offer_id: int, min_ppm: int) -> dict:
     fav = st == "SETTLED_FULL" or (st == "SETTLED_PARTIAL" and ppm >= min_ppm)
     return {"offer_id": offer_id, "state": st, "favorable": fav, "fraction_ppm": ppm, "bounty": str(bounty),
             "owed": str(owed), "paid": str(claimed), "refunded": str(back1 + back2), "claim_deadline": cd,
+            "protocol": proto, "incident": base["incident"],
             "why": "settled by the registry" + ("" if fav else "; below the gate's threshold" if st == "SETTLED_PARTIAL" else "")}
 
 
@@ -136,6 +148,20 @@ class SafeHarborGate(gl.contract.Contract):
     @gl.public.view
     def is_favorable(self, offer_id: int) -> bool:
         return self._read(_as_int(offer_id, 0))["favorable"] is True
+
+    @gl.public.view
+    def check_for(self, offer_id: int, protocol: str) -> typing.Any:
+        """check(), favorable only if the offer was opened by `protocol`."""
+        s = self._read(_as_int(offer_id, 0))
+        want = _addr(protocol)
+        if want == "" or s["protocol"] != want:
+            s["favorable"] = False
+            s["why"] = "the offer was not opened by the expected protocol" if want != "" else "bad protocol address"
+        return s
+
+    @gl.public.view
+    def is_favorable_for(self, offer_id: int, protocol: str) -> bool:
+        return self.check_for(offer_id, protocol)["favorable"] is True
 
     @gl.public.write
     def attest(self, offer_id: int) -> typing.Any:

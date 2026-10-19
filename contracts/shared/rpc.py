@@ -127,6 +127,8 @@ def project(tx: typing.Any, rc: typing.Any, hdr: typing.Any) -> typing.Any:
         amt = 0 if d == "0x" else _hex_int(d)
         if t1 == "" or t2 == "" or li < 0 or la == "" or amt < 0:
             return None
+        if t1[2:26] != "0" * 24 or t2[2:26] != "0" * 24:
+            continue        # not a canonical address topic: not an ERC-20 Transfer of an address
         logs.append({"i": li, "address": la, "from": "0x" + t1[26:], "to": "0x" + t2[26:], "amount": str(amt)})
     st = str(rc.get("status", "")).lower()
     return {"status": 1 if st == "0x1" else 0, "block": blk, "block_hash": bh, "time": ts,

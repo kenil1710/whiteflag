@@ -18,7 +18,8 @@ export function project(tx, rc, hdr) {
     from: lc(tx.from),
     to: tx.to ? lc(tx.to) : "",
     value: BigInt(tx.value).toString(),
-    logs: (rc.logs ?? []).filter((l) => lc(l.topics?.[0]) === TRANSFER_TOPIC && l.topics.length === 3)
+    logs: (rc.logs ?? []).filter((l) => lc(l.topics?.[0]) === TRANSFER_TOPIC && l.topics.length === 3
+      && lc(l.topics[1]).slice(2, 26) === "0".repeat(24) && lc(l.topics[2]).slice(2, 26) === "0".repeat(24))
       .map((l) => ({ i: parseInt(l.logIndex, 16), address: lc(l.address), from: "0x" + lc(l.topics[1]).slice(26),
         to: "0x" + lc(l.topics[2]).slice(26), amount: BigInt(l.data === "0x" ? 0 : l.data).toString() })),
   };
