@@ -177,5 +177,5 @@ table.ledger td.num, table.ledger th.num { text-align: right; font-variant-numer
 @media (prefers-reduced-motion: no-preference) {
   .rise { animation: rise 520ms cubic-bezier(.2, .7, .2, 1) both; }
   .bar > span { transition: width 900ms cubic-bezier(.2, .7, .2, 1); }
-  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes rise { from { transform: translateY(6px); } to { transform: none; } }
 }

@@ -24,7 +24,53 @@
       "ok": true,
       "reason": "credited�\u000150000000000000000\u0002ok\b\u0006reason�\u0001RECOVERY_IS_EXPLOITER",
       "hash": "0x9d6bdc6f4b3c7780c65b85f19eb9a83ecd181ff28567f9b92e567e7c13c82549"
+    },
+    {
+      "label": "withdraw-refund",
+      "fn": "withdraw_refund",
+      "args": [],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "ok\u0010\twithdrawn�\u000150000000000000000",
+      "hash": "0xc9bb0ebdfb63367ddab3b3ea07b0fdfbe6ea64e54497332bb698a1c055c240a5"
+    },
+    {
+      "label": "A-full",
+      "fn": "create_offer",
+      "args": [
+        "demo-seneca-full",
+        "Seneca (demo: full return)",
+        "[\"ethereum\"]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0x94641c01a4937f2c8ef930580cf396142a2942dc\"},{\"chain\":\"ethereum\",\"address\":\"0x5217c6923a4efc5bcf53d9a30ec4b0089f080ed0\"},{\"chain\":\"ethereum\",\"address\":\"0xe83b072433f025ef06b73e0caa3095133e7c5bd0\"},{\"chain\":\"ethereum\",\"address\":\"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\"}]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0xb7af0aa318706d94469d8d851015f9aa12d9c53a\"}]",
+        "[{\"chain\":\"ethereum\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"1536993670758298535257\",\"weight\":\"300000\"}]",
+        2000,
+        1709165843,
+        1792497328,
+        "EXPLOITER_OR_NAMED",
+        "{\"demo\":true,\"note\":\"stolen set to exactly what came back, so 100% settles early\"}"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\u0006bounty�\u0001100000000000000000\boffer_id\u0011\u0002ok\u0010\tsettle_at���5",
+      "hash": "0x225248c63c3852f325dcc251d16436e973f95779a42838174ac2576f5e1400ba"
     }
   ],
-  "payouts": []
+  "payouts": [
+    {
+      "label": "withdraw-refund",
+      "tx": "0xc9bb0ebdfb63367ddab3b3ea07b0fdfbe6ea64e54497332bb698a1c055c240a5",
+      "status": "FINALIZED",
+      "payee": "0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+      "amount": "50000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "-50000000000000000",
+      "payee_delta": "49873693999999177",
+      "payee_paid_fee": true,
+      "net_fee": "126306000000823",
+      "balances_ok": true,
+      "balances_why": ""
+    }
+  ]
 }

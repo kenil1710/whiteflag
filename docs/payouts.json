@@ -1,4 +1,20 @@
 {
   "registry": "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2",
-  "payouts": []
+  "payouts": [
+    {
+      "label": "withdraw-refund",
+      "tx": "0xc9bb0ebdfb63367ddab3b3ea07b0fdfbe6ea64e54497332bb698a1c055c240a5",
+      "status": "FINALIZED",
+      "payee": "0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+      "amount": "50000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "-50000000000000000",
+      "payee_delta": "49873693999999177",
+      "payee_paid_fee": true,
+      "net_fee": "126306000000823",
+      "balances_ok": true,
+      "balances_why": ""
+    }
+  ]
 }

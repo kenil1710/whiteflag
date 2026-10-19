@@ -17,15 +17,27 @@ export function plain(v: unknown): unknown {
   return v;
 }
 
+/** Studio meters reads per IP per minute: identical reads within 15 s are served once per instance. */
+const memo = new Map<string, { at: number; value: unknown }>();
+const MEMO_MS = 15_000;
+
 export async function view<T>(address: string, fn: string, args: unknown[] = []): Promise<T> {
+  const key = `${address.toLowerCase()}|${fn}|${JSON.stringify(args)}`;
+  const hit = memo.get(key);
+  if (hit && Date.now() - hit.at < MEMO_MS) return hit.value as T;
   let last: unknown;
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 5; i++) {
     try {
       const r = await client.readContract({ address: address as `0x${string}`, functionName: fn, args: args as never });
-      return (typeof r === "string" ? JSON.parse(r) : plain(r)) as T;
+      const value = (typeof r === "string" ? JSON.parse(r) : plain(r)) as T;
+      if (memo.size > 2000) memo.clear();
+      memo.set(key, { at: Date.now(), value });
+      return value;
     } catch (e) {
       last = e;
-      await new Promise((res) => setTimeout(res, 900 * (i + 1)));
+      // a per-minute rate limit needs the minute to roll over; other noise does not
+      const limited = /rate limit|-32029|429/i.test(String((e as Error)?.message ?? e));
+      await new Promise((res) => setTimeout(res, limited ? 12_000 : 900 * (i + 1)));
     }
   }
   throw last;
