@@ -9,8 +9,8 @@
     },
     "0xa06816b6cf6aa72c64027a84dc04bfb708935aa2": {
       "cursor": 0,
-      "scans_completed": 3,
-      "last_scan_at": 1792414240,
+      "scans_completed": 4,
+      "last_scan_at": 1792422335,
       "total": 8
     }
   },
@@ -169,5 +169,5 @@
     "0x461399B65edA1C0634a47A658d34624eC4C24a31",
     "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2"
   ],
-  "saved_at": "2026-10-19T15:05:34.271Z"
+  "saved_at": "2026-10-19T15:05:35.092Z"
 }
