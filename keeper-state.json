@@ -15,13 +15,37 @@
     }
   },
   "actions": {},
-  "runs": [],
+  "runs": [
+    {
+      "started_at": 1792410218,
+      "finished_at": 1792410220,
+      "resumed": 0,
+      "scanned": 6,
+      "due": 0,
+      "submitted": 0,
+      "done": 0,
+      "pending": 0,
+      "failed": 0,
+      "errors": []
+    }
+  ],
   "unprocessed": [],
-  "last_run": null,
+  "last_run": {
+    "started_at": 1792410218,
+    "finished_at": 1792410220,
+    "resumed": 0,
+    "scanned": 6,
+    "due": 0,
+    "submitted": 0,
+    "done": 0,
+    "pending": 0,
+    "failed": 0,
+    "errors": []
+  },
   "keeper": "0x41d0b3fa573192aba06B076aF22AA90ba6c6f8fD",
   "registries_watched": [
     "0x461399B65edA1C0634a47A658d34624eC4C24a31",
     "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2"
   ],
-  "saved_at": "2026-10-19T11:43:40.661Z"
+  "saved_at": "2026-10-19T11:43:40.674Z"
 }
