@@ -12,7 +12,7 @@ After a hack, protocols offer bounties in on-chain messages that nobody can chec
 
 ## Review verification (457/500 characters)
 
-Live: whiteflag-ledger.vercel.app (/verify checks source byte for byte). Registry 0x461399B65edA1C0634a47A658d34624eC4C24a31, demo 0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2, gates 0x54035218daFDf7fB68F01cF36E70044f51878c75, 0x886095700276BA236Fc00cfd710AEb2f2d594E37 on Studio Dev. Repo github.com/kenil1710/whiteflag: sh test/run_offline.sh (387 tests), node tools/verify_source.mjs, node tools/final_check.mjs. docs/SEEDS.md links every proof and payout.
+Live: whiteflag-ledger.vercel.app (/verify checks source byte for byte). Registry 0x461399B65edA1C0634a47A658d34624eC4C24a31, demo 0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2, gates 0x54035218daFDf7fB68F01cF36E70044f51878c75, 0x886095700276BA236Fc00cfd710AEb2f2d594E37 on Studio Dev. Repo github.com/kenil1710/whiteflag: sh test/run_offline.sh (389 tests), node tools/verify_source.mjs, node tools/final_check.mjs. docs/SEEDS.md links every proof and payout.
 
 ## Addresses
 
