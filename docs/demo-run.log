@@ -4,3 +4,103 @@ refused-create: create_offer ACCEPTED credited�50000000000000000okreason�
 withdraw-refund: withdraw_refund ACCEPTED ok	withdrawn�50000000000000000 0xc9bb0ebdfb63367ddab3b3ea07b0fdfbe6ea64e54497332bb698a1c055c240a5
   PAYOUT withdraw-refund: 50000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -50000000000000000, payee Δ 49873693999999177 BALANCES OK
 A-full: create_offer ACCEPTED &bounty�100000000000000000offer_idok	settle_at���5 0x225248c63c3852f325dcc251d16436e973f95779a42838174ac2576f5e1400ba
+A-proofs: submit_proofs ACCEPTED &fraction_ppm���offer_idokresults>chainDethereumcredits6amount�537000000000000000000from�0x94641c01a4937f2c8ef930580cf396142a2942dckey�ethereum 0x8f71983c51f04faecbf0a9cd7537f00ad1ef13d499ec00755be23018dd368f60
+  A returned 100% (settle_at 1792497388, a day away)
+A-settle-early: settle ACCEPTED Fclaim_deadline����5fraction_ppm���offer_idokowed�100000000000000000	refund_torefunded0statusdSETTLED_FULL 0xb355b37d390cc9818f3844d759dd9c8aa7d3db81b03c70a76b2063ba31e18209
+  A SETTLED_FULL owed 100000000000000000
+A-claim-to-payee: claim ACCEPTED &offer_idokpaid�100000000000000000to�0x0f893accbf43bd4459955fc33005b268b99b074f 0xd072e27dc4f0f5f22499006b6dd14a68f7d75619a701dc81a89cc4193cec4d69
+  PAYOUT A-claim-to-payee: 100000000000000000 wei to 0x0f893accbf43bd4459955fc33005b268b99b074f: FINALIZED, delivered=true, registry Δ -100000000000000000, payee Δ 100000000000000000 BALANCES OK
+B-partial: create_offer ACCEPTED &bounty�100000000000000000offer_idok	settle_at����5 0x1bf581169aa4587ee28e429491a537187a3afb277543eb620ea1d8f8aa29e542
+B-proof: submit_proofs ACCEPTED &fraction_ppm���offer_idokresults>chainDarbitrumcredits6amount�5494796166294325551571952from�0xdf3340a436c27655ba62f8281565c9925c3a5221key�arbi 0xcd2741f12e7865af33c40885dc64bd3af191576a1986192f1fbb25de18ba4ecc
+  waiting 30 s for B's settle time
+B-settle-refund: settle ACCEPTED Fclaim_deadline����5fraction_ppm���offer_idokowed�52357340525981060	refund_to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07refunded�47642659474018940s 0xca6587d498962db5d132b823e7615747834df30bf9be2705b7da64eed8b5a866
+  PAYOUT B-settle-refund: 47642659474018940 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -47642659474018940, payee Δ 47642659474018940 BALANCES OK
+  B SETTLED_PARTIAL 52.3573% owed 52357340525981060
+B-claim-by-stranger: claim ACCEPTED REFUSED: NOT_AN_EXPLOITER_ADDRESS 0x71e10894643a1a5ccb12e2bc63f356b0e78e05bfcfdb1950e11cfcf4b8a4e25d
+  stranger's claim: refused: REFUSED: NOT_AN_EXPLOITER_ADDRESS
+B-claim-named-under-EXPLOITER_ONLY: claim ACCEPTED REFUSED: PAYOUT_RULE_IS_EXPLOITER_ONLY 0x44f6ca72f22fa94c6540b553e1407ddcd5a4186d68148a79fbda85f9d61626f4
+  named payout under EXPLOITER_ONLY: refused: REFUSED: PAYOUT_RULE_IS_EXPLOITER_ONLY
+B-claim-to-self: claim ACCEPTED &offer_idokpaid�52357340525981060to�0x346a860297878340d4253e503e36d0b01ebe695f 0xa078541c42bddba538ae64e2945542f4041770ea3efabf78ca90cd811ca50049
+  PAYOUT B-claim-to-self: 52357340525981060 wei to 0x346a860297878340d4253e503e36d0b01ebe695f: FINALIZED, delivered=true, registry Δ -52357340525981060, payee Δ 52231033775980237 BALANCES OK
+C-none: create_offer ACCEPTED &bounty�100000000000000000offer_id!ok	settle_at����5 0x320ea89a0d257905930749caac7fa3511406670aa38a007dae6849224da8e3ab
+  waiting 51 s for C's settle time
+  waiting 21 s for C's settle time
+C-settle-refund-all: settle ACCEPTED Fclaim_deadlinefraction_ppmoffer_id!okowed0	refund_to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07refunded�100000000000000000statusdSETTLED_NONE 0x0bf8c65b9e5f4e0e7338828642978647ae9e9569487ddd63a9f5f46ce30b2544
+  PAYOUT C-settle-refund-all: 100000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -100000000000000000, payee Δ 100000000000000000 BALANCES OK
+C-claim-nothing-owed: claim ACCEPTED REFUSED: NOTHING_OWED 0x921c2dca16763b440f53b04374368ba184c93f89c6674e966203544ece290004
+  claim on SETTLED_NONE: refused: REFUSED: NOTHING_OWED
+D-refund-after-window: create_offer ACCEPTED &bounty�100000000000000000offer_id)ok	settle_at����5 0x977f6fbfc39d27d3e65aa5bb99744f68445254b3e0aae98f1c29db8c1b7093ba
+D-proofs: submit_proofs ACCEPTED &fraction_ppm���offer_id)okresults>chainDethereumcredits6amount�1000000000000000000000from�0xdce5d6b41c32f578f875efffc0d422c57a75d7d8key�ethereu 0x8dd61f64efb6acb71e1d4f5978298fe9cf4874eaf4c9f3b758f730491d4acf1b
+  waiting 30 s for D's settle time
+D-settle-refund-remainder: settle ACCEPTED Fclaim_deadline���5fraction_ppm���offer_id)okowed�31110498759988977	refund_to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07refunded�68889501240011023st 0xdff8d83bbf0ad1b8a6e9e5f3219bdb84a8a9c661d03c63cf06a37c50615f6525
+  PAYOUT D-settle-refund-remainder: 68889501240011023 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -68889501240011023, payee Δ 68889501240011023 BALANCES OK
+D-refund-inside-window: refund_unclaimed ACCEPTED REFUSED: CLAIM_WINDOW_OPEN_UNTIL_1792411678 0x3a6b39dc4c42e199d9abb40950b57d9a2cb795f319a2262668a143566c72afa3
+  refund inside the window: refused: REFUSED: CLAIM_WINDOW_OPEN_UNTIL_1792411678
+  waiting 126 s for D's claim window to close
+  waiting 96 s for D's claim window to close
+  waiting 66 s for D's claim window to close
+  waiting 35 s for D's claim window to close
+  waiting 5 s for D's claim window to close
+D-claim-after-window: claim ACCEPTED REFUSED: CLAIM_WINDOW_CLOSED 0x747f4b0b22a5aa6a18ebe172a8cdf824434c8ec7c76b8e7c818d8e1386fd90ee
+  claim after the window: refused: REFUSED: CLAIM_WINDOW_CLOSED
+D-refund-unclaimed: refund_unclaimed ACCEPTED &offer_id)okrefunded�31110498759988977to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07 0xeb23ee0936b293fc0aeb42c75804ad31ba070e4c1de5fd18bbf597b2a8061b35
+  PAYOUT D-refund-unclaimed: 31110498759988977 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -31110498759988977, payee Δ 31110498759988977 BALANCES OK
+E: fresh Arbitrum tx 0xdcbd48d1868d03d20402369095e2f99f96010656f0a2b93a2a825212b3fb5616 in block 516280641 from 0xf98211636ee0f06d61e15ffa0b2afd7fbfd0340e to 0x7d740c5fd0a77afb32e7c68668a6616fd9a883fd
+E-rejections: create_offer ACCEPTED &bounty�100000000000000000offer_id1ok	settle_at����5 0xd08a901d480ac62ed41aebf85e956076f4340cdc979284a1e514c840dfffe7d9
+E-batch-1: submit_proofs ACCEPTED &fraction_ppmoffer_id1okresults->chainDarbitrumcreditsdetailproof_idQreasontAFTER_DEADLINEstatusDREJECTEDtx�0xdcbd48d1868d03d20402369095e2f99f96 0x5929bee4539cd20908dc19984c0da40b3a473ab53c4c2324409e4aeda90a10f5
+E-batch-2: submit_proofs ACCEPTED &fraction_ppmoffer_id1okresults%>chainDethereumcreditsdetailproof_idyreason�NO_RETURN_TO_RECOVERYstatusDREJECTEDtx�0xd83072cfc1126e23f18d13529c 0xd09697872204e0bf2c34dc2eeb6d4d7f5f353890c9382df980dfe959d4726b85
+E-duplicate: submit_proofs ACCEPTED REFUSED: ALREADY_COUNTED 0x2b71dc0b5af8dd04d938eb43bc6a33f4e9dca15243bd81f9bfd1b51f9581ba5e
+  resubmitting a counted transaction: refused before reading: REFUSED: ALREADY_COUNTED
+E-chain-not-in-offer: submit_proofs ACCEPTED REFUSED: CHAIN_NOT_IN_OFFER 0xb1b5352f1d4f668e0de5a031c3fb4b2690274d76307c3b620d1ea251eeaa4ae8
+  unsupported chain: refused: REFUSED: CHAIN_NOT_IN_OFFER
+E-extend-deadline: extend_deadline ACCEPTED &deadline��ճ2offer_id1ok	settle_at����5 0xcdedc1170aca6ae63984e5140893f1db7d49c9c078c87ee124b3214911524928
+E-extend-by-stranger: extend_deadline ACCEPTED REFUSED: ONLY_THE_PROTOCOL 0xa11783ad303695b9af8ce4bf3c70240d2db7b871a13811b875cc310e0a937b3c
+  extension by a stranger: refused: REFUSED: ONLY_THE_PROTOCOL
+E-add-recovery: add_recovery ACCEPTED offer_id1ok
+recoveries 0x3cab509726f50cde334f2ccd2104c8ae816bf95140124e17804f7195c0977833
+  E proof #10 arbitrum 0xdcbd48d186: REJECTED AFTER_DEADLINE
+  E proof #11 ethereum 0x7ad3111bb6: REJECTED TX_FAILED
+  E proof #12 ethereum 0x431103213d: REJECTED BEFORE_OFFER_START
+  E proof #13 ethereum 0xdbf1d8dca9: REJECTED AFTER_DEADLINE
+  E proof #14 ethereum 0xab7f14e2b7: REJECTED AFTER_DEADLINE
+  E proof #15 ethereum 0xd83072cfc1: REJECTED NO_RETURN_TO_RECOVERY
+  E proof #16 ethereum 0x4197ed0ef9: REJECTED NO_RETURN_TO_RECOVERY
+  E proof #17 ethereum 0xababababab: REJECTED TX_NOT_FOUND
+  E proof #18 ethereum 0x25bc0a2573: COUNTED
+gate check(999) expected NO_OFFER: NO_OFFER, favorable false, 0%, why: the registry has no such offer
+gate check(999) expected NO_OFFER: NO_OFFER, favorable false, 0%, why: the registry has no such offer
+gate-attest-NO_OFFER: attest ACCEPTED vattestation_id	attested_at����5bounty0claim_deadline	favorablefraction_ppmincidentoffer_id�>owed0paid0protocolrefunded0stateDNO_OFFERwhy� 0x1aad3a335692c8bc851c28047535bcf469b8a00739dfedcee7ee1d55ae95f886
+gate check(6) expected OPEN: OPEN, favorable false, 0%, why: the offer is open; nothing is settled
+gate-attest-OPEN: attest ACCEPTED vattestation_idattested_at����5bounty�100000000000000000claim_deadline	favorablefraction_ppmincident|demo-rejectionsoffer_id1owed0paid0protocol 0x09d64d95c15cd26429aef39306ccc11647794ba57aa0ae8d149a84217d1ae7d5
+gate check(2) expected SETTLED_FULL: SETTLED_FULL, favorable true, 100%, why: settled by the registry
+gate-attest-SETTLED_FULL: attest ACCEPTED vattestation_idattested_at����5bounty�100000000000000000claim_deadline����5	favorablefraction_ppm���incident�demo-seneca-fulloffer_idowed�1000000 0x590a4544b34891bc7a1bbe89b2671827e06beaaa4a893cb9b3919dc910a74d63
+gate check(3) expected SETTLED_PARTIAL: SETTLED_PARTIAL, favorable false, 52.3573%, why: settled by the registry; below the gate's threshold
+gate-attest-SETTLED_PARTIAL: attest ACCEPTED vattestation_id!attested_at����5bounty�100000000000000000claim_deadline����5	favorablefraction_ppm���incident�demo-gmx-partialoffer_idowed�5235734 0xed0faedac013fc131192df5d4ae8f908e0aecdefec63bd637580494fea46f91e
+gate check(4) expected SETTLED_NONE: SETTLED_NONE, favorable false, 0%, why: settled by the registry
+gate-attest-SETTLED_NONE: attest ACCEPTED vattestation_id)attested_at����5bounty�100000000000000000claim_deadline	favorablefraction_ppmincidentldemo-uwu-noneoffer_id!owed0paid0protocol� 0x721070c839f52a891e833191b71c62f4b634445931eca70d06db9cb0dbc9db45
+gate check_for(A, stranger) favorable false (the offer was not opened by the expected protocol); check_for(A, protocol) favorable true
+E-settle-refund: settle ACCEPTED Fclaim_deadlineقµ5fraction_ppmoffer_id1okowed\50000000000	refund_to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07refunded�99999950000000000status|SETTLE 0x453cc995443f7cc6549b421122bb9bfab352e71fc58c76a7289c6d48afb654ca
+  PAYOUT E-settle-refund: 99999950000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -99999950000000000, payee Δ 99999950000000000 BALANCES OK
+E-claim-to-payee: claim ACCEPTED &offer_id1okpaid\50000000000to�0x0f893accbf43bd4459955fc33005b268b99b074f 0x10b42e5459d083fb3f572e0d4d389b4b13213d49c4fafcdfeaf1692c92261d15
+  PAYOUT E-claim-to-payee: 50000000000 wei to 0x0f893accbf43bd4459955fc33005b268b99b074f: FINALIZED, delivered=true, registry Δ -50000000000, payee Δ 50000000000 BALANCES OK
+F: Ethereum tx 0xf66505d80223f6d37239f66cacd40df1807f4d01ee46031196aa0f46c0becd02 in block 26226682 (latest, not finalized) from 0x11111215b72e894c60f24e91ac2c8ccb1d373911 to 0x672061b75f770331b0c7c2a566a9ac0a9ba331d2
+F-not-finalized: create_offer ACCEPTED &bounty�100000000000000000offer_id9ok	settle_at��µ5 0xd5bbaa9ccf37c50c6035b8711165a04ab6cb3330f3be66bb49b821ab27c1a300
+F-proof: submit_proofs ACCEPTED &fraction_ppmoffer_id9okresults>chainDethereumcreditsdetailproof_id�reasonlNOT_FINALIZEDstatusDREJECTEDtx�0xf66505d80223f6d37239f66cacd40df180 0xb5529a2b6e52d252882be4b8a44f55d05f9239561822a7acfd2e23c530aa2867
+G-sender-not-exploiter: create_offer ACCEPTED &bounty�100000000000000000offer_idAok	settle_at��µ5 0x7026a801592a7d62ca07a49ac694d431fde897244ba264b73368aa40ea812af0
+G-proof: submit_proofs ACCEPTED &fraction_ppmoffer_idAokresults>chainDethereumcreditsdetailproof_id�reason�SENDER_NOT_EXPLOITERstatusDREJECTEDtx�0xab7f14e2b75e70c8b136c8facb 0x55cb7899aa57f94ea0c62972124128d8cac9bc79a736ca75a26cca5bacb8770d
+  offer 7 proof #19 0xf66505d802: REJECTED NOT_FINALIZED
+  offer 8 proof #20 0xab7f14e2b7: REJECTED SENDER_NOT_EXPLOITER
+  waiting 232 s for F's settle time
+  waiting 202 s for F's settle time
+  waiting 172 s for F's settle time
+  waiting 142 s for F's settle time
+  waiting 112 s for F's settle time
+  waiting 82 s for F's settle time
+  waiting 52 s for F's settle time
+  waiting 22 s for F's settle time
+F-settle-refund-all: settle ACCEPTED Fclaim_deadlinefraction_ppmoffer_id9okowed0	refund_to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07refunded�100000000000000000statusdSETTLED_NONE 0x06a8f608598fb8db1f92f3678ea0697d320e713987f802f27830950b25d89ac8
+  PAYOUT F-settle-refund-all: 100000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -100000000000000000, payee Δ 100000000000000000 BALANCES OK
+G-settle-refund-all: settle ACCEPTED Fclaim_deadlinefraction_ppmoffer_idAokowed0	refund_to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07refunded�100000000000000000statusdSETTLED_NONE 0x5ed9ba28e11fbf99c9b9d4679581e48d7f25234e63ed13f9d9911ed48e8ef9ff
+  PAYOUT G-settle-refund-all: 100000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -100000000000000000, payee Δ 100000000000000000 BALANCES OK
+
+registry eth_getBalance 0 wei; held 0; payouts 11, delivered 11, balances ok 11

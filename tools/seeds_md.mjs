@@ -89,7 +89,7 @@ if (demo) {
   L.push("", "Refused before reading (the call reverts, nothing recorded):", "");
   for (const s of demo.steps.filter((s) => !s.ok && /claim|duplicate|chain-not|extend-by|refund-inside/.test(s.label))) L.push(`- ${s.label}: \`${(s.reason || "").slice(0, 90)}\` ([tx](${ST}/tx/${s.hash}))`);
   L.push("", "### Gate states", "", "| Expected | Offer | State | Favorable |", "|---|---|---|---|");
-  for (const g of demo.gate ?? []) L.push(`| ${g.expected} | ${g.offer ?? "A"} | ${g.state ?? "-"} | ${g.favorable} |`);
+  for (const g of demo.gate_states ?? []) L.push(`| ${g.expected} | ${g.offer ?? "A"} | ${g.state ?? "-"} | ${g.favorable} |`);
   L.push("", "### Payouts, each verified at the recipient", "", "| Payout | Amount (GEN) | Recipient | Transaction | Delivered | Registry Δ | Recipient Δ |", "|---|---|---|---|---|---|---|");
   for (const p of payouts.payouts) L.push(`| ${p.label} | ${gen(p.amount)} | \`${short(p.payee)}\` | [${short(p.tx)}](${ST}/tx/${p.tx}) | ${p.delivered && p.balances_ok ? "yes" : "NO: " + (p.why || p.balances_why)} | ${gen(p.registry_delta)} | ${gen(p.payee_delta)}${p.payee_paid_fee ? " (paid the fee)" : ""} |`);
   const balD = await balanceOf(regDemo);

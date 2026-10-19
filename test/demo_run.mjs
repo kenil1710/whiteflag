@@ -34,7 +34,7 @@ const G = client({ role: "stranger", address: gate });
 const logPath = new URL("docs/demo-run.log", root);
 writeFileSync(logPath, `# demo run on ${reg} (gate ${gate}), started ${new Date().toISOString()}\n`);
 const log = (s) => { console.log(s); appendFileSync(logPath, s + "\n"); };
-const run = { registry: reg, gate, started_at: new Date().toISOString(), offers: {}, steps: [], payouts: [] };
+const run = { registry: reg, gate_contract: gate, started_at: new Date().toISOString(), offers: {}, steps: [], payouts: [] };
 const save = () => {
   writeFileSync(new URL("docs/demo-run.json", root), JSON.stringify(run, (k, v) => (typeof v === "bigint" ? v.toString() : v), 2) + "\n");
   writeFileSync(new URL("docs/payouts.json", root), JSON.stringify({ registry: reg, payouts: run.payouts }, (k, v) => (typeof v === "bigint" ? v.toString() : v), 2) + "\n");
