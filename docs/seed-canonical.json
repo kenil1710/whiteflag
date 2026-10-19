@@ -1,0 +1,18 @@
+{
+  "registry": "0x461399B65edA1C0634a47A658d34624eC4C24a31",
+  "protocol": "0xa774B496796ADBB4Cf6Bf3Fa9Dc23BEFD04A1A07",
+  "incidents": {
+    "gmx-v1-glp-2025": {
+      "case_no": 1,
+      "name": "GMX V1 GLP",
+      "txs": [
+        {
+          "fn": "create_offer",
+          "hash": "0x888dbd9433e2834f19e2631e83ee295ae1d790797edb197234786c2c6d47e069",
+          "status": "ACCEPTED"
+        }
+      ],
+      "offer_id": 1
+    }
+  }
+}

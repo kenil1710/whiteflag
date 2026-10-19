@@ -1,0 +1,32 @@
+name: keeper
+on:
+  schedule:
+    - cron: "11 * * * *"
+  workflow_dispatch: {}
+concurrency:
+  group: keeper
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  keep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --prefix test
+      - name: Check out the keeper-state branch (durable checkpoints)
+        run: |
+          git fetch origin keeper-state:keeper-state
+          git worktree add state keeper-state
+          git -C state config user.name whiteflag-keeper
+          git -C state config user.email keeper@users.noreply.github.com
+      - run: node tools/keeper.mjs --state=state --push --max=25 --wait=480
+        env:
+          WHITEFLAG_KEEPER_KEY: ${{ secrets.WHITEFLAG_KEEPER_KEY }}
+      - name: Push the final checkpoint
+        if: always()
+        run: git -C state push -q origin HEAD:keeper-state || true
