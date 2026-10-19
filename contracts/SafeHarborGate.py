@@ -149,9 +149,7 @@ class SafeHarborGate(gl.contract.Contract):
     def is_favorable(self, offer_id: int) -> bool:
         return self._read(_as_int(offer_id, 0))["favorable"] is True
 
-    @gl.public.view
-    def check_for(self, offer_id: int, protocol: str) -> typing.Any:
-        """check(), favorable only if the offer was opened by `protocol`."""
+    def _read_for(self, offer_id: typing.Any, protocol: typing.Any) -> dict:
         s = self._read(_as_int(offer_id, 0))
         want = _addr(protocol)
         if want == "" or s["protocol"] != want:
@@ -160,8 +158,13 @@ class SafeHarborGate(gl.contract.Contract):
         return s
 
     @gl.public.view
+    def check_for(self, offer_id: int, protocol: str) -> typing.Any:
+        """check(), favorable only if the offer was opened by `protocol`."""
+        return self._read_for(offer_id, protocol)
+
+    @gl.public.view
     def is_favorable_for(self, offer_id: int, protocol: str) -> bool:
-        return self.check_for(offer_id, protocol)["favorable"] is True
+        return self._read_for(offer_id, protocol)["favorable"] is True
 
     @gl.public.write
     def attest(self, offer_id: int) -> typing.Any:
