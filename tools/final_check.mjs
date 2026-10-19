@@ -15,6 +15,7 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { client, deployments, balanceOf, finalized, payoutDelivered } from "./lib/wf.mjs";
+import { CHAINS } from "./lib/chains.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
 const rd = (p) => readFileSync(root + p, "utf8");
@@ -51,7 +52,9 @@ const sh = (cmd, args) => spawnSync(cmd, args, { cwd: root, encoding: "utf8", ma
   const BROWSER_ONLY = /(etherscan\.io|arbiscan\.io|medium\.com|theblock\.co|cointelegraph\.com|decrypt\.co|dlnews\.com|rekt\.news|merklescience\.com|unchainedcrypto\.com|x\.com|twitter\.com)/;
   const docs = ["README.md", ...readdirSync(root + "docs").filter((f) => f.endsWith(".md")).map((f) => "docs/" + f)];
   const urls = new Set();
-  for (const f of docs) for (const m of rd(f).matchAll(/https?:\/\/[^\s)<>"'`|\]]+/g)) urls.add(m[0].replace(/[.,;:]+$/, ""));
+  // JSON-RPC endpoints answer POSTs only; tools/feasibility.mjs reads them for real
+  const RPCS = new Set(Object.values(CHAINS).flatMap((c) => c.rpcs));
+  for (const f of docs) for (const m of rd(f).matchAll(/https?:\/\/[^\s)<>"'`|\]*]+/g)) { const u = m[0].replace(/[.,;:]+$/, ""); if (!RPCS.has(u)) urls.add(u); }
   const bad = [], browser = [];
   let ok = 0;
   const list = [...urls];
