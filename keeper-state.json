@@ -127,6 +127,20 @@
       "submitted_at": 1792426057,
       "verified_at": 1792426102,
       "finalized_hash": "0xe63ede0e0cc14ed14370d09392261cc12670cc8379f76733a76b4b37be6448ab"
+    },
+    "0x461399b65eda1c0634a47a658d34624ec4c24a31:3:REFUND_UNCLAIMED": {
+      "key": "0x461399b65eda1c0634a47a658d34624ec4c24a31:3:REFUND_UNCLAIMED",
+      "registry": "0x461399b65eda1c0634a47a658d34624ec4c24a31",
+      "offer_id": 3,
+      "action": "REFUND_UNCLAIMED",
+      "status": "SUBMITTED",
+      "attempts": 0,
+      "hashes": [
+        "0x31840f92a908b6d36fb864bf128587415d781f33ae5d6202174b4cf4fcb6ad6a"
+      ],
+      "first_seen_at": 1792426047,
+      "hash": "0x31840f92a908b6d36fb864bf128587415d781f33ae5d6202174b4cf4fcb6ad6a",
+      "submitted_at": 1792426108
     }
   },
   "runs": [
@@ -197,5 +211,5 @@
     "0x461399B65edA1C0634a47A658d34624eC4C24a31",
     "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2"
   ],
-  "saved_at": "2026-10-19T16:08:23.371Z"
+  "saved_at": "2026-10-19T16:08:28.330Z"
 }
