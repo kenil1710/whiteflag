@@ -31,6 +31,20 @@
       "last_error": "read failed: Requested resource not found.\n\nDetails: Contract 0x461399b65eda1c0634a47a658d34624ec4c24a31 not found\nVersion: viem@2.57.7",
       "verified_at": 1792414236,
       "finalized_hash": "0x17c694713fbbfcbb95b69eacb0b3a55b08af1876dc0d750f99a00f7f233eb61c"
+    },
+    "0x461399b65eda1c0634a47a658d34624ec4c24a31:1:SETTLE": {
+      "key": "0x461399b65eda1c0634a47a658d34624ec4c24a31:1:SETTLE",
+      "registry": "0x461399b65eda1c0634a47a658d34624ec4c24a31",
+      "offer_id": 1,
+      "action": "SETTLE",
+      "status": "SUBMITTED",
+      "attempts": 0,
+      "hashes": [
+        "0x9bba0b0bdea0aa7ae315148c405e7cbcd274b179b056bb83c1ed1c3af8d54d3c"
+      ],
+      "first_seen_at": 1792422080,
+      "hash": "0x9bba0b0bdea0aa7ae315148c405e7cbcd274b179b056bb83c1ed1c3af8d54d3c",
+      "submitted_at": 1792422090
     }
   },
   "runs": [
@@ -89,5 +103,5 @@
     "0x461399B65edA1C0634a47A658d34624eC4C24a31",
     "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2"
   ],
-  "saved_at": "2026-10-19T12:50:40.816Z"
+  "saved_at": "2026-10-19T15:01:30.094Z"
 }
