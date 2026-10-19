@@ -24,6 +24,9 @@ export function emptyState() {
   return { version: VERSION, registries: {}, actions: {}, runs: [], unprocessed: [], last_run: null };
 }
 
+/** State keys hold lowercase addresses; Studio finds a contract only by its checksummed address. */
+export const canonicalAddress = (list, a) => list.find((r) => r.toLowerCase() === String(a).toLowerCase()) ?? a;
+
 export const keyOf = (registry, offerId, action) => `${registry.toLowerCase()}:${offerId}:${action}`;
 
 /** Did the offer reach the state this action produces? */
@@ -67,7 +70,13 @@ export async function runKeeper({ chain, store, registries, log = () => {}, maxA
     // a transaction for this action reached a terminal state: decide what it means
     const now = chain.now();
     let offer = null;
-    try { offer = await chain.getOffer(a.registry, a.offer_id); } catch (e) { a.last_error = "read failed: " + e.message; return; }
+    try { offer = await chain.getOffer(a.registry, a.offer_id); } catch (e) {
+      // the transaction is known; only the verifying read failed: keep it pending, resumed next run
+      a.last_error = "read failed: " + String(e.message).slice(0, 160);
+      run.pending++;
+      note(a.key, `${a.hash} reached ${tx?.statusName ?? "an unknown state"}; verifying read failed, retried next run`);
+      return;
+    }
     if (tx?.statusName === "FINALIZED" && tx.ok && effectVisible(a.action, offer)) {
       a.status = "DONE"; a.verified_at = now; a.finalized_hash = a.hash; run.done++;
       log(`DONE ${a.key} ${a.hash} (finalized, executed, verified by read)`);

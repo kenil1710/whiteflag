@@ -2,7 +2,7 @@
 // scripted transaction lifecycle, outages and crashes.   node --test test/keeper.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runKeeper, emptyState, keyOf, stillDue, effectVisible, backoffS, MAX_ATTEMPTS, PAGE } from "../tools/lib/keeper_core.mjs";
+import { runKeeper, emptyState, keyOf, stillDue, effectVisible, backoffS, canonicalAddress, MAX_ATTEMPTS, PAGE } from "../tools/lib/keeper_core.mjs";
 
 const REG = "0x" + "aa".repeat(20);
 const REG2 = "0x" + "bb".repeat(20);
@@ -463,4 +463,31 @@ test("state starts empty and versioned", () => {
 
 test("keys are stable and lowercase", () => {
   assert.equal(keyOf("0xAB", 3, "SETTLE"), "0xab:3:SETTLE");
+});
+
+test("a failed verifying read keeps the action pending and listed, and is resolved next run", async () => {
+  const f = new Fake(1), s = memStore();
+  const c = f.chain();
+  const og = c.getOffer.bind(c);
+  let fail = false;
+  c.getOffer = async (...a) => { if (fail) throw new Error("not found"); return og(...a); };
+  const ow = c.wait.bind(c);
+  c.wait = async (h) => { const t = await ow(h); fail = true; return t; };
+  await runKeeper({ chain: c, store: s, registries: [REG] });
+  const a = s.state.actions[keyOf(REG, 1, "SETTLE")];
+  assert.equal(a.status, "SUBMITTED");
+  assert.ok(s.state.unprocessed.some((u) => u.key === a.key && /verifying read failed/.test(u.why)));
+  assert.equal(s.state.last_run.pending, 1);
+  fail = false;
+  c.wait = ow;
+  await runKeeper({ chain: c, store: s, registries: [REG] });
+  assert.equal(s.state.actions[keyOf(REG, 1, "SETTLE")].status, "DONE");
+  assert.equal(f.submits.length, 1);
+});
+
+test("state keys are lowercase; the chain layer gets the checksummed registry back", () => {
+  const regs = ["0x461399B65edA1C0634a47A658d34624eC4C24a31"];
+  assert.equal(canonicalAddress(regs, "0x461399b65eda1c0634a47a658d34624ec4c24a31"), regs[0]);
+  assert.equal(canonicalAddress(regs, regs[0]), regs[0]);
+  assert.equal(canonicalAddress(regs, "0xabc"), "0xabc");
 });
