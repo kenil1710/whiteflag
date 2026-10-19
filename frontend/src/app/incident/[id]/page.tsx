@@ -53,7 +53,7 @@ export default async function Incident({ params, searchParams }: { params: Promi
             <div className="stat"><span className="caps">Refunded to the protocol</span><div className="figure-md">{gen((BigInt(o.refunded_at_settle) + BigInt(o.unclaimed_refunded)).toString(), 4)}</div><span className="mono small muted">GEN</span></div>
           </div>
         </div>
-        {ev && <p className="note note-flag" style={{ marginTop: 28 }}>{ev.label} {ev.at > now ? <>in <Countdown at={ev.at} /> ({iso(ev.at)})</> : <>now: anyone can call it, the keeper does within the hour.</>}</p>}
+        {ev && <p className="note note-flag" style={{ marginTop: 28 }}>{ev.label} {ev.at > now ? <>in <Countdown at={ev.at} /> ({iso(ev.at)})</> : <>now: anyone can call it; the keeper does on its next scheduled run.</>}</p>}
 
         <section className="section">
           <div className="section-head"><h2>Timeline</h2><span className="mono small muted">chain times, UTC</span></div>

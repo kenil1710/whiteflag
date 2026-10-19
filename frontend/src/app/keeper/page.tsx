@@ -15,9 +15,9 @@ export default async function Page() {
   const actions = s ? Object.values(s.actions).sort((a, b) => (b.verified_at ?? 0) - (a.verified_at ?? 0)) : [];
   return (
     <div className="page"><div className="wrap">
-      <div className="kicker"><span className="caps">The keeper bot · GitHub Actions, hourly</span></div>
+      <div className="kicker"><span className="caps">The keeper bot · GitHub Actions, scheduled</span></div>
       <h1>Nothing waits on a person.</h1>
-      <p className="lede" style={{ marginTop: 18 }}>Every hour the keeper settles offers past their settle time and refunds owed bounties nobody claimed.
+      <p className="lede" style={{ marginTop: 18 }}>On an hourly schedule, with a 6-hourly fallback because GitHub starts scheduled runs late, the keeper settles offers past their settle time and refunds owed bounties nobody claimed. Anyone can do the same at any time.
         Every checkpoint is a commit on the <a href={`${REPO}/tree/keeper-state`}>keeper-state</a> branch; an action counts only when its
         transaction is finalized, executed and visible in a fresh read.</p>
       {err && <p className="note note-flag">The keeper state could not be read ({err}).</p>}

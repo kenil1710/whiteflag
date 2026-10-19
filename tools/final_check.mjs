@@ -7,7 +7,8 @@
  *   5  every canonical seed is settled and every owed bounty claimed or refunded
  *   6  every demo payout arrived (finalized, delivered, balances moved by the amount)
  *   7  every registry's eth_getBalance is what its ledger says (0 when all is settled)
- *   8  the keeper ran within the last 2 hours and has no failed action
+ *   8  the keeper ran within the last 8 hours (6-hourly fallback plus GitHub's delay), has no failed action, and a
+ *      scheduled run succeeded
  *   9  the offline test suite passes
  *  10  no placeholder language in the docs
  *  11  README names the deploy commit and the final commit; SUBMISSION.md's evidence links are pinned to the final
@@ -136,7 +137,7 @@ const sh = (cmd, args) => spawnSync(cmd, args, { cwd: root, encoding: "utf8", ma
   const done = Object.values(ks?.actions ?? {}).filter((a) => a.status === "DONE");
   let sched = null;
   try { sched = (await (await fetch("https://api.github.com/repos/kenil1710/whiteflag/actions/workflows/keeper.yml/runs?event=schedule&status=success&per_page=1", { headers: { "user-agent": "final_check" } })).json()).workflow_runs?.[0] ?? null; } catch { /* */ }
-  add("keeper ran", last > 0 && age < 7200 && failed.length === 0 && sched !== null, `last run ${new Date(last * 1000).toISOString()} (${Math.round(age / 60)} min ago), ${done.length} actions done, ${failed.length} failed, ${ks?.unprocessed?.length ?? "?"} unprocessed; ${sched ? `latest successful scheduled run ${sched.html_url} (${sched.created_at})` : "NO successful scheduled run"}`);
+  add("keeper ran", last > 0 && age < 8 * 3600 && failed.length === 0 && sched !== null, `last run ${new Date(last * 1000).toISOString()} (${Math.round(age / 60)} min ago), ${done.length} actions done, ${failed.length} failed, ${ks?.unprocessed?.length ?? "?"} unprocessed; ${sched ? `latest successful scheduled run ${sched.html_url} (${sched.created_at})` : "NO successful scheduled run"}`);
 }
 // 9
 {

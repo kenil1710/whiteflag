@@ -77,7 +77,7 @@ export function ClaimDesk() {
       )}
       <Progress p={p} />
       <section className="section">
-        <div className="section-head"><h2>Due now, for anyone</h2><span className="mono small muted">the keeper does these hourly</span></div>
+        <div className="section-head"><h2>Due now, for anyone</h2><span className="mono small muted">the keeper does these on its schedule</span></div>
         {due.length === 0 ? <p className="muted">Nothing is due: no offer past its settle time, no owed bounty past its claim window.</p> : (
           <div className="table-wrap"><table className="ledger"><thead><tr><th>Offer</th><th>Action</th><th>Pays</th><th /></tr></thead><tbody>
             {due.map((o) => (

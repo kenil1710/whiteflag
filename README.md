@@ -51,7 +51,8 @@ Each outcome was checked against public reporting and every outgoing transfer of
    SETTLED_PARTIAL, SETTLED_NONE (or UNREADABLE), never favorable on missing data, pinned to the protocol that opened
    the offer with `check_for`.
 7. **Keeper.** A GitHub Actions job ([.github/workflows/keeper.yml](.github/workflows/keeper.yml)) settles and refunds
-   every hour, checkpointing each step on the [keeper-state](https://github.com/kenil1710/whiteflag/tree/keeper-state)
+   on an hourly schedule with a 6-hourly fallback (GitHub starts scheduled runs late, sometimes by hours),
+   checkpointing each step on the [keeper-state](https://github.com/kenil1710/whiteflag/tree/keeper-state)
    branch. Everything it does, anyone can do.
 
 ## Addresses (GenLayer Studio Dev, chain 61997)
