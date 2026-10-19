@@ -1,0 +1,805 @@
+{
+  "at": "2026-10-19T10:32:38.648Z",
+  "rpcs": {
+    "ethereum": [
+      "https://eth-pokt.nodies.app",
+      "https://rpc.mevblocker.io"
+    ],
+    "arbitrum": [
+      "https://arb-pokt.nodies.app",
+      "https://arbitrum-one.public.blastapi.io"
+    ]
+  },
+  "incidents": [
+    {
+      "id": "gmx-v1-glp-2025",
+      "name": "GMX V1 GLP",
+      "message": {
+        "chain": "arbitrum",
+        "hash": "0x92a39e66e54aff033cd7b41b468de7891cf459593495d68d78099cc889547380",
+        "agree": true,
+        "from": "0x5f799f365fa8a2b60ac0429c48b153ca5a6f0cf8",
+        "to": "0xdf3340a436c27655ba62f8281565c9925c3a5221",
+        "time": 1752069859,
+        "iso": "2025-07-09T14:04:19.000Z",
+        "text": "We acknowledge the recent GMX V1 exploit. \n\nWe want to offer a 10% white-hat bounty for the return of the exploited funds.\n\nIf the remaining 90% of funds are returned within 48 hours, we commit to pursuing no further legal action.\n\nPlease contact us securely & anonymously:\nEmail: security@gmx.io\nOn-chain (GMX Deployer: 0x5F799f365Fa8A2B60ac0429C48B153cA5a6f0Cf8)\nImmunefi (https://immunefi.com/bug-bounty/gmx/information/)\n\nWe urge a swift and ethical resolution to this situation.",
+        "errors": []
+      },
+      "returns": [
+        {
+          "chain": "arbitrum",
+          "hash": "0x62b8450259ee85838c7be3335e659a65be66268a1a5c6792ca731df199211841",
+          "note": "5,494,796.17 FRAX",
+          "read": true,
+          "block": 356508010,
+          "time": 1752221074,
+          "iso": "2025-07-11T08:04:34.000Z",
+          "from": "0xdf3340a436c27655ba62f8281565c9925c3a5221",
+          "to": "0x17fc002b466eec40dae837fc4be5c67993ddbd6f",
+          "status": 1,
+          "finalized": [
+            516255661,
+            516255661
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "arbitrum:0x62b8450259ee85838c7be3335e659a65be66268a1a5c6792ca731df199211841:0",
+              "token": "0x17fc002b466eec40dae837fc4be5c67993ddbd6f",
+              "amount": "5494796166294325551571952",
+              "from": "0xdf3340a436c27655ba62f8281565c9925c3a5221",
+              "to": "0x5f799f365fa8a2b60ac0429c48b153ca5a6f0cf8",
+              "log": 0
+            }
+          ]
+        },
+        {
+          "chain": "arbitrum",
+          "hash": "0x255d0af85ae52c22e0206cad52d22f8620c002b8e23efcc3162916d8559321b3",
+          "note": "5,000,000 FRAX",
+          "read": true,
+          "block": 356508947,
+          "time": 1752221307,
+          "iso": "2025-07-11T08:08:27.000Z",
+          "from": "0xdf3340a436c27655ba62f8281565c9925c3a5221",
+          "to": "0x17fc002b466eec40dae837fc4be5c67993ddbd6f",
+          "status": 1,
+          "finalized": [
+            516255661,
+            516255661
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "arbitrum:0x255d0af85ae52c22e0206cad52d22f8620c002b8e23efcc3162916d8559321b3:0",
+              "token": "0x17fc002b466eec40dae837fc4be5c67993ddbd6f",
+              "amount": "5000000000000000000000000",
+              "from": "0xdf3340a436c27655ba62f8281565c9925c3a5221",
+              "to": "0x5f799f365fa8a2b60ac0429c48b153ca5a6f0cf8",
+              "log": 0
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0x15ccc802345d0e3ddb641f6cbde251f7d26838ceeec9e902c983414e66c42ce0",
+          "note": "1 ETH test",
+          "read": true,
+          "block": 22895034,
+          "time": 1752226019,
+          "iso": "2025-07-11T09:26:59.000Z",
+          "from": "0xa33fcbe3b84fb8393690d1e994b6a6adc256d8a3",
+          "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0x15ccc802345d0e3ddb641f6cbde251f7d26838ceeec9e902c983414e66c42ce0:native",
+              "token": "native",
+              "amount": "1000000000000000000",
+              "from": "0xa33fcbe3b84fb8393690d1e994b6a6adc256d8a3",
+              "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+              "log": -1
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0xa551b21c6d711eaea1709a94bd061c0cbc52d9c4171ea738d1948b70ce412ab3",
+          "note": "2,998.995 ETH",
+          "read": true,
+          "block": 22895048,
+          "time": 1752226187,
+          "iso": "2025-07-11T09:29:47.000Z",
+          "from": "0xa33fcbe3b84fb8393690d1e994b6a6adc256d8a3",
+          "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0xa551b21c6d711eaea1709a94bd061c0cbc52d9c4171ea738d1948b70ce412ab3:native",
+              "token": "native",
+              "amount": "2998995000000000000000",
+              "from": "0xa33fcbe3b84fb8393690d1e994b6a6adc256d8a3",
+              "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+              "log": -1
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0x3a4fe19fb4d7550cb24dd34c4a3dccea71522c004235474e5651466af44c0357",
+          "note": "1 ETH test",
+          "read": true,
+          "block": 22895194,
+          "time": 1752227939,
+          "iso": "2025-07-11T09:58:59.000Z",
+          "from": "0xe9ad5a0f2697a3cf75ffa7328bda93dbaef7f7e7",
+          "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0x3a4fe19fb4d7550cb24dd34c4a3dccea71522c004235474e5651466af44c0357:native",
+              "token": "native",
+              "amount": "1000000000000000000",
+              "from": "0xe9ad5a0f2697a3cf75ffa7328bda93dbaef7f7e7",
+              "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+              "log": -1
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0x7b4abbdc00a051f33083416acae11819958f86855408865e86a08a551e3b7f2c",
+          "note": "2,998.995 ETH",
+          "read": true,
+          "block": 22895199,
+          "time": 1752227999,
+          "iso": "2025-07-11T09:59:59.000Z",
+          "from": "0xe9ad5a0f2697a3cf75ffa7328bda93dbaef7f7e7",
+          "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0x7b4abbdc00a051f33083416acae11819958f86855408865e86a08a551e3b7f2c:native",
+              "token": "native",
+              "amount": "2998995000000000000000",
+              "from": "0xe9ad5a0f2697a3cf75ffa7328bda93dbaef7f7e7",
+              "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+              "log": -1
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0x1bfee76a4a485e3002933c2651d9a4c9bd5b546d7da9998d7f6488075786af15",
+          "note": "1 ETH test",
+          "read": true,
+          "block": 22895250,
+          "time": 1752228635,
+          "iso": "2025-07-11T10:10:35.000Z",
+          "from": "0x69c965e164fa60e37a851aa5cd82b13ae39c1d95",
+          "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0x1bfee76a4a485e3002933c2651d9a4c9bd5b546d7da9998d7f6488075786af15:native",
+              "token": "native",
+              "amount": "1000000000000000000",
+              "from": "0x69c965e164fa60e37a851aa5cd82b13ae39c1d95",
+              "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+              "log": -1
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0xa91e0e24d3b1898af0dda20e07f6a8606a3f506e9641dd19ffd4f87e4c788214",
+          "note": "2,998.999 ETH",
+          "read": true,
+          "block": 22895255,
+          "time": 1752228695,
+          "iso": "2025-07-11T10:11:35.000Z",
+          "from": "0x69c965e164fa60e37a851aa5cd82b13ae39c1d95",
+          "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0xa91e0e24d3b1898af0dda20e07f6a8606a3f506e9641dd19ffd4f87e4c788214:native",
+              "token": "native",
+              "amount": "2998999439114664711100",
+              "from": "0x69c965e164fa60e37a851aa5cd82b13ae39c1d95",
+              "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+              "log": -1
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0xceafc389d50eb1dea3df64f1565a0c39df206f05848f02ea7a72babda6313b22",
+          "note": "1,000 ETH",
+          "read": true,
+          "block": 22895284,
+          "time": 1752229043,
+          "iso": "2025-07-11T10:17:23.000Z",
+          "from": "0x639cd2fc24ec06be64aaf94eb89392bea98a6605",
+          "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0xceafc389d50eb1dea3df64f1565a0c39df206f05848f02ea7a72babda6313b22:native",
+              "token": "native",
+              "amount": "1000000000000000000000",
+              "from": "0x639cd2fc24ec06be64aaf94eb89392bea98a6605",
+              "to": "0x8d1d2e24ec641edc6a1ebe0f3ae7af0ebc573e0d",
+              "log": -1
+            }
+          ]
+        }
+      ],
+      "rejects": [
+        {
+          "chain": "ethereum",
+          "hash": "0x2f210f0faf9e7d4643cec1c6b4ea7faa64e095bfda2837db454884d2c3c3c99e",
+          "note": "the 1,701.017 ETH the exploiter kept, sent to a fresh wallet",
+          "read": true,
+          "block": 22895683,
+          "time": 1752233831,
+          "iso": "2025-07-11T11:37:11.000Z",
+          "from": "0x639cd2fc24ec06be64aaf94eb89392bea98a6605",
+          "to": "0x1da7653d18b59bc19424d0017b21a045ad8db038",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "NO_RETURN_TO_RECOVERY",
+          "credits": [],
+          "expect": "NO_RETURN_TO_RECOVERY"
+        }
+      ],
+      "returned": {
+        "arbitrum:0x17fc002b466eec40dae837fc4be5c67993ddbd6f": "10494796166294325551571952",
+        "ethereum:native": "9999989439114664711100"
+      },
+      "fraction_ppm": "890184"
+    },
+    {
+      "id": "alchemix-aleth-2023",
+      "name": "Alchemix alETH-ETH (Curve/Vyper)",
+      "message": {
+        "chain": "ethereum",
+        "hash": "0x6264cc2827b0598ec7d8c0f549238c2a96a795cfde8c5ac4dcf77021c75adf0c",
+        "agree": true,
+        "from": "0xbabe61887f1de2713c6f97e567623453d3c79f67",
+        "to": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+        "time": 1691090519,
+        "iso": "2023-08-03T19:21:59.000Z",
+        "text": "We as a group: Curve, Metronome & Alchemix would like to discuss a bounty with any parties who were involved in the recent Curve exploits. We are offering a 10% bounty of any funds stolen, which are yours to keep if you return the remaining 90%.\n\nYou will have no risk of us pursuing this further, no risk of law enforcement issues, etc. If you choose not to partake in the voluntary return and complete the process by 6 August at 0800 UTC, we will expand the bounty to the public, and offer the full 10% to the person who is able to identify you in a way that leads to your conviction in the courts. We will pursue you from all angles with the full extent of the law. \n\nContact us at curvenegotiation@protonmail.com asap, as the deadline for the completion of the return is not far off. \n\nPlease note that anyone emailing us will have to verify their ownership of their address on-chain before any discussions will take place.",
+        "errors": []
+      },
+      "returns": [
+        {
+          "chain": "ethereum",
+          "hash": "0x4197ed0ef9b60ab1cacdc31d6d3ce06413b333b14b8947be5c0cfe29cb88b088",
+          "note": "1 alETH test",
+          "read": true,
+          "block": 17841884,
+          "time": 1691155295,
+          "iso": "2023-08-04T13:21:35.000Z",
+          "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+          "to": "0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0x4197ed0ef9b60ab1cacdc31d6d3ce06413b333b14b8947be5c0cfe29cb88b088:163",
+              "token": "0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6",
+              "amount": "1000000000000000000",
+              "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+              "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+              "log": 163
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0xaf7d9a75b66118d76383406259c5860afae1a4ecd0c058593da05a2613b18fc2",
+          "note": "1,000 alETH",
+          "read": true,
+          "block": 17841974,
+          "time": 1691156387,
+          "iso": "2023-08-04T13:39:47.000Z",
+          "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+          "to": "0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0xaf7d9a75b66118d76383406259c5860afae1a4ecd0c058593da05a2613b18fc2:246",
+              "token": "0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6",
+              "amount": "1000000000000000000000",
+              "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+              "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+              "log": 246
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0x9d0b241e96cb8a2fcd181e1af6c6d4e52b193190209ab028ddf174fd6b184b44",
+          "note": "3,819.55 alETH",
+          "read": true,
+          "block": 17842059,
+          "time": 1691157431,
+          "iso": "2023-08-04T13:57:11.000Z",
+          "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+          "to": "0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0x9d0b241e96cb8a2fcd181e1af6c6d4e52b193190209ab028ddf174fd6b184b44:251",
+              "token": "0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6",
+              "amount": "3819550464760440887778",
+              "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+              "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+              "log": 251
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0xd83072cfc1126e23f18d13529c8fa832015a06f0a6988c65f53b4a8a0c403665",
+          "note": "1 alETH to Curve's address (counts once Curve's address is added)",
+          "read": true,
+          "block": 17841263,
+          "time": 1691147795,
+          "iso": "2023-08-04T11:16:35.000Z",
+          "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+          "to": "0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0xd83072cfc1126e23f18d13529c8fa832015a06f0a6988c65f53b4a8a0c403665:146",
+              "token": "0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6",
+              "amount": "1000000000000000000",
+              "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+              "to": "0xbabe61887f1de2713c6f97e567623453d3c79f67",
+              "log": 146
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0x25bc0a257301b4168e2e1862669c68dacb46aace6921f9efc6dd152c040a45c2",
+          "note": "1 ETH test",
+          "read": true,
+          "block": 17842176,
+          "time": 1691158835,
+          "iso": "2023-08-04T14:20:35.000Z",
+          "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+          "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0x25bc0a257301b4168e2e1862669c68dacb46aace6921f9efc6dd152c040a45c2:native",
+              "token": "native",
+              "amount": "1000000000000000000",
+              "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+              "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+              "log": -1
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0x4ab8367b391ad733ab98433f51f2c4d56cec93941d31c9d19b0e3ff6e8771639",
+          "note": "1,000 ETH",
+          "read": true,
+          "block": 17842261,
+          "time": 1691159879,
+          "iso": "2023-08-04T14:37:59.000Z",
+          "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+          "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0x4ab8367b391ad733ab98433f51f2c4d56cec93941d31c9d19b0e3ff6e8771639:native",
+              "token": "native",
+              "amount": "1000000000000000000000",
+              "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+              "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+              "log": -1
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0xfa8560f76f1f4ac1a4ed5bb0bded5afc0e9d7aee8b2e098e3fe92c28088aadec",
+          "note": "1,258 ETH",
+          "read": true,
+          "block": 17842725,
+          "time": 1691165495,
+          "iso": "2023-08-04T16:11:35.000Z",
+          "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+          "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0xfa8560f76f1f4ac1a4ed5bb0bded5afc0e9d7aee8b2e098e3fe92c28088aadec:native",
+              "token": "native",
+              "amount": "1258000000000000000000",
+              "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+              "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+              "log": -1
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0xfb647fd4e2df611e9c3178c169ded85699284845aeb6a5be5a612ce2ace8d2cb",
+          "note": "1 ETH test",
+          "read": true,
+          "block": 17850610,
+          "time": 1691260727,
+          "iso": "2023-08-05T18:38:47.000Z",
+          "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+          "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0xfb647fd4e2df611e9c3178c169ded85699284845aeb6a5be5a612ce2ace8d2cb:native",
+              "token": "native",
+              "amount": "1000000000000000000",
+              "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+              "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+              "log": -1
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0x0bf820a8fb3656d2f57be119d801a08bfbd0d78b6653c62b928df70a2f10df0b",
+          "note": "2,999 ETH",
+          "read": true,
+          "block": 17850618,
+          "time": 1691260823,
+          "iso": "2023-08-05T18:40:23.000Z",
+          "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+          "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0x0bf820a8fb3656d2f57be119d801a08bfbd0d78b6653c62b928df70a2f10df0b:native",
+              "token": "native",
+              "amount": "2999000000000000262144",
+              "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+              "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+              "log": -1
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0xdbf1d8dca9858119e3852d52f18821754640013d9914d692589b13f8181a08e8",
+          "note": "2,000 ETH",
+          "read": true,
+          "block": 17851003,
+          "time": 1691265455,
+          "iso": "2023-08-05T19:57:35.000Z",
+          "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+          "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0xdbf1d8dca9858119e3852d52f18821754640013d9914d692589b13f8181a08e8:native",
+              "token": "native",
+              "amount": "2000000000000000000000",
+              "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+              "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+              "log": -1
+            }
+          ]
+        }
+      ],
+      "rejects": [
+        {
+          "chain": "ethereum",
+          "hash": "0x7ad3111bb69abd88f4095e2cec8e8c058ad3e17e8ba7fbd538a4828658d564ff",
+          "note": "a reverted transaction from the exploiter to the Alchemix multisig",
+          "read": true,
+          "block": 17843563,
+          "time": 1691175623,
+          "iso": "2023-08-04T19:00:23.000Z",
+          "from": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+          "to": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9",
+          "status": 0,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "TX_FAILED",
+          "credits": [],
+          "expect": "TX_FAILED"
+        }
+      ],
+      "returned": {
+        "ethereum:0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6": "4821550464760440887778",
+        "ethereum:native": "7259000000000000262144"
+      },
+      "fraction_ppm": "1000000"
+    },
+    {
+      "id": "seneca-2024",
+      "name": "Seneca",
+      "message": {
+        "chain": "ethereum",
+        "hash": "0x6e81e21ae6345279060de5c2c27378e2dca4c27a83615c8d835d218c4f66ffbd",
+        "agree": true,
+        "from": "0x61da869d8eb130cb3d2ba5bbd57c4a53ff534cb4",
+        "to": "0x94641c01a4937f2c8ef930580cf396142a2942dc",
+        "time": 1709165843,
+        "iso": "2024-02-29T00:17:23.000Z",
+        "text": "Dear Whitehat,\n\nPlease return the funds to the following Ethereum wallet address: 0xb7aF0Aa318706D94469d8d851015F9Aa12D9c53a\n\nWe are collaborating with third-party security providers and law enforcement to trace the funds and identify recipient wallets. Acting promptly is crucial, so we kindly request that you return the funds as soon as possible to avoid any further legal action.\n\nA 20% bounty may be kept as per whitehat efforts.",
+        "errors": []
+      },
+      "returns": [
+        {
+          "chain": "ethereum",
+          "hash": "0xab7f14e2b75e70c8b136c8facb7a94d1947b812749660d0cb961e1a0db7c2f64",
+          "note": "537 ETH",
+          "read": true,
+          "block": 19331009,
+          "time": 1709183519,
+          "iso": "2024-02-29T05:11:59.000Z",
+          "from": "0x94641c01a4937f2c8ef930580cf396142a2942dc",
+          "to": "0xb7af0aa318706d94469d8d851015f9aa12d9c53a",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0xab7f14e2b75e70c8b136c8facb7a94d1947b812749660d0cb961e1a0db7c2f64:native",
+              "token": "native",
+              "amount": "537000000000000000000",
+              "from": "0x94641c01a4937f2c8ef930580cf396142a2942dc",
+              "to": "0xb7af0aa318706d94469d8d851015f9aa12d9c53a",
+              "log": -1
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0xcf3f1f4d4db1782fa16d34e180c7c632a944e61f60ff7aae4e50bf145b0184f2",
+          "note": "499.997 ETH",
+          "read": true,
+          "block": 19330999,
+          "time": 1709183399,
+          "iso": "2024-02-29T05:09:59.000Z",
+          "from": "0x5217c6923a4efc5bcf53d9a30ec4b0089f080ed0",
+          "to": "0xb7af0aa318706d94469d8d851015f9aa12d9c53a",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0xcf3f1f4d4db1782fa16d34e180c7c632a944e61f60ff7aae4e50bf145b0184f2:native",
+              "token": "native",
+              "amount": "499996758239285385644",
+              "from": "0x5217c6923a4efc5bcf53d9a30ec4b0089f080ed0",
+              "to": "0xb7af0aa318706d94469d8d851015f9aa12d9c53a",
+              "log": -1
+            }
+          ]
+        },
+        {
+          "chain": "ethereum",
+          "hash": "0x8e19428c50722538b0a98690c3621d644543950e9d852adad956a5ee70dd7cd8",
+          "note": "499.997 ETH",
+          "read": true,
+          "block": 19330996,
+          "time": 1709183363,
+          "iso": "2024-02-29T05:09:23.000Z",
+          "from": "0xe83b072433f025ef06b73e0caa3095133e7c5bd0",
+          "to": "0xb7af0aa318706d94469d8d851015f9aa12d9c53a",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "COUNTED",
+          "credits": [
+            {
+              "key": "ethereum:0x8e19428c50722538b0a98690c3621d644543950e9d852adad956a5ee70dd7cd8:native",
+              "token": "native",
+              "amount": "499996912519013149613",
+              "from": "0xe83b072433f025ef06b73e0caa3095133e7c5bd0",
+              "to": "0xb7af0aa318706d94469d8d851015f9aa12d9c53a",
+              "log": -1
+            }
+          ]
+        }
+      ],
+      "rejects": [
+        {
+          "chain": "ethereum",
+          "hash": "0x775cc19c5c29deda98220cf3d244cb2f3f0e63e1c842060abeb26f84df2fb76d",
+          "note": "150 ETH the exploiter kept",
+          "read": true,
+          "block": 19331071,
+          "time": 1709184275,
+          "iso": "2024-02-29T05:24:35.000Z",
+          "from": "0x94641c01a4937f2c8ef930580cf396142a2942dc",
+          "to": "0x0c77350c4bde539ffcee261a149dbc6e6afda517",
+          "status": 1,
+          "finalized": [
+            26225974,
+            26225974
+          ],
+          "verdict": "NO_RETURN_TO_RECOVERY",
+          "credits": [],
+          "expect": "NO_RETURN_TO_RECOVERY"
+        }
+      ],
+      "returned": {
+        "ethereum:native": "1536993670758298535257"
+      },
+      "fraction_ppm": "836689"
+    },
+    {
+      "id": "kyberswap-elastic-2023",
+      "name": "KyberSwap Elastic",
+      "message": {
+        "chain": "ethereum",
+        "hash": "0xfeb8bd91320ed818cefd72aba25d48f4b50964549681096d6fae3d2320c75743",
+        "agree": true,
+        "from": "0x8180a5ca4e3b94045e05a9313777955f7518d757",
+        "to": "0x50275e0b7261559ce1644014d4b78d4aa63be836",
+        "time": 1700804231,
+        "iso": "2023-11-24T05:37:11.000Z",
+        "text": "You have done one of the most sophisticated hacks ser. That was high EV and everyone missed it. On the table is a bounty equivalent to 10% of users' funds taken from them by your hack, for the safe return of all of the users' funds.\nBut we both know how this works, so lets cut to the chase so you and these users can all get on with life.\nWe can set aside the funds for the bounty to distribute directly to users. You can return 90% of the funds you took from users to 0x8180a5CA4E3B94045e05A9313777955f7518D757 by 6am UTC, 25 November, or you stay on the run.\nIf you want to discuss in private, email vutran54@proton.me",
+        "errors": []
+      },
+      "returns": [],
+      "rejects": [],
+      "returned": {},
+      "fraction_ppm": "0"
+    },
+    {
+      "id": "curve-crv-eth-2023",
+      "name": "Curve CRV/ETH (Curve/Vyper)",
+      "message": {
+        "chain": "ethereum",
+        "hash": "0x6264cc2827b0598ec7d8c0f549238c2a96a795cfde8c5ac4dcf77021c75adf0c",
+        "agree": true,
+        "from": "0xbabe61887f1de2713c6f97e567623453d3c79f67",
+        "to": "0xdce5d6b41c32f578f875efffc0d422c57a75d7d8",
+        "time": 1691090519,
+        "iso": "2023-08-03T19:21:59.000Z",
+        "text": "We as a group: Curve, Metronome & Alchemix would like to discuss a bounty with any parties who were involved in the recent Curve exploits. We are offering a 10% bounty of any funds stolen, which are yours to keep if you return the remaining 90%.\n\nYou will have no risk of us pursuing this further, no risk of law enforcement issues, etc. If you choose not to partake in the voluntary return and complete the process by 6 August at 0800 UTC, we will expand the bounty to the public, and offer the full 10% to the person who is able to identify you in a way that leads to your conviction in the courts. We will pursue you from all angles with the full extent of the law. \n\nContact us at curvenegotiation@protonmail.com asap, as the deadline for the completion of the return is not far off. \n\nPlease note that anyone emailing us will have to verify their ownership of their address on-chain before any discussions will take place.",
+        "errors": []
+      },
+      "returns": [],
+      "rejects": [],
+      "returned": {},
+      "fraction_ppm": "0"
+    },
+    {
+      "id": "uwu-lend-2024",
+      "name": "UwU Lend",
+      "message": {
+        "chain": "ethereum",
+        "hash": "0x31e5c9a15ce5697c9680cfdeaf5eda60379923d751d3b5eb685b28448d083f97",
+        "agree": true,
+        "from": "0x5dd596c901987a2b28c38a9c1dfbf86fffc15d77",
+        "to": "0x841ddf093f5188989fa1524e7b893de64b421f47",
+        "time": 1718039999,
+        "iso": "2024-06-10T17:19:59.000Z",
+        "text": "UwU Lend would like to discuss a bounty with any parties involved in the recent UwU Lend exploit. We are offering a 20% white hat bounty of any funds taken, which you may keep if you return the remaining 80% to uwulend.eth \n\nYou will face no risk of us pursuing this further and no risk of law enforcement issues. If you choose not to partake in the voluntary return and complete the process by June 12 at 17:00 UTC, we will expand the bounty to the public and offer the full 20% to the person who can identify you in a way that leads to your conviction in the courts. We will pursue you from all angles.\n\nContact us at contact@uwulend.fi as soon as possible.\n\nPlease note that anyone emailing us will need to verify their ownership of their address on-chain before any discussions take place.",
+        "errors": []
+      },
+      "returns": [],
+      "rejects": [],
+      "returned": {},
+      "fraction_ppm": "0"
+    }
+  ],
+  "summary": {
+    "incidents": 6,
+    "readable": 6,
+    "with_returns": 3,
+    "without_returns": 3,
+    "return_txs_read": 22,
+    "return_txs": 22,
+    "rejects_as_expected": 3,
+    "rejects": 3,
+    "feasible": true
+  }
+}
