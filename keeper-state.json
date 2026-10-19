@@ -1,8 +1,21 @@
 {
   "version": 1,
-  "registries": {},
+  "registries": {
+    "0x461399b65eda1c0634a47a658d34624ec4c24a31": {
+      "cursor": 0,
+      "scans_completed": 1,
+      "last_scan_at": 1792410218,
+      "total": 6
+    }
+  },
   "actions": {},
   "runs": [],
   "unprocessed": [],
-  "last_run": null
+  "last_run": null,
+  "keeper": "0x41d0b3fa573192aba06B076aF22AA90ba6c6f8fD",
+  "registries_watched": [
+    "0x461399B65edA1C0634a47A658d34624eC4C24a31",
+    "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2"
+  ],
+  "saved_at": "2026-10-19T11:43:38.969Z"
 }
