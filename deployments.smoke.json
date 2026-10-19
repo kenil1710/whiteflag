@@ -1,0 +1,39 @@
+{
+  "network": "studiodev",
+  "chain_id": 61997,
+  "rpc": "https://studio-dev.genlayer.com/api",
+  "explorer": "https://explorer-studio-dev.genlayer.com/",
+  "contracts": {
+    "WhiteFlagRegistryDemo": {
+      "address": "0x566fB529Bf749350808Fe11494041a159F0ddA27",
+      "deploy_tx": "0x5571e20a10daebbbb17095111e69fa5bfd191dd0b38b934fdb306e994c91b404",
+      "file": "build/WhiteFlagRegistry.py",
+      "source": "contracts/WhiteFlagRegistry.py",
+      "commit": "8f027bfb369782f587f4bfa098e04c2ecffeb6e5",
+      "bytes": 54473,
+      "sha256": "6366055370c585a568d4f0b85e929b1a22de5eae5b0dbccec5a11e4f68cf270a",
+      "constructor_args": [
+        "DEMO"
+      ],
+      "deployer": "0xd663687D6cf172E849C84180d316757e33FD9f4e",
+      "deployed_at": "2026-10-19T10:49:01.853Z",
+      "mode": "DEMO"
+    },
+    "SafeHarborGateDemo": {
+      "address": "0x504d277a201cDE6a2E79e5dc9Cc694F1e07321C1",
+      "deploy_tx": "0xf6621fd549280d0ae7510a084628a1f237b3403a7c5e432142fe4ec72afe1c25",
+      "file": "build/SafeHarborGate.py",
+      "source": "contracts/SafeHarborGate.py",
+      "commit": "8f027bfb369782f587f4bfa098e04c2ecffeb6e5",
+      "bytes": 12280,
+      "sha256": "8d43d682d5f1d0de8f9cb5e6830e645efdcf53b12b6c42160ddb4e6c4285d5fb",
+      "constructor_args": [
+        "0x566fB529Bf749350808Fe11494041a159F0ddA27",
+        900000
+      ],
+      "deployer": "0xd663687D6cf172E849C84180d316757e33FD9f4e",
+      "deployed_at": "2026-10-19T10:49:07.796Z",
+      "mode": "DEMO"
+    }
+  }
+}
