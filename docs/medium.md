@@ -52,8 +52,13 @@ submitted as a proof:
 - The Alchemix alETH pool from the Curve/Vyper exploit: 100%. One alETH went to Curve's address instead of Alchemix's;
   it was rejected until the protocol added Curve's address, then counted. That's the "add a recovery address" power
   doing exactly what it's for.
-- Seneca: 83.67%. The exploiter kept 300 ETH, and the two transfers that sent it away are on record as rejected.
-- KyberSwap Elastic, Curve CRV/ETH and UwU Lend: nothing came back, so the whole bounty went back.
+- Seneca: 83.67%. The exploiter kept 300 ETH; a transfer that moved 150 ETH of it to a fresh wallet is on record,
+  rejected as `NO_RETURN_TO_RECOVERY`.
+- KyberSwap Elastic, Curve CRV/ETH and UwU Lend: nothing came back from the listed exploiters, so the whole bounty
+  went back. I checked every outgoing transfer of those addresses, not only ours: the CRV/ETH exploiter still holds
+  most of it, and the only returns in those incidents came from other people (an MEV bot that ran the same Curve
+  exploit and handed it back, front-runners in KyberSwap's pools), which an offer for this exploiter rightly ignores
+  ([REAL_WORLD_CHECK.md](REAL_WORLD_CHECK.md)).
 
 A failed transaction from the Alchemix exploiter to the Alchemix multisig is in there too, rejected as `TX_FAILED`.
 I like that one. It's a real attempt that didn't land, and the rule treats it as one.
@@ -62,8 +67,8 @@ I like that one. It's a real attempt that didn't land, and the rule treats it as
 
 The first on-chain trial rejected every single proof as unreadable. Each validator was hammering the same public RPC
 at the same moment, and that provider refuses batches under that kind of load. I had to measure providers from inside
-GenVM with all the validators reading at once, keep the ones that held up, and make each submission one batch per RPC
-instead of many small requests.
+GenVM with all the validators reading at once, keep the ones that held up, and batch each submission's reads per RPC
+instead of sending many small requests.
 
 Studio also keeps the GEN sent with a call that fails. So the one payable method never fails: a refused offer credits
 its GEN back to the sender, who can withdraw it.

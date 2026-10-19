@@ -32,7 +32,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         <div className="kicker"><span className="caps">The board · {r === "demo" ? "demo registry (minutes)" : "canonical registry"}</span></div>
         <h1 className="rise">Bounties that pay<br />only for what <em className="flag-text">came back</em>.</h1>
         <p className="lede" style={{ marginTop: 22 }}>
-          A hacked protocol locks a whitehat bounty. The exploiter returns funds on any chain. GenLayer validators read every
+          A hacked protocol locks a whitehat bounty. The exploiter returns funds on Ethereum or Arbitrum. GenLayer validators read every
           returned transfer from two RPCs per chain, and code pays the bounty pro rata. The rest goes back to the protocol.
         </p>
 

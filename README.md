@@ -6,7 +6,7 @@ two independent RPCs per chain, and code pays the bounty pro rata to the returne
 protocol. Nobody decides anything after the offer is opened: no admin, no vote, no model.
 
 Live: **https://whiteflag-ledger.vercel.app** · Rules: [docs/RULES.md](docs/RULES.md) · Seeds: [docs/SEEDS.md](docs/SEEDS.md) ·
-Final check: [docs/FINAL_CHECK.md](docs/FINAL_CHECK.md)
+Final check: [docs/FINAL_CHECK.md](docs/FINAL_CHECK.md) · Real-world check: [docs/REAL_WORLD_CHECK.md](docs/REAL_WORLD_CHECK.md)
 
 ## What and why
 
@@ -25,6 +25,8 @@ back, half the bounty is paid and half refunded.
 Six real incidents are on the canonical registry with their real addresses, amounts, offers and return transactions
 ([docs/FEASIBILITY.md](docs/FEASIBILITY.md)): GMX V1 (89.02% returned, across Arbitrum and Ethereum), the Alchemix
 alETH pool of the Curve/Vyper exploit (100%), Seneca (83.67%), KyberSwap Elastic, Curve CRV/ETH and UwU Lend (nothing).
+Each outcome was checked against public reporting and every outgoing transfer of the exploiter addresses
+([docs/REAL_WORLD_CHECK.md](docs/REAL_WORLD_CHECK.md)).
 
 ## How the rules work
 
@@ -40,10 +42,11 @@ alETH pool of the Curve/Vyper exploit (100%), Seneca (83.67%), KyberSwap Elastic
    offer. Anything unreadable or inconsistent is rejected with a reason and can be resubmitted.
 3. **The fraction is arithmetic.** `sum(min(returned, stolen) * weight) / sum(stolen * weight)`, integer math;
    owed = bounty × fraction.
-4. **Settlement.** Anyone settles after the deadline plus a finality grace (2 h), or at once at 100%:
+4. **Settlement.** Anyone settles at once at 100%, otherwise at the later of the deadline plus a finality grace (2 h)
+   and the offer's creation plus a minimum open time (3 h):
    SETTLED_FULL, SETTLED_PARTIAL or SETTLED_NONE. The remainder goes back to the protocol in the same transaction.
 5. **Claim.** Only a listed exploiter address can claim, paid to itself or to a payout address named in the same call.
-   After the 1 h claim window, anyone refunds the owed bounty to the protocol. Every GEN has an exit.
+   After the claim window (1 h canonical), anyone refunds the owed bounty to the protocol. Every GEN has an exit.
 6. **SafeHarborGate.** Other contracts ask it whether an incident is resolved: NO_OFFER, OPEN, SETTLED_FULL,
    SETTLED_PARTIAL, SETTLED_NONE (or UNREADABLE), never favorable on missing data, pinned to the protocol that opened
    the offer with `check_for`.
@@ -84,9 +87,16 @@ its recipient ([docs/payouts.json](docs/payouts.json)).
 
 ## Scope
 
-- WhiteFlag verifies returns and pays the bounty. It does not enforce legal promises; only listed exploiter addresses
-  and tokens count. A return from an address the offer does not list, through an internal call, or of a token the
-  offer does not list does not move the fraction.
+- WhiteFlag verifies returns and pays the bounty. It does not enforce legal promises ("no further legal action" stays
+  a promise between people). Only listed exploiter addresses, recovery addresses, tokens and chains count: a return
+  from an address the offer does not list, to an address it does not list, through an internal call, of a token it
+  does not list or on a chain it does not list does not move the fraction. Returns by other people (an MEV bot that
+  ran the same exploit, a front-runner) belong to no offer but their own.
+- Only submitted returns count. Nothing is discovered automatically: anyone may submit a return's transaction hash
+  while the offer is open, and every submission is recorded COUNTED or REJECTED with its reason; a rejected one may be
+  submitted again. A return nobody submits before settlement is not counted.
+- An offer is the protocol's own statement of the incident. SafeHarborGate reports what the registry settled for one
+  offer id; a consumer pins the protocol address it trusts with `check_for`.
 - Chains: Ethereum and Arbitrum One, each read from two RPCs run by different operators. Adding a chain means adding
   two RPCs that serve old receipts and the `finalized` tag from GenVM under validator load.
 - The weights are the protocol's own valuation, frozen when the offer opens. A partial return of a token that later

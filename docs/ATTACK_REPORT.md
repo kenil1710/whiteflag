@@ -59,7 +59,8 @@ address. Test: `FakeLogs.test_dirty_topic_padding`.
 
 On the first on-chain trial every proof was rejected `RPC_UNREADABLE`: with five validators reading at once, the
 Nodies endpoints refused the batches (measured inside GenVM, [FEASIBILITY.md](FEASIBILITY.md)). The read path now sends
-one batch per RPC per submission (at most 12 calls) and the RPCs are ones that hold up under that load (Ethereum:
+its calls per RPC in JSON-RPC batches of at most 12 (transactions, receipts, finalized head and chain id,
+then the block headers) and the RPCs are ones that hold up under that load (Ethereum:
 MEV Blocker and Blast; Arbitrum: arb1 and Blast). A rejection stores which RPC failed (`detail`).
 Tests: `Griefing.test_batch_chunks_when_an_rpc_takes_fewer_calls`, `Griefing.test_rejection_detail_names_the_rpc`.
 

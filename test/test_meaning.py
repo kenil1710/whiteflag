@@ -95,7 +95,7 @@ class DocsMatchCode(unittest.TestCase):
         self.assertIn("at most %d days later" % (RG.MAX_SPAN_S // 86400), RULES)
         self.assertIn("at most %d days past the original" % (RG.MAX_EXTEND_S // 86400), RULES)
         self.assertIn("with 1 to %d transactions" % RG.MAX_ITEMS, RULES)
-        self.assertIn("at most %d calls per RPC" % RG.BATCH_MAX, RULES)
+        self.assertIn("JSON-RPC batches of at most %d calls" % RG.BATCH_MAX, RULES)
         self.assertIn("at most %d per page" % RG.PAGE_MAX, RULES)
         self.assertIn("at most %d characters" % RG.MAX_NAME, RULES)
         self.assertEqual(RG.MIN_BOUNTY, 10 ** 15)

@@ -33,8 +33,8 @@ There is no cancel. The protocol (the address that created the offer) may only, 
 ## 2. Return proofs
 
 Anyone may call `submit_proofs(offer_id, [[chain, tx_hash], ...])` with 1 to 5 transactions while the offer is open.
-Every validator reads, for each chain, from BOTH of its RPCs, in one batch of at most 12 calls per RPC:
-the transaction, its receipt, the receipt's block header, the RPC's finalized head and its chain id.
+Every validator reads, for each chain, from BOTH of its RPCs, in JSON-RPC batches of at most 12 calls: the
+transaction, its receipt, the RPC's finalized head and its chain id, then the receipts' block headers.
 
 | Chain | Chain id | RPC A | RPC B |
 |---|---|---|---|
