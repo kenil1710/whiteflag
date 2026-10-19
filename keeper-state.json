@@ -27,7 +27,8 @@
       ],
       "first_seen_at": 1792414113,
       "hash": "0x17c694713fbbfcbb95b69eacb0b3a55b08af1876dc0d750f99a00f7f233eb61c",
-      "submitted_at": 1792414115
+      "submitted_at": 1792414115,
+      "last_error": "read failed: Requested resource not found.\n\nDetails: Contract 0x461399b65eda1c0634a47a658d34624ec4c24a31 not found\nVersion: viem@2.57.7"
     }
   },
   "runs": [
@@ -62,5 +63,5 @@
     "0x461399B65edA1C0634a47A658d34624eC4C24a31",
     "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2"
   ],
-  "saved_at": "2026-10-19T12:48:35.737Z"
+  "saved_at": "2026-10-19T12:49:19.004Z"
 }
