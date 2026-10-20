@@ -11,6 +11,7 @@ const mono = IBM_Plex_Mono({ weight: ["400", "500"], subsets: ["latin"], variabl
 
 export const metadata: Metadata = {
   title: "WhiteFlag",
+  icons: { icon: [{ url: "/logo.svg", type: "image/svg+xml" }], apple: "/logo.svg" },
   description: "A hacked protocol locks a whitehat bounty; GenLayer validators verify every returned transfer on chain and the bounty is paid pro rata, the rest refunded.",
 };
 

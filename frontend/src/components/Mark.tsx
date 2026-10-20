@@ -1,10 +1,12 @@
-/** The white flag: a staff and a pennant, the pennant in signal orange. */
-export function Mark({ size = 34 }: { size?: number }) {
+/** The logo (public/logo.svg): a white flag on a straight pole whose lower and trailing edges are a check mark. */
+export function Mark({ size = 40 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 34 34" aria-hidden="true">
-      <rect x="7" y="3" width="2.2" height="28" fill="var(--ink)" />
-      <path d="M9.2 4.5 C 15 2.5, 19 7.5, 28 5 L 28 18 C 19 20.5, 15 15.5, 9.2 17.5 Z" fill="var(--flag)" />
-      <path d="M9.2 4.5 C 15 2.5, 19 7.5, 28 5" fill="none" stroke="var(--ink)" strokeWidth="0.8" />
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
+      <g transform="translate(-1.5 0)">
+        <path d="M19 12 H52 L30.5 40 L19 33 Z" fill="#fff" stroke="var(--ink)" strokeWidth="3" strokeLinejoin="round" />
+        <path d="M19 33 L30.5 40 L52 12" fill="none" stroke="var(--flag)" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M17 9 V55" stroke="var(--ink)" strokeWidth="4.4" strokeLinecap="round" />
+      </g>
     </svg>
   );
 }
