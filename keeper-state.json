@@ -3,8 +3,8 @@
   "registries": {
     "0x461399b65eda1c0634a47a658d34624ec4c24a31": {
       "cursor": 0,
-      "scans_completed": 6,
-      "last_scan_at": 1792458439,
+      "scans_completed": 7,
+      "last_scan_at": 1792473545,
       "total": 6
     },
     "0xa06816b6cf6aa72c64027a84dc04bfb708935aa2": {
@@ -237,5 +237,5 @@
     "0x461399B65edA1C0634a47A658d34624eC4C24a31",
     "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2"
   ],
-  "saved_at": "2026-10-20T01:07:22.042Z"
+  "saved_at": "2026-10-20T05:19:05.620Z"
 }
