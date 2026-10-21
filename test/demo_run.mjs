@@ -5,9 +5,13 @@
  * not need a claim:
  *
  *   refused  a refused create_offer credited back and withdrawn
- *   F  evidence recovery: two wfdemo returns proved during node b's scheduled
- *      outage (PENDING), one also not final yet; both retried after the outage
- *      and finality (COUNTED); settled; each exploiter address claims its own share
+ *   F  evidence recovery on Ethereum mainnet: a transaction from the latest
+ *      block, its sender listed as the exploiter and its recipient as the
+ *      recovery address, is proved at once (PENDING, NOT_FINALIZED); after
+ *      Ethereum finalizes its block it is retried (COUNTED); settled; the
+ *      share belongs to a real address nobody here controls, so it is
+ *      refunded after the claim window. (RPC outages and provider
+ *      disagreement are exercised in test/direct and the offline suite.)
  *   G  expiry: a return whose block never finalizes stays PENDING; settle is
  *      refused until the recovery window ends, then settles; the proof is EXPIRED
  *   A  full return by the demo exploiter, settled at 100%; it commits a
@@ -154,8 +158,7 @@ const DEMO = (wei) => JSON.stringify([ETH(wei, "wfdemo")]);
 const WF = JSON.stringify(["wfdemo"]);
 const RECOV = pairs("wfdemo", [chainPlan.recovery]);
 
-if (now() > T0 + 240) log(`WARNING: started ${now() - T0} s after T0; the proofs meant for node b's outage may read fine`);
-await waitUntil(T0, "for the demo chain's T0 (node b's outage starts)");
+if (now() < OUTAGE_END) await waitUntil(OUTAGE_END + 5, "for the demo chain's scheduled outage to end");
 
 // ---- refused create_offer: credited back, withdrawn --------------------------------
 {
@@ -167,19 +170,25 @@ await waitUntil(T0, "for the demo chain's T0 (node b's outage starts)");
   await paying("withdraw-refund", P, "withdraw_refund", [], A("protocol"), c1, true);
 }
 
-// ---- F and G: proofs during node b's outage --------------------------------------------
-const f = await create("F-recovery", ["demo-recovery", "Evidence recovery (demo)", WF, pairs("wfdemo", [A("exploiter"), A("exploiter2")]), RECOV, DEMO(8n * E18),
-  1000, T0 - 7200, now() + 900, "EXPLOITER_OR_NAMED", JSON.stringify({ demo: true, note: "proved during a scheduled RPC outage, retried after it" })], B);
+// ---- F: a real Ethereum transaction proved before its block is final; G: a block that never finalizes ----
+const ethRpc = "https://ethereum-rpc.publicnode.com";
+const ethCall = async (m, p) => (await (await fetch(ethRpc, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: m, params: p }) })).json()).result;
+const ehead = await ethCall("eth_getBlockByNumber", ["latest", true]);
+const etx = ehead.transactions.find((t) => t.to && BigInt(t.value) > 10n ** 15n && t.input === "0x" && t.from.toLowerCase() !== t.to.toLowerCase());
+log(`F: Ethereum tx ${etx.hash} in block ${parseInt(ehead.number, 16)} (latest, not finalized) from ${etx.from} to ${etx.to}, ${BigInt(etx.value)} wei`);
+const f = await create("F-recovery", ["demo-recovery", "Evidence recovery: proved before finality (demo)", JSON.stringify(["ethereum"]), pairs("ethereum", [etx.from.toLowerCase()]),
+  pairs("ethereum", [etx.to.toLowerCase()]), JSON.stringify([ETH(BigInt(etx.value) * 2n)]), 1000, now() - 7200, now() + 1500, "EXPLOITER_OR_NAMED",
+  JSON.stringify({ demo: true, note: "a real Ethereum transfer proved before its block was final, retried after" })], B);
+await step("F-proof-before-finality", V, "submit_proofs", [f, JSON.stringify([["ethereum", etx.hash.toLowerCase()]])]);
 const g = await create("G-expiry", ["demo-expiry", "Expired proof (demo)", WF, pairs("wfdemo", [A("exploiter")]), RECOV, DEMO(2n * E18),
   1000, T0 - 7200, now() + 300, "EXPLOITER_OR_NAMED", JSON.stringify({ demo: true, note: "a return whose block never finalizes" })], B);
-await step("F-proofs-during-outage", V, "submit_proofs", [f, JSON.stringify([["wfdemo", W("F-outage")], ["wfdemo", W("F-late-final")]])]);
 await step("G-proof", V, "submit_proofs", [g, JSON.stringify([["wfdemo", W("G-never-final")]])]);
 for (const p of [...(await proofsOf(f)), ...(await proofsOf(g))]) {
   log(`  proof #${p.proof_id} offer ${p.offer_id}: ${p.status} ${p.reason} ${p.detail}`);
   check(`proof #${p.proof_id} (offer ${p.offer_id}) is PENDING, not rejected`, p.status === "PENDING", `${p.status} ${p.reason}`);
 }
 
-// ---- during the outage: mainnet paths C, D, E and the amendments of H ------------------------
+// ---- mainnet paths C, D, E and the amendments of H ------------------------
 const c = await create("C-none", ["demo-uwu-none", "UwU Lend (demo: nothing returned)", JSON.stringify(["ethereum"]), pairs("ethereum", ["0x841ddf093f5188989fa1524e7b893de64b421f47"]),
   pairs("ethereum", ["0xc671a6b1415de6549b05775ee4156074731190c6"]), JSON.stringify([ETH("5292986878286905142739")]), 2000, iso("2024-06-10T17:19:59Z"), iso("2024-06-12T17:00:00Z"), "EXPLOITER_OR_NAMED", JSON.stringify({ demo: true })], B);
 const SENECA_SUM = 537000000000000000000n + 499996758239285385644n + 499996912519013149613n;
@@ -230,14 +239,22 @@ oh = await offer(h);
 check("H amendments recorded in order with seq and time", oh.amendments.length === 2 && oh.amendments[0].what === "deadline" && oh.amendments[1].what === "recovery" && oh.amendments[1].seq > oh.amendments[0].seq,
   JSON.stringify(oh.amendments));
 
-// ---- after the outage: retries, then the wfdemo paths A, B and the copy -----------------------
-await waitUntil(OUTAGE_END + 5, "for node b's outage to end and the late block to finalize");
-const pf = (await proofsOf(f)).filter((p) => p.status === "PENDING").map((p) => p.proof_id);
-if (pf.length) {
-  const r = await step("F-retry", K, "retry_proofs", [f, JSON.stringify(pf)]);
-  check("F retry accepted", r.ok, r.reason);
+// ---- F's retry once Ethereum finalized its block; G stays PENDING ------------------------------
+{
+  const blk = parseInt(etx.blockNumber, 16);
+  for (;;) {
+    const fin = parseInt((await ethCall("eth_getBlockByNumber", ["finalized", false])).number, 16);
+    if (fin >= blk + 2) break;
+    log(`  waiting for Ethereum to finalize block ${blk} (finalized head ${fin})`);
+    await sleep(30000);
+  }
+  const pf = (await proofsOf(f)).filter((p) => p.status === "PENDING").map((p) => p.proof_id);
+  if (pf.length) {
+    const r = await step("F-retry-after-finality", K, "retry_proofs", [f, JSON.stringify(pf)]);
+    check("F retry accepted", r.ok, r.reason);
+  }
+  for (const p of await proofsOf(f)) check(`F proof #${p.proof_id} COUNTED after the retry`, p.status === "COUNTED" && p.attempts >= 2, `${p.status} ${p.reason} attempts ${p.attempts}`);
 }
-for (const p of await proofsOf(f)) check(`F proof #${p.proof_id} COUNTED after the retry`, p.status === "COUNTED" && p.attempts >= 2, `${p.status} ${p.reason} attempts ${p.attempts}`);
 const pg = (await proofsOf(g)).filter((p) => p.status === "PENDING").map((p) => p.proof_id);
 if (pg.length) await step("G-retry", K, "retry_proofs", [g, JSON.stringify(pg)]);
 for (const p of await proofsOf(g)) check(`G proof #${p.proof_id} still PENDING (block not final)`, p.status === "PENDING", `${p.status} ${p.reason}`);
@@ -302,9 +319,7 @@ const og = await settle("G-settle-after-recovery-window", g);
 const gp = (await proofsOf(g))[0];
 check("G proof EXPIRED after the recovery window", gp.status === "EXPIRED" && og.n_expired === 1, gp.status);
 const of = await settle("F-settle", f);
-check("F counted both recovered proofs (75%)", of.fraction_ppm === 750000, `${of.fraction_ppm}`);
-await claimOwn("F-claim-exploiter", X, "exploiter", f);
-await claimOwn("F-claim-exploiter2", X2, "exploiter2", f);
+check("F counted the recovered proof (50%)", of.fraction_ppm === 500000, `${of.fraction_ppm}`);
 const oe = await settle("E-settle", e);
 const ep = (await proofsOf(e)).find((p) => p.chain === "arbitrum");
 check("E's unfinalized Arbitrum proof: COUNTED if it finalized and was retried, else EXPIRED", ["EXPIRED", "COUNTED"].includes(ep.status), ep.status);
@@ -312,7 +327,7 @@ if (BigInt(oe.owed) > 0n) log("  E's owed shares belong to real addresses; refun
 const ohh = await settle("H-settle", h);
 check("H SETTLED_NONE", ohh.status === "SETTLED_NONE", ohh.status);
 
-for (const [label, id] of [["D", d], ["E", e]]) {
+for (const [label, id] of [["D", d], ["E", e], ["F", f]]) {
   const o = await offer(id);
   if (BigInt(o.owed) <= BigInt(o.claimed)) continue;
   await refused(`${label}-refund-inside-window`, S, "refund_unclaimed", [id], "CLAIM_WINDOW_OPEN_UNTIL_", { payee: A("protocol") });

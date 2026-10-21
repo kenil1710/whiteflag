@@ -39,7 +39,7 @@ export function CreateForm() {
     <div className="form">
       <div className="field"><label htmlFor="incident">Incident id</label><input id="incident" value={f.incident} onChange={set("incident")} placeholder="protocol-name-2026" /></div>
       <div className="field"><label htmlFor="name">Name</label><input id="name" value={f.name} onChange={set("name")} placeholder="Protocol V2 pools" /></div>
-      <div className="field"><label htmlFor="chains">Chains (comma separated: ethereum, arbitrum)</label><input id="chains" value={f.chains} onChange={set("chains")} /></div>
+      <div className="field"><label htmlFor="chains">Chains (comma separated: ethereum, arbitrum; the demo registry also takes wfdemo, its demo chain)</label><input id="chains" value={f.chains} onChange={set("chains")} /></div>
       <div className="field"><label htmlFor="ex">Exploiter addresses (JSON)</label><textarea id="ex" value={f.exploiters} onChange={set("exploiters")} /><div className="hint">A return counts only if a listed exploiter address sends it.</div></div>
       <div className="field"><label htmlFor="rec">Recovery addresses (JSON)</label><textarea id="rec" value={f.recoveries} onChange={set("recoveries")} /></div>
       <div className="field"><label htmlFor="tok">Stolen tokens (JSON)</label><textarea id="tok" value={f.tokens} onChange={set("tokens")} /><div className="hint">token: &quot;native&quot; or the ERC-20 address that emits Transfer events (the proxy). stolen: base units. weight: your value per whole token, frozen.</div></div>

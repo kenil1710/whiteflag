@@ -1,13 +1,13 @@
 {
   "chain": "wfdemo",
   "chain_id": 357357,
-  "t0": 1792567135,
-  "t0_iso": "2026-10-21T07:18:55.000Z",
+  "t0": 1792569632,
+  "t0_iso": "2026-10-21T08:00:32.000Z",
   "recovery": "0x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe",
   "recovery_e2e": "0xe2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e0",
   "outage_node_b": [
-    1792567135,
-    1792568035
+    1792569632,
+    1792570532
   ],
   "txs": {
     "A-full": {
@@ -17,8 +17,8 @@
       "to": "0x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe",
       "value": "2000000000000000000",
       "block": 1,
-      "block_time": 1792565335,
-      "final_at": 1792565335
+      "block_time": 1792567832,
+      "final_at": 1792567832
     },
     "B-exploiter": {
       "hash": "0x494a5ef651875d5d4aef6457a27fa5a268ad94ba41db65ee8c097541813feb20",
@@ -27,8 +27,8 @@
       "to": "0x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe",
       "value": "3000000000000000000",
       "block": 1,
-      "block_time": 1792565335,
-      "final_at": 1792565335
+      "block_time": 1792567832,
+      "final_at": 1792567832
     },
     "B-exploiter2": {
       "hash": "0x014d164b03810ac4c8bce70573ca6086302adc6d2c6a3aa2ccdf746411855845",
@@ -37,8 +37,8 @@
       "to": "0x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe",
       "value": "6000000000000000000",
       "block": 1,
-      "block_time": 1792565335,
-      "final_at": 1792565335
+      "block_time": 1792567832,
+      "final_at": 1792567832
     },
     "B-stranger": {
       "hash": "0xd1f98f21ee6682d55335225f7e028b66f4cae9c22b99e60cb4a0714928b957b0",
@@ -47,8 +47,8 @@
       "to": "0x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe",
       "value": "1000000000000000000",
       "block": 1,
-      "block_time": 1792565335,
-      "final_at": 1792565335
+      "block_time": 1792567832,
+      "final_at": 1792567832
     },
     "F-outage": {
       "hash": "0x4d4bd967f716a9ac4447a8a5b833596fa591b52dc0e1121fd487483443030159",
@@ -57,8 +57,8 @@
       "to": "0x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe",
       "value": "4000000000000000000",
       "block": 1,
-      "block_time": 1792565335,
-      "final_at": 1792565335
+      "block_time": 1792567832,
+      "final_at": 1792567832
     },
     "F-late-final": {
       "hash": "0xb701efc1d72320200d915dd45c496565af341e5a0d3ee82543231153a4432a61",
@@ -67,8 +67,8 @@
       "to": "0x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe",
       "value": "2000000000000000000",
       "block": 2,
-      "block_time": 1792566235,
-      "final_at": 1792568035
+      "block_time": 1792568732,
+      "final_at": 1792570532
     },
     "G-never-final": {
       "hash": "0xc1d1b71f3608f427ac667c323573d5a2a7157f2c9bf3a380d9dc63f496a05d14",
@@ -77,8 +77,8 @@
       "to": "0x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe",
       "value": "1000000000000000000",
       "block": 3,
-      "block_time": 1792566235,
-      "final_at": 1795159135
+      "block_time": 1792568732,
+      "final_at": 1795161632
     },
     "E2E-return": {
       "hash": "0xef104ab1c7d49d365d3fff940912ea4b03aec6f6c77b5ffa57c6913b195e378a",
@@ -87,8 +87,8 @@
       "to": "0xe2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e0",
       "value": "1000000000000000000",
       "block": 1,
-      "block_time": 1792565335,
-      "final_at": 1792565335
+      "block_time": 1792567832,
+      "final_at": 1792567832
     },
     "E2E-return-2": {
       "hash": "0xce0beba31eb4269fd38d3c729e0389b36f103eea7b8d1c153acc59135fbec9ce",
@@ -97,8 +97,8 @@
       "to": "0xe2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e0",
       "value": "1000000000000000000",
       "block": 1,
-      "block_time": 1792565335,
-      "final_at": 1792565335
+      "block_time": 1792567832,
+      "final_at": 1792567832
     },
     "E2E-stranger": {
       "hash": "0x4a376fcb90cf44446eb2fe5d4ecffa7ec81bface11454b4928a3e6ab0d6c8267",
@@ -107,8 +107,8 @@
       "to": "0xe2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e0e2e0",
       "value": "1000000000000000000",
       "block": 1,
-      "block_time": 1792565335,
-      "final_at": 1792565335
+      "block_time": 1792567832,
+      "final_at": 1792567832
     }
   }
 }

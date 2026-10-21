@@ -12,7 +12,11 @@
  *   9  the offline test suite passes
  *  10  no placeholder language in the docs
  *  11  README names the deploy commit and the final commit; SUBMISSION.md's evidence links are pinned to the final
- *      commit, which is pushed; after it only README.md, docs/SUBMISSION.md and docs/FINAL_CHECK.md change
+ *      commit, which is pushed; after it only README.md, docs/SUBMISSION.md, docs/FINAL_CHECK.md, docs/AUDIT.md and
+ *      docs/STEWARD_RESPONSE.md change
+ *  12  the CI workflow (offline, Direct Mode, lint, frontend, keeper, deployed source) passed on the final commit
+ *  13  the browser-wallet flows passed and their screenshots and videos are in docs/e2e/
+ *  14  the demo chain's transactions are signed by the keys the file names, and the site serves them as written
  *   node tools/final_check.mjs       exit 1 if any check fails
  */
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
@@ -31,7 +35,7 @@ const sh = (cmd, args) => spawnSync(cmd, args, { cwd: root, encoding: "utf8", ma
 {
   const b = sh("python3", ["tools/build.py", "--check"]);
   const f = sh("node", ["tools/sync_frontend.mjs", "--check"]);
-  add("build and site copies fresh", b.status === 0 && f.status === 0, b.status === 0 && f.status === 0 ? "build/ = contracts/ + shared; frontend copies of deployments, incidents, verify rule and RULES.md identical" : (b.stdout + f.stdout).trim());
+  add("build and site copies fresh", b.status === 0 && f.status === 0, b.status === 0 && f.status === 0 ? "build/ = contracts/ + shared; frontend copies of deployments, incidents, demo chain, verify rule and RULES.md identical" : (b.stdout + f.stdout).trim());
 }
 // 2
 {
@@ -42,13 +46,14 @@ const sh = (cmd, args) => spawnSync(cmd, args, { cwd: root, encoding: "utf8", ma
 // 3
 {
   const addrs = Object.values(dep).map((c) => c.address);
-  const files = ["README.md", "docs/SUBMISSION.md", "docs/SEEDS.md", "frontend/src/lib/deployments.json"];
+  const files = ["README.md", "docs/SUBMISSION.md", "docs/SEEDS.md", "docs/STEWARD_RESPONSE.md", "frontend/src/lib/deployments.json"];
   const missing = [];
   for (const f of files) { if (!existsSync(root + f)) { missing.push(f + " (missing)"); continue; } const t = rd(f).toLowerCase(); for (const a of addrs) if (!t.includes(a.toLowerCase())) missing.push(`${f} lacks ${a}`); }
-  const smoke = existsSync(root + "deployments.smoke.json") ? Object.values(JSON.parse(rd("deployments.smoke.json")).contracts).map((c) => c.address.toLowerCase()) : [];
+  // superseded contracts may be named only in docs/superseded/, deployments.json's superseded list and the README's note
+  const old = (JSON.parse(rd("deployments.json")).superseded ?? []).map((c) => c.address.toLowerCase());
   const stray = [];
-  for (const f of ["README.md", "docs/SUBMISSION.md"]) if (existsSync(root + f)) for (const s of smoke) if (rd(f).toLowerCase().includes(s)) stray.push(`${f} names smoke contract ${s}`);
-  add("addresses consistent", missing.length === 0 && stray.length === 0, missing.length + stray.length === 0 ? `the 4 deployed addresses appear in ${files.join(", ")}; no smoke address in README or SUBMISSION` : [...missing, ...stray].join("; "));
+  for (const f of ["docs/SUBMISSION.md", "docs/SEEDS.md", "frontend/src/lib/deployments.json"]) if (existsSync(root + f)) for (const s of old) if (rd(f).toLowerCase().includes(s)) stray.push(`${f} names superseded contract ${s}`);
+  add("addresses consistent", missing.length === 0 && stray.length === 0, missing.length + stray.length === 0 ? `the 4 deployed addresses appear in ${files.join(", ")}; no superseded address outside docs/superseded/ and the README's note` : [...missing, ...stray].join("; "));
 }
 // 4
 {
@@ -83,11 +88,11 @@ const sh = (cmd, args) => spawnSync(cmd, args, { cwd: root, encoding: "utf8", ma
   const out = [];
   for (const [id, s] of Object.entries(seed.incidents)) {
     const o = await C.view("get_offer", [s.offer_id]);
-    const closed = o.status !== "OPEN" && (BigInt(o.owed) === 0n || o.claimed !== "0" || o.unclaimed_refunded !== "0");
+    const closed = o.status !== "OPEN" && BigInt(o.owed) === BigInt(o.claimed) + BigInt(o.unclaimed_refunded);
     if (!closed) probs.push(`${id} ${o.status}, owed ${o.owed}, claimed ${o.claimed}, refunded ${o.unclaimed_refunded}`);
     out.push(`${id} ${o.status} ${(o.fraction_ppm / 1e4).toFixed(2)}%`);
   }
-  add("canonical seeds settled", probs.length === 0, probs.length ? probs.join("; ") : out.join("; ") + "; every owed bounty refunded after the claim window");
+  add("canonical seeds settled", probs.length === 0, probs.length ? probs.join("; ") : out.join("; ") + "; every owed share claimed or refunded after the claim window");
 }
 // 6
 {
@@ -104,7 +109,7 @@ const sh = (cmd, args) => spawnSync(cmd, args, { cwd: root, encoding: "utf8", ma
   const Cc = client({ role: "keeper", address: dep.WhiteFlagRegistry.address });
   let kp = 0;
   for (const a of Object.values(ks?.actions ?? {})) {
-    if (a.status !== "DONE" || a.done_by_other || !a.finalized_hash || a.registry !== dep.WhiteFlagRegistry.address.toLowerCase()) continue;
+    if (a.status !== "DONE" || a.done_by_other || !a.finalized_hash || a.registry !== dep.WhiteFlagRegistry.address.toLowerCase() || a.action === "RETRY_PENDING") continue;
     const o = await Cc.view("get_offer", [a.offer_id]);
     const amount = a.action === "SETTLE" ? o.refunded_at_settle : o.unclaimed_refunded;
     if (BigInt(amount) === 0n) continue;
@@ -144,7 +149,9 @@ const sh = (cmd, args) => spawnSync(cmd, args, { cwd: root, encoding: "utf8", ma
   const t = sh("sh", ["test/run_offline.sh"]);
   const all = t.stdout + t.stderr;
   const py = Number(all.match(/Ran (\d+) tests/)?.[1] ?? 0), js = Number(all.match(/# pass (\d+)/)?.[1] ?? 0), jf = Number(all.match(/# fail (\d+)/)?.[1] ?? 1);
-  add("tests pass", t.status === 0 && jf === 0, `${py + js} offline tests (${py} contract, gate, attack and meaning; ${js} keeper), ${t.status === 0 ? "all pass" : "FAILURES"}`);
+  const d = sh("sh", ["test/run_direct.sh"]);
+  const dn = Number((d.stdout + d.stderr).match(/(\d+) passed/)?.[1] ?? 0), df = /failed|error/i.test((d.stdout + d.stderr).split("\n").slice(-2).join(" "));
+  add("tests pass", t.status === 0 && jf === 0 && d.status === 0 && !df, `${py + js} offline tests (${py} contract, gate, attack and meaning; ${js} keeper) and ${dn} GenLayer Direct Mode tests, ${t.status === 0 && d.status === 0 ? "all pass" : "FAILURES"}`);
 }
 // 10
 {
@@ -169,10 +176,30 @@ const sh = (cmd, args) => spawnSync(cmd, args, { cwd: root, encoding: "utf8", ma
     const pushed = sh("git", ["branch", "-r", "--contains", fin]).stdout.includes("origin/main");
     if (!pushed) probs.push("the final commit is not on origin/main");
     const changed = sh("git", ["diff", "--name-only", fin]).stdout.trim().split("\n").filter(Boolean);
-    const extra = changed.filter((f) => !["README.md", "docs/SUBMISSION.md", "docs/FINAL_CHECK.md"].includes(f));
+    const extra = changed.filter((f) => !["README.md", "docs/SUBMISSION.md", "docs/FINAL_CHECK.md", "docs/AUDIT.md", "docs/STEWARD_RESPONSE.md"].includes(f));
     if (extra.length) probs.push("changed after the final commit: " + extra.join(", "));
   }
-  add("verification package", probs.length === 0, probs.length ? probs.join("; ") : `deploy commit ${deployCommit.slice(0, 7)} and final commit ${fin.slice(0, 7)} named in README; every evidence link in SUBMISSION.md pinned to ${fin.slice(0, 7)}, which is on origin/main; since then only README.md, docs/SUBMISSION.md and docs/FINAL_CHECK.md`);
+  add("verification package", probs.length === 0, probs.length ? probs.join("; ") : `deploy commit ${deployCommit.slice(0, 7)} and final commit ${fin.slice(0, 7)} named in README; every evidence link in SUBMISSION.md pinned to ${fin.slice(0, 7)}, which is on origin/main; since then only README.md and docs/{SUBMISSION,FINAL_CHECK,AUDIT,STEWARD_RESPONSE}.md`);
+}
+// 12
+{
+  const fin = rd("README.md").match(/Final commit `([0-9a-f]{40})`/)?.[1];
+  let run = null;
+  try { run = (await (await fetch(`https://api.github.com/repos/kenil1710/whiteflag/actions/workflows/ci.yml/runs?head_sha=${fin}&per_page=5`, { headers: { "user-agent": "final_check" } })).json()).workflow_runs?.find((r) => r.conclusion === "success") ?? null; } catch { /* */ }
+  add("CI passed", Boolean(run), run ? `ci.yml run ${run.html_url} succeeded on ${String(fin).slice(0, 7)} (offline, Direct Mode, lint, frontend, keeper, deployed source)` : `no successful ci.yml run on the final commit ${String(fin).slice(0, 7)}`);
+}
+// 13
+{
+  let res = null; try { res = JSON.parse(rd("docs/e2e/results.json")); } catch { /* */ }
+  const files = existsSync(root + "docs/e2e") ? readdirSync(root + "docs/e2e") : [];
+  const pngs = files.filter((f) => f.endsWith(".png")).length, vids = files.filter((f) => f.endsWith(".webm")).length;
+  const ok = res && res.stats && res.stats.unexpected === 0 && res.stats.expected > 0 && pngs >= 8 && vids >= 2;
+  add("browser flows", Boolean(ok), res ? `${res.stats.expected} Playwright flow(s) passed, ${res.stats.unexpected} failed; ${pngs} screenshots and ${vids} videos in docs/e2e/` : "docs/e2e/results.json missing");
+}
+// 14
+{
+  const v = sh("node", ["tools/verify_demochain.mjs", "--live"]);
+  add("demo chain", v.status === 0, (v.stdout.trim().split("\n").join("; ")).slice(0, 400));
 }
 
 const head = execFileSync("git", ["-C", root, "rev-parse", "HEAD"]).toString().trim();
