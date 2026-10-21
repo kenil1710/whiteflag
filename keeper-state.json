@@ -299,6 +299,20 @@
       "submitted_at": 1792585691,
       "verified_at": 1792585734,
       "finalized_hash": "0xfd8d7b955951a23d3519213a85a482217a660b16ad4a5ed51151f23113876333"
+    },
+    "0x0c5c9cb1826530a5a90ca1676ca0477f36fc9d55:2:SETTLE": {
+      "key": "0x0c5c9cb1826530a5a90ca1676ca0477f36fc9d55:2:SETTLE",
+      "registry": "0x0c5c9cb1826530a5a90ca1676ca0477f36fc9d55",
+      "offer_id": 2,
+      "action": "SETTLE",
+      "status": "SUBMITTED",
+      "attempts": 0,
+      "hashes": [
+        "0x993d225d665b181ec052d49be6c7608d6b58b9ae38a898be96bfc95ca6fc461e"
+      ],
+      "first_seen_at": 1792585687,
+      "hash": "0x993d225d665b181ec052d49be6c7608d6b58b9ae38a898be96bfc95ca6fc461e",
+      "submitted_at": 1792585738
     }
   },
   "runs": [
@@ -537,5 +551,5 @@
     "0x11b9e1d185ADd2b88dF872743734Db1124b80390",
     "0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55"
   ],
-  "saved_at": "2026-10-21T12:28:54.684Z"
+  "saved_at": "2026-10-21T12:28:58.045Z"
 }
