@@ -12,6 +12,12 @@
       "scans_completed": 17,
       "last_scan_at": 1792559990,
       "total": 8
+    },
+    "0x11b9e1d185add2b88df872743734db1124b80390": {
+      "cursor": 0,
+      "scans_completed": 0,
+      "last_scan_at": 0,
+      "total": 6
     }
   },
   "actions": {
@@ -143,6 +149,20 @@
       "submitted_at": 1792426108,
       "verified_at": 1792426142,
       "finalized_hash": "0x31840f92a908b6d36fb864bf128587415d781f33ae5d6202174b4cf4fcb6ad6a"
+    },
+    "0x11b9e1d185add2b88df872743734db1124b80390:1:SETTLE": {
+      "key": "0x11b9e1d185add2b88df872743734db1124b80390:1:SETTLE",
+      "registry": "0x11b9e1d185add2b88df872743734db1124b80390",
+      "offer_id": 1,
+      "action": "SETTLE",
+      "status": "SUBMITTED",
+      "attempts": 0,
+      "hashes": [
+        "0xba82272161305a8b0f9682ff4951f5dcbaea0e05b20534e348daae9b7dc210df"
+      ],
+      "first_seen_at": 1792577960,
+      "hash": "0xba82272161305a8b0f9682ff4951f5dcbaea0e05b20534e348daae9b7dc210df",
+      "submitted_at": 1792577963
     }
   },
   "runs": [
@@ -366,8 +386,8 @@
   },
   "keeper": "0x41d0b3fa573192aba06B076aF22AA90ba6c6f8fD",
   "registries_watched": [
-    "0x461399B65edA1C0634a47A658d34624eC4C24a31",
-    "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2"
+    "0x11b9e1d185ADd2b88dF872743734Db1124b80390",
+    "0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55"
   ],
-  "saved_at": "2026-10-21T05:19:50.089Z"
+  "saved_at": "2026-10-21T10:19:23.687Z"
 }
