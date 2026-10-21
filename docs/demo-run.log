@@ -1,1 +1,192 @@
-# demo run on 0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55 (gate 0x5d7376dD53bCb4f3A8791A2ddB79F5F2f230F43f), demo chain T0 2026-10-21T08:00:32.000Z, started 2026-10-21T10:33:15.271Z
+# demo run on 0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55 (gate 0x5d7376dD53bCb4f3A8791A2ddB79F5F2f230F43f), demo chain T0 2026-10-21T08:00:32.000Z, started 2026-10-21T10:36:26.187Z
+refused-create: create_offer ACCEPTED credited�50000000000000000okreason�RECOVERY_IS_EXPLOITER 0x9e34067c731db2e86698c689447ef73816958f8f490d26528d3fddab36764bf8
+  CHECK ok   refused create credited the value back: 50000000000000000 wei (RECOVERY_IS_EXPLOITER)
+withdraw-refund: withdraw_refund ACCEPTED ok	withdrawn�50000000000000000 0xe1589411ff598a90fc346314e5cad7c792246b81a1f1dcb8acad59c15d6d6f0f
+  PAYOUT withdraw-refund: 50000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ 950000000000000000, payee Δ 49873694249999177 BALANCES: contract balance moved by 950000000000000000, expected -50000000000000000
+F: Ethereum tx 0x478526ef6199db08faa2f7832d0116a5137840bcaf62ff7b9c498026d91b8bff in block 26240424 (latest, not finalized) from 0x62425cd6bdcb6bfe51558ea465b063486b70dc9f to 0x4f16bf7f771339b3177d3673531b4d178790cdb7, 2000000000000000000 wei
+F-recovery: create_offer ACCEPTED &bounty�100000000000000000offer_idIok	settle_at��5 0xb22131d12e1577c00b522d3266d233261accf3c2d979b3d74111fd0465b81df1
+F-proof-before-finality: submit_proofs ACCEPTED &fraction_ppmoffer_idIokresultsFattempts	chainDethereumcreditsdetailproof_id)reasonlNOT_FINALIZEDstatus<PENDINGtx�0x478526ef6199db08faa2f7832d 0x0d297d6744fff8b1e4f2a97066a57df0fd1a74a3c2952cb1b0101e7cce11a22c
+G-expiry: create_offer ACCEPTED &bounty�100000000000000000offer_idQok	settle_at����5 0x25429039cdadc2631b1802a14cf872ca52c45975e4288b42bffc6c54b08dd3aa
+G-proof: submit_proofs ACCEPTED &fraction_ppmoffer_idQokresultsFattempts	chain4wfdemocreditsdetailproof_id1reasonlNOT_FINALIZEDstatus<PENDINGtx�0xc1d1b71f3608f427ac667c323573 0xbf8fcd7ce6dd303600d6c96045981d5ff8194effa50cba27f4c0e1fcfa5a9fa4
+  proof #5 offer 9: PENDING NOT_FINALIZED 
+  CHECK ok   proof #5 (offer 9) is PENDING, not rejected: PENDING NOT_FINALIZED
+  proof #6 offer 10: PENDING NOT_FINALIZED 
+  CHECK ok   proof #6 (offer 10) is PENDING, not rejected: PENDING NOT_FINALIZED
+C-none: create_offer ACCEPTED &bounty�100000000000000000offer_idYok	settle_at�蒶5 0x56de2ecdcd18dec1a27714a865e8e1201e7bbdb33cd8ada06ccd2f207fcffc7a
+D-unclaimed: create_offer ACCEPTED &bounty�100000000000000000offer_idaok	settle_at�钶5 0xf110f0b74f1a181d34844f394e1cd0c57b5039620d262ec56ed3a71f94ff0b88
+D-proofs: submit_proofs ACCEPTED &fraction_ppm���offer_idaokresultsFattempts	chainDethereumcredits6amount�537000000000000000000from�0x94641c01a4937f2c8ef930580cf396142a2942dckey 0xd4962cb480db00f1475fa0ff24ecc12925dcdf1c8734537638552c500e85fa1b
+E: fresh Arbitrum tx 0xa12a9a82948ab77697ceefc83390908a23ab7314d82a58ec16a8919fcb5c9d2a in block 516889024 from 0xdf205931e9df00f8a2b53ca2d7b31427bc0adaf5 to 0x33a936693a1a9d5714d4ee284145d23d5c34c61c
+E-rejections: create_offer ACCEPTED &bounty�100000000000000000offer_idyok	settle_at�뒶5 0xcb29c66da3f9269faa1b757ece94f221efc364c1c778eec1bc84929d99ff9f29
+E-batch-1: submit_proofs ACCEPTED &fraction_ppmoffer_idyokresults-Fattempts	chainDarbitrumcreditsdetailproof_idQreasonlNOT_FINALIZEDstatus<PENDINGtx�0xa12a9a82948ab77697ceefc833 0x14ddb9cf8bc9c8792c5c136dd63f18e4004e874acf0c803191f5e4f576e5f0e2
+E-batch-2: submit_proofs ACCEPTED REFUSED: SUBMISSIONS_CLOSED_AT_1792579263 0xae23e0d5492907c137b37b87b898f847ce02d9147e2529549b208ca9117cd790
+E-duplicate: submit_proofs ACCEPTED REFUSED: SUBMISSIONS_CLOSED_AT_1792579263 0x6af0744e4a366325df3b453ef77bb79c54ee316f7ad09046ac9335028330c0f5
+  CHECK FAIL E-duplicate refused with ALREADY_COUNTED: REFUSED: SUBMISSIONS_CLOSED_AT_1792579263
+E-chain-not-in-offer: submit_proofs ACCEPTED REFUSED: SUBMISSIONS_CLOSED_AT_1792579263 0xbbd5979ef3ff6a2fb99f05de7869e8006993472a4c1fa17f9b018715399006d0
+  CHECK FAIL E-chain-not-in-offer refused with CHAIN_NOT_IN_OFFER: REFUSED: SUBMISSIONS_CLOSED_AT_1792579263
+E-extend-after-deadline: extend_deadline ACCEPTED REFUSED: AMENDMENTS_CLOSED_AT_1691261880 0x5b52d76d292656eba4bbf2122c3f55511a5892e929bfacc2a113602654b28407
+  CHECK ok   E-extend-after-deadline refused with AMENDMENTS_CLOSED_AT_: REFUSED: AMENDMENTS_CLOSED_AT_1691261880
+E-add-recovery-after-deadline: add_recovery ACCEPTED REFUSED: AMENDMENTS_CLOSED_AT_1691261880 0xc7106c6d4f5009a6d7beb3c0aca0f1b1a0e68fc6761e46b101fe2df32d9ab0f6
+  CHECK ok   E-add-recovery-after-deadline refused with AMENDMENTS_CLOSED_AT_: REFUSED: AMENDMENTS_CLOSED_AT_1691261880
+  E proof #10 arbitrum 0xa12a9a8294: PENDING NOT_FINALIZED
+  E proof #11 ethereum 0x7ad3111bb6: REJECTED TX_FAILED
+  E proof #12 ethereum 0x431103213d: REJECTED BEFORE_OFFER_START
+  E proof #13 ethereum 0xdbf1d8dca9: REJECTED AFTER_DEADLINE
+  E proof #14 ethereum 0xab7f14e2b7: REJECTED AFTER_DEADLINE
+H-amendments: create_offer ACCEPTED &bounty�100000000000000000offer_id�ok	settle_at����5 0x24717555df1b70624ab58cef4882ddb1aab80d09bff8085acc38e8a152a82a87
+H-extend: extend_deadline ACCEPTED .	amendment.at��5from����5seq	to����5whatDdeadlinedeadline����5offer_id�ok	settle_at����5 0x0bfb28785cdc73b6b2e33a78bdc5ba16383aa541142f2101c436d4f854dfbee5
+H-add-recovery: add_recovery ACCEPTED &	amendment.address�0x5afe5afe5afe5afe5afe5afe5afe5afe5afe0002at��5chain4wfdemoseqwhatDrecoveryoffer_id�ok
+recoveries 0x644ffd7ae925a116cbce0ea4bd091d40ea1f6f656f96460af4183f15a4215723
+H-extend-by-stranger: extend_deadline ACCEPTED REFUSED: ONLY_THE_PROTOCOL 0x5068c967a15010b3fd92e185d879ae84a13e6ca3510942a9d92a2efb01a621d7
+  CHECK ok   H-extend-by-stranger refused with ONLY_THE_PROTOCOL: REFUSED: ONLY_THE_PROTOCOL
+H-extend-past-cap: extend_deadline ACCEPTED REFUSED: EXTENSION_CAP_1792583539 0x48d4a1a370ae5197f3a5e2fcf8d0870cfc50dc23abee6e3c9625525f02ad1b1d
+  CHECK ok   H-extend-past-cap refused with EXTENSION_CAP_: REFUSED: EXTENSION_CAP_1792583539
+  CHECK ok   H amendments recorded in order with seq and time: [{"at":1792579373,"from":1792579939,"seq":1,"to":1792580179,"what":"deadline"},{"address":"0x5afe5afe5afe5afe5afe5afe5afe5afe5afe0002","at":1792579390,"chain":"wfdemo","seq":2,"what":"recovery"}]
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240388)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240388)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240388)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240388)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240388)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240388)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240388)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240388)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240388)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240388)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240388)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240388)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240388)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240420)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240420)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240420)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240420)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240420)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240420)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240420)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240420)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240420)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240420)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240420)
+  waiting for Ethereum to finalize block 26240424 (finalized head 26240420)
+F-retry-after-finality: retry_proofs ACCEPTED .fraction_ppm���offer_idIokpendingresultsFattemptschainDethereumcredits6amount�2000000000000000000from�0x62425cd6bdcb6bfe51558ea465b063486b70d 0xcedef8d8ef4c6a0c30939edfebfc95d667679f7418546bb6e929f6be2fd5ab0b
+  CHECK ok   F retry accepted: .fraction_ppm���offer_idIokpendingresultsFattemptschainDethereumcredits6amount�2000000000000000000from�0x62425cd6bdcb6bfe51558ea465b063486b70dc9fkey�ethereum:0x478526ef6199db08faa2f7832d0116a5137840bcaf62ff7b9c498026d91b8bff:nativelogto�0x4f16bf7f771339b3177d3673531b4d178790cdb7token4nativedetailproof_id)reasonstatus<COUNTEDtx�0x478526ef6199db08faa2f7832d0116a5137840bcaf62ff7b9c498026d91b8bff
+  CHECK ok   F proof #5 COUNTED after the retry: COUNTED  attempts 2
+G-retry: retry_proofs ACCEPTED REFUSED: RECOVERY_CLOSED_AT_1792579776 0x7ab2bb1b609cdf2b004f63f61a33c682d5c9982e2737c243aa71487e5f105a9b
+  CHECK ok   G proof #6 still PENDING (block not final): PENDING NOT_FINALIZED
+A-full: create_offer ACCEPTED &bounty�100000000000000000offer_id�ok	settle_at�ý�5 0x4483c832232f9ef6e70d44f0c0af650f99e1066cf5a170acda420b99b70be852
+A-proof: submit_proofs ACCEPTED &fraction_ppm���offer_id�okresultsFattempts	chain4wfdemocredits6amount�2000000000000000000from�0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0key�w 0x0a1120e1ac92eb79b5cd48303a701ff809e8c2a273236c0aba69ea471839f6d9
+A-commit-by-stranger: commit_beneficiary ACCEPTED REFUSED: NOT_AN_EXPLOITER_ADDRESS 0x6c3a1d4c24587838524d02b8df8260de53788e5845652ec1c3c8a9bdb9a68dea
+  CHECK ok   A-commit-by-stranger refused with NOT_AN_EXPLOITER_ADDRESS: REFUSED: NOT_AN_EXPLOITER_ADDRESS
+A-commit-beneficiary: commit_beneficiary ACCEPTED &beneficiary�0x0f893accbf43bd4459955fc33005b268b99b074f	exploiter�0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0offer_id�ok 0x3d5fe3756f8eae012ff947498f78d450e9783738672fea75482269dcfb998424
+A-commit-again: commit_beneficiary ACCEPTED REFUSED: BENEFICIARY_ALREADY_COMMITTED 0xcd7d3d608d6dec0728d0f7546fabe895d78390808bc138c485aeb7240e2ea1b5
+  CHECK ok   A-commit-again refused with BENEFICIARY_ALREADY_COMMITTED: REFUSED: BENEFICIARY_ALREADY_COMMITTED
+A-settle-early: settle ACCEPTED Fclaim_deadline鷓�5fraction_ppm���offer_id�okowed�100000000000000000	refund_torefunded0statusdSETTLED_FULL 0x8f02ec181b809ce10ca91a9445250d5c987292a6b580647a2818a7bf643208aa
+  A-settle-early: SETTLED_FULL 100% owed 100000000000000000 shares {"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0":"100000000000000000"} expired 0
+  CHECK ok   A-settle-early refunded the remainder at settlement: 0
+  CHECK ok   A settled FULL before its deadline: SETTLED_FULL
+A-claim-by-affiliated-address: claim ACCEPTED REFUSED: NOTHING_OWED_TO_THIS_ADDRESS 0x71809d89313f26f686b890cab346773e56ded00970c0f837f770adf739b1cc24
+  CHECK ok   A-claim-by-affiliated-address refused with NOTHING_OWED_TO_THIS_ADDRESS: REFUSED: NOTHING_OWED_TO_THIS_ADDRESS
+A-claim-to-beneficiary: claim ACCEPTED .	exploiter�0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0offer_id�okpaid�100000000000000000to�0x0f893accbf43bd4459955fc33005b268b99b074f 0xc0c53929dbd276b59df1617cd3742919cbb856a6dba3f263aac74afce83d2e2d
+  PAYOUT A-claim-to-beneficiary: 100000000000000000 wei to 0x0f893accbf43bd4459955fc33005b268b99b074f: FINALIZED, delivered=true, registry Δ -100000000000000000, payee Δ 100000000000000000 BALANCES OK
+  CHECK ok   A-claim-to-beneficiary paid exactly the address's own share: 100000000000000000 to 0x0f893accbf43bd4459955fc33005b268b99b074f
+B-shared: create_offer ACCEPTED &bounty�100000000000000000offer_id�ok	settle_at����5 0x1cb38b9323044e5a5b550df6e3eb456c9c369fd2a2e8849f3797ff2e6160467a
+B-proofs: submit_proofs ACCEPTED &fraction_ppm���offer_id�okresultsFattempts	chain4wfdemocredits6amount�3000000000000000000from�0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0key�w 0x220f97aed7229b741e830166b1193985b6c8fcb3308371202f2a853869f9a9fe
+  B proof #19: COUNTED  credits [["0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0","3000000000000000000"]]
+  B proof #20: COUNTED  credits [["0x346a860297878340d4253e503e36d0b01ebe695f","6000000000000000000"]]
+  B proof #21: REJECTED SENDER_NOT_EXPLOITER credits []
+copy-of-A: create_offer ACCEPTED &bounty�1000000000000000offer_id�ok	settle_at�н�5 0x485ad910624614db6fff17662f16937681e02ad61b809cbf7b4ba974d02654cc
+copy-proof: submit_proofs ACCEPTED &fraction_ppm���offer_id�okresultsFattempts	chain4wfdemocredits6amount�1000000000000000000from�0x2e1f3d50623462fe0b14b978c3a7c220149d60edkey�w 0x4d4394622fc5fb421b6729e1356b378d877a72f9c5ee7ed3a8e9c8f217226c6e
+copy-settle: settle ACCEPTED Fclaim_deadline��5fraction_ppm���offer_id�okowed�1000000000000000	refund_torefunded0statusdSETTLED_FULL 0x68868888f00f03d545794d64e3fac9eabcf5fc270a5251832c36464257893429
+B-commit-under-EXPLOITER_ONLY: commit_beneficiary ACCEPTED REFUSED: PAYOUT_RULE_IS_EXPLOITER_ONLY 0xcd8c97a0d89a06ed6a49fd1e7a75cf755f6fee92c6a02cb4a7b7f7b74f1ba9d7
+  CHECK ok   B-commit-under-EXPLOITER_ONLY refused with PAYOUT_RULE_IS_EXPLOITER_ONLY: REFUSED: PAYOUT_RULE_IS_EXPLOITER_ONLY
+  waiting 75 s for B-settle-refund-remainder's settle time
+  waiting 45 s for B-settle-refund-remainder's settle time
+  waiting 15 s for B-settle-refund-remainder's settle time
+B-settle-refund-remainder: settle ACCEPTED Fclaim_deadline�ʓ�5fraction_ppm���offer_id�okowed�75000000000000000	refund_to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07refunded�25000000000000000s 0x7e4453dcbb7f831f5e862608886b4c639d1c6490a040d4ac17f0550dde4cd4ad
+  PAYOUT B-settle-refund-remainder: 25000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -25000000000000000, payee Δ 25000000000000000 BALANCES OK
+  B-settle-refund-remainder: SETTLED_PARTIAL 75% owed 75000000000000000 shares {"0x346a860297878340d4253e503e36d0b01ebe695f":"50000000000000000","0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0":"25000000000000000"} expired 0
+  CHECK ok   B-settle-refund-remainder refunded the remainder at settlement: 25000000000000000
+  CHECK ok   B shares are 3/12 and 6/12 of the bounty, by sender: {"0x346a860297878340d4253e503e36d0b01ebe695f":"50000000000000000","0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0":"25000000000000000"}
+B-claim-by-stranger: claim ACCEPTED REFUSED: NOT_AN_EXPLOITER_ADDRESS 0x398fdccae76ddd5cefe8288c010c4fa95be68ddeb30ac45412789b001fd555dd
+  CHECK ok   B-claim-by-stranger refused with NOT_AN_EXPLOITER_ADDRESS: REFUSED: NOT_AN_EXPLOITER_ADDRESS
+B-claim-exploiter2-first: claim ACCEPTED .	exploiter�0x346a860297878340d4253e503e36d0b01ebe695foffer_id�okpaid�50000000000000000to�0x346a860297878340d4253e503e36d0b01ebe695f 0xb24fca03c0fabcfacbe4b7bb4ae7bd6f23f4cca878223092aeeb89c3c74e0752
+  PAYOUT B-claim-exploiter2-first: 50000000000000000 wei to 0x346a860297878340d4253e503e36d0b01ebe695f: FINALIZED, delivered=true, registry Δ -50000000000000000, payee Δ 49873692749999177 BALANCES OK
+  CHECK ok   B-claim-exploiter2-first paid exactly the address's own share: 50000000000000000 to 0x346a860297878340d4253e503e36d0b01ebe695f
+B-claim-exploiter: claim ACCEPTED REFUSED: CLAIM_WINDOW_CLOSED 0xaa948c9a64e1a608848270bf85f51afddcd90ba5ded72b0397a74181ab6796c5
+
+# resumed by demo_finish.mjs at 2026-10-21T11:08:11.662Z (B's second claim landed after the 3 min claim window)
+  CHECK ok   B's late claim refused after the claim window: REFUSED: CLAIM_WINDOW_CLOSED
+gate check_for(protocol, demo-recovery) expected OPEN: OPEN, favorable false, offer 9, 50%, why: the offer is open; nothing is settled
+  CHECK ok   gate check_for(protocol, demo-recovery) is OPEN: OPEN
+gate check_for(protocol, demo-full) expected SETTLED_FULL: SETTLED_FULL, favorable true, offer 17, 100%, why: settled by the registry
+  CHECK ok   gate check_for(protocol, demo-full) is SETTLED_FULL: SETTLED_FULL
+gate check_for(protocol, demo-shared) expected SETTLED_PARTIAL: SETTLED_PARTIAL, favorable false, offer 18, 75%, why: settled by the registry; below the gate's threshold
+  CHECK ok   gate check_for(protocol, demo-shared) is SETTLED_PARTIAL: SETTLED_PARTIAL
+gate check_for(protocol, demo-never-opened) expected NO_OFFER: NO_OFFER, favorable false, offer 0, 0%, why: the registry has no such offer
+  CHECK ok   gate check_for(protocol, demo-never-opened) is NO_OFFER: NO_OFFER
+  CHECK ok   the copy opened by a stranger does not shadow the protocol's offer: offer 17
+  CHECK ok   asking for the stranger's copy names the stranger: offer 19
+gate-attest: attest ACCEPTED vattestation_id	attested_at�ғ�5bounty�100000000000000000claim_deadline鷓�5	favorablefraction_ppm���incidentLdemo-fulloffer_id�owed�10000000000000000 0x3f5f2f9b86273f47e75dc10503955ed79e91fe7147fad3abf8ef0923b7defa34
+H-extend-inside-final-window: extend_deadline ACCEPTED REFUSED: AMENDMENTS_CLOSED_AT_1792580059 0x3bcd9917b8d3c28f6d20fc7065e9a22906a0f2443885b7f2e07d42de93f37102
+  CHECK ok   H-extend-inside-final-window refused with AMENDMENTS_CLOSED_AT_: REFUSED: AMENDMENTS_CLOSED_AT_1792580059
+H-add-recovery-inside-final-window: add_recovery ACCEPTED REFUSED: AMENDMENTS_CLOSED_AT_1792580059 0xcbc7c9c573ff20cf8b07a0916c1e3a1d83f9768f09791af096c5232540b7191d
+  CHECK ok   H-add-recovery-inside-final-window refused with AMENDMENTS_CLOSED_AT_: REFUSED: AMENDMENTS_CLOSED_AT_1792580059
+C-settle-refund-all: settle ACCEPTED Fclaim_deadlinefraction_ppmoffer_idYokowed0	refund_to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07refunded�100000000000000000statusdSETTLED_NONE 0x7ca5aada222387ffc2ce4064018e3eec2db8919e59488048c41f508b404d650c
+  PAYOUT C-settle-refund-all: 100000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -100000000000000000, payee Δ 100000000000000000 BALANCES OK
+  C-settle-refund-all: SETTLED_NONE 0% owed 0 shares {} expired 0
+  CHECK ok   C-settle-refund-all refunded the remainder at settlement: 100000000000000000
+  CHECK ok   C SETTLED_NONE, whole bounty back: SETTLED_NONE
+D-settle-refund-remainder: settle ACCEPTED Fclaim_deadline�擶5fraction_ppm���offer_idaokowed�50000000000000000	refund_to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07refunded�50000000000000000sta 0x00ed087a67a1c7ae0e59e6714902ea1e82fb8c685e3a4ec11fff4f5d7ed51eec
+  PAYOUT D-settle-refund-remainder: 50000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -50000000000000000, payee Δ 50000000000000000 BALANCES OK
+  D-settle-refund-remainder: SETTLED_PARTIAL 50% owed 50000000000000000 shares {"0x5217c6923a4efc5bcf53d9a30ec4b0089f080ed0":"16265413701821055","0x94641c01a4937f2c8ef930580cf396142a2942dc":"17469167577478154","0xe83b072433f025ef06b73e0caa3095133e7c5bd0":"16265418720700791"} expired 0
+  CHECK ok   D-settle-refund-remainder refunded the remainder at settlement: 50000000000000000
+D-claim-by-listed-demo-key: claim ACCEPTED REFUSED: NOTHING_OWED_TO_THIS_ADDRESS 0x4ac465e20a0039e4685e7e5dff8dda442c25bc349bf2ceb5e9776f24ab6b7aab
+  CHECK ok   D-claim-by-listed-demo-key refused with NOTHING_OWED_TO_THIS_ADDRESS: REFUSED: NOTHING_OWED_TO_THIS_ADDRESS
+  G's recovery window ended at 1792579776; its earlier retry was refused RECOVERY_CLOSED_AT_ (see above)
+G-settle-after-recovery-window: settle ACCEPTED Fclaim_deadlinefraction_ppmoffer_idQokowed0	refund_to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07refunded�100000000000000000statusdSETTLED_NONE 0x5b0046404a95c07490985f44589b56ef1683a2361c57f4f5f82f3c0b809a455d
+  PAYOUT G-settle-after-recovery-window: 100000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -100000000000000000, payee Δ 100000000000000000 BALANCES OK
+  G-settle-after-recovery-window: SETTLED_NONE 0% owed 0 shares {} expired 1
+  CHECK ok   G-settle-after-recovery-window refunded the remainder at settlement: 100000000000000000
+  CHECK ok   G proof EXPIRED after the recovery window: EXPIRED
+F-settle: settle ACCEPTED Fclaim_deadline��5fraction_ppm���offer_idIokowed�50000000000000000	refund_to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07refunded�50000000000000000sta 0x826e125136edb165c3e64f8d1b50f57387c03e17b2b500dd4ef420d18ea943a9
+  PAYOUT F-settle: 50000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -50000000000000000, payee Δ 50000000000000000 BALANCES OK
+  F-settle: SETTLED_PARTIAL 50% owed 50000000000000000 shares {"0x62425cd6bdcb6bfe51558ea465b063486b70dc9f":"50000000000000000"} expired 0
+  CHECK ok   F-settle refunded the remainder at settlement: 50000000000000000
+  CHECK ok   F counted the recovered proof (50%): 500000
+E-settle: settle ACCEPTED Fclaim_deadlinefraction_ppmoffer_idyokowed0	refund_to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07refunded�100000000000000000statusdSETTLED_NONE 0xde62384c50c301b19af9c7101ff155e269c96df6489767d40010a8d9fbd707f2
+  PAYOUT E-settle: 100000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -100000000000000000, payee Δ 100000000000000000 BALANCES OK
+  E-settle: SETTLED_NONE 0% owed 0 shares {} expired 1
+  CHECK ok   E-settle refunded the remainder at settlement: 100000000000000000
+  CHECK ok   E's unfinalized Arbitrum proof: COUNTED if it finalized and was retried, else EXPIRED: EXPIRED
+H-settle: settle ACCEPTED Fclaim_deadlinefraction_ppmoffer_id�okowed0	refund_to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07refunded�100000000000000000statusdSETTLED_NONE 0x4487b61febe1de66ff15b44034ff824e4b5b8f7a54da7f0dda987f031edb5ee1
+  PAYOUT H-settle: 100000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -100000000000000000, payee Δ 100000000000000000 BALANCES OK
+  H-settle: SETTLED_NONE 0% owed 0 shares {} expired 0
+  CHECK ok   H-settle refunded the remainder at settlement: 100000000000000000
+  CHECK ok   H SETTLED_NONE: SETTLED_NONE
+B-refund-unclaimed: refund_unclaimed ACCEPTED &offer_id�okrefunded�25000000000000000to�0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07 0x16f3735b6562ddf6201102a42b03f5493ff5aecaa1d55f501f4d3b106110216b
+  PAYOUT B-refund-unclaimed: 25000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -25000000000000000, payee Δ 25000000000000000 BALANCES OK
+copy-refund-unclaimed: refund_unclaimed UNSETTLED never settled in 900s — RPC unreadable for the last 0s, tx may still be in flight 0x1030e7a8bade283c07e31b1930c6b790416316d34eb14c383f223fbe416b52df
+
+# closed by demo_close.mjs at 2026-10-21T12:36:19.571Z (the copy offer's first refund was CANCELED by Studio)
+  F-recovery: closed (SETTLED_PARTIAL, claimed 0, refunded 100000000000000000)
+  G-expiry: closed (SETTLED_NONE, claimed 0, refunded 100000000000000000)
+  C-none: closed (SETTLED_NONE, claimed 0, refunded 100000000000000000)
+  D-unclaimed: closed (SETTLED_PARTIAL, claimed 0, refunded 100000000000000000)
+  E-rejections: closed (SETTLED_NONE, claimed 0, refunded 100000000000000000)
+  H-amendments: closed (SETTLED_NONE, claimed 0, refunded 100000000000000000)
+  A-full: closed (SETTLED_FULL, claimed 100000000000000000, refunded 0)
+  B-shared: closed (SETTLED_PARTIAL, claimed 50000000000000000, refunded 50000000000000000)
+  copy-of-A: closed (SETTLED_FULL, claimed 0, refunded 1000000000000000)
+  CHECK ok   every demo offer settled
+  CHECK ok   registry eth_getBalance is 0: 0
+  CHECK FAIL every payout delivered with exact balances: 10/11
+
+registry eth_getBalance 0 wei; held 0; received 4701000000000000000, paid 400000000000000000, refunded 4201000000000000000, credits paid 100000000000000000
+payouts: 11, delivered 11, balances ok 10; checks 45/48 ok
+
+# Notes on the three failed expectations above
+# - E-duplicate and E-chain-not-in-offer were refused, but with SUBMISSIONS_CLOSED_AT_ rather than ALREADY_COUNTED /
+#   CHAIN_NOT_IN_OFFER: under the steward-review rules a historic offer takes proofs only until settle_at, which on the
+#   demo registry is creation + 60 s, and these two calls came later. Both specific refusals are covered offline
+#   (test_registry.Proofs.test_counted_tx_cannot_be_resubmitted, test_chain_not_in_offer).
+# - withdraw-refund: delivered (value message delivered, payee +0.05 GEN less its fee), but the registry's balance
+#   delta was +0.95 GEN instead of -0.05 GEN because the browser flows (docs/e2e) locked bounties in the same registry
+#   during the measurement. Every other payout's deltas match exactly.

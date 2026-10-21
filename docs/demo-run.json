@@ -1,0 +1,1274 @@
+{
+  "registry": "0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55",
+  "gate_contract": "0x5d7376dD53bCb4f3A8791A2ddB79F5F2f230F43f",
+  "demo_chain": {
+    "t0": 1792569632,
+    "outage_node_b": [
+      1792569632,
+      1792570532
+    ]
+  },
+  "started_at": "2026-10-21T10:36:26.188Z",
+  "offers": {
+    "F-recovery": 9,
+    "G-expiry": 10,
+    "C-none": 11,
+    "D-unclaimed": 12,
+    "E-rejections": 15,
+    "H-amendments": 16,
+    "A-full": 17,
+    "B-shared": 18,
+    "copy-of-A": 19
+  },
+  "steps": [
+    {
+      "label": "refused-create",
+      "fn": "create_offer",
+      "args": [
+        "bad",
+        "Refused on purpose",
+        "[\"ethereum\"]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\"}]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\"}]",
+        "[{\"chain\":\"ethereum\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"1\",\"weight\":\"300000\"}]",
+        1000,
+        1704067200,
+        1706745600,
+        "EXPLOITER_OR_NAMED",
+        "{}"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "credited�\u000150000000000000000\u0002ok\b\u0006reason�\u0001RECOVERY_IS_EXPLOITER",
+      "hash": "0x9e34067c731db2e86698c689447ef73816958f8f490d26528d3fddab36764bf8"
+    },
+    {
+      "label": "withdraw-refund",
+      "fn": "withdraw_refund",
+      "args": [],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "ok\u0010\twithdrawn�\u000150000000000000000",
+      "hash": "0xe1589411ff598a90fc346314e5cad7c792246b81a1f1dcb8acad59c15d6d6f0f"
+    },
+    {
+      "label": "F-recovery",
+      "fn": "create_offer",
+      "args": [
+        "demo-recovery",
+        "Evidence recovery: proved before finality (demo)",
+        "[\"ethereum\"]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0x62425cd6bdcb6bfe51558ea465b063486b70dc9f\"}]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0x4f16bf7f771339b3177d3673531b4d178790cdb7\"}]",
+        "[{\"chain\":\"ethereum\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"4000000000000000000\",\"weight\":\"300000\"}]",
+        1000,
+        1792571885,
+        1792580585,
+        "EXPLOITER_OR_NAMED",
+        "{\"demo\":true,\"note\":\"a real Ethereum transfer proved before its block was final, retried after\"}"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\u0006bounty�\u0001100000000000000000\boffer_idI\u0002ok\u0010\tsettle_at��5",
+      "hash": "0xb22131d12e1577c00b522d3266d233261accf3c2d979b3d74111fd0465b81df1"
+    },
+    {
+      "label": "F-proof-before-finality",
+      "fn": "submit_proofs",
+      "args": [
+        9,
+        "[[\"ethereum\",\"0x478526ef6199db08faa2f7832d0116a5137840bcaf62ff7b9c498026d91b8bff\"]]"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\ffraction_ppm\u0001\boffer_idI\u0002ok\u0010\u0007results\rF\battempts\t\u0005chainDethereum\u0007credits\u0005\u0006detail\u0004\bproof_id)\u0006reasonlNOT_FINALIZED\u0006status<PENDING\u0002tx�\u00040x478526ef6199db08faa2f7832d0116a5137840bcaf62ff7b9c498026d91b8bff",
+      "hash": "0x0d297d6744fff8b1e4f2a97066a57df0fd1a74a3c2952cb1b0101e7cce11a22c"
+    },
+    {
+      "label": "G-expiry",
+      "fn": "create_offer",
+      "args": [
+        "demo-expiry",
+        "Expired proof (demo)",
+        "[\"wfdemo\"]",
+        "[{\"chain\":\"wfdemo\",\"address\":\"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\"}]",
+        "[{\"chain\":\"wfdemo\",\"address\":\"0x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe\"}]",
+        "[{\"chain\":\"wfdemo\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"2000000000000000000\",\"weight\":\"300000\"}]",
+        1000,
+        1792562432,
+        1792579416,
+        "EXPLOITER_OR_NAMED",
+        "{\"demo\":true,\"note\":\"a return whose block never finalizes\"}"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\u0006bounty�\u0001100000000000000000\boffer_idQ\u0002ok\u0010\tsettle_at����5",
+      "hash": "0x25429039cdadc2631b1802a14cf872ca52c45975e4288b42bffc6c54b08dd3aa"
+    },
+    {
+      "label": "G-proof",
+      "fn": "submit_proofs",
+      "args": [
+        10,
+        "[[\"wfdemo\",\"0xc1d1b71f3608f427ac667c323573d5a2a7157f2c9bf3a380d9dc63f496a05d14\"]]"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\ffraction_ppm\u0001\boffer_idQ\u0002ok\u0010\u0007results\rF\battempts\t\u0005chain4wfdemo\u0007credits\u0005\u0006detail\u0004\bproof_id1\u0006reasonlNOT_FINALIZED\u0006status<PENDING\u0002tx�\u00040xc1d1b71f3608f427ac667c323573d5a2a7157f2c9bf3a380d9dc63f496a05d14",
+      "hash": "0xbf8fcd7ce6dd303600d6c96045981d5ff8194effa50cba27f4c0e1fcfa5a9fa4"
+    },
+    {
+      "label": "C-none",
+      "fn": "create_offer",
+      "args": [
+        "demo-uwu-none",
+        "UwU Lend (demo: nothing returned)",
+        "[\"ethereum\"]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0x841ddf093f5188989fa1524e7b893de64b421f47\"}]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0xc671a6b1415de6549b05775ee4156074731190c6\"}]",
+        "[{\"chain\":\"ethereum\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"5292986878286905142739\",\"weight\":\"300000\"}]",
+        2000,
+        1718039999,
+        1718211600,
+        "EXPLOITER_OR_NAMED",
+        "{\"demo\":true}"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\u0006bounty�\u0001100000000000000000\boffer_idY\u0002ok\u0010\tsettle_at�蒶5",
+      "hash": "0x56de2ecdcd18dec1a27714a865e8e1201e7bbdb33cd8ada06ccd2f207fcffc7a"
+    },
+    {
+      "label": "D-unclaimed",
+      "fn": "create_offer",
+      "args": [
+        "demo-seneca-unclaimed",
+        "Seneca (demo: real returns, nobody can claim)",
+        "[\"ethereum\"]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0x94641c01a4937f2c8ef930580cf396142a2942dc\"},{\"chain\":\"ethereum\",\"address\":\"0x5217c6923a4efc5bcf53d9a30ec4b0089f080ed0\"},{\"chain\":\"ethereum\",\"address\":\"0xe83b072433f025ef06b73e0caa3095133e7c5bd0\"},{\"chain\":\"ethereum\",\"address\":\"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\"}]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0xb7af0aa318706d94469d8d851015f9aa12d9c53a\"}]",
+        "[{\"chain\":\"ethereum\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"3073987341516597070514\",\"weight\":\"300000\"}]",
+        2000,
+        1709165843,
+        1709337600,
+        "EXPLOITER_OR_NAMED",
+        "{\"demo\":true,\"note\":\"stolen doubled: 50% returned by the real exploiter addresses\"}"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\u0006bounty�\u0001100000000000000000\boffer_ida\u0002ok\u0010\tsettle_at�钶5",
+      "hash": "0xf110f0b74f1a181d34844f394e1cd0c57b5039620d262ec56ed3a71f94ff0b88"
+    },
+    {
+      "label": "D-proofs",
+      "fn": "submit_proofs",
+      "args": [
+        12,
+        "[[\"ethereum\",\"0xab7f14e2b75e70c8b136c8facb7a94d1947b812749660d0cb961e1a0db7c2f64\"],[\"ethereum\",\"0xcf3f1f4d4db1782fa16d34e180c7c632a944e61f60ff7aae4e50bf145b0184f2\"],[\"ethereum\",\"0x8e19428c50722538b0a98690c3621d644543950e9d852adad956a5ee70dd7cd8\"]]"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\ffraction_ppm���\u0001\boffer_ida\u0002ok\u0010\u0007results\u001dF\battempts\t\u0005chainDethereum\u0007credits\r6\u0006amount�\u0001537000000000000000000\u0004from�\u00020x94641c01a4937f2c8ef930580cf396142a2942dc\u0003key�\u0005ethereum:0xab7f14e2b75e70c8b136c8facb7a94d1947b812749660d0cb961e1a0db7c2f64:native\u0003log\u0002\u0002to�\u00020xb7af0aa318706d94469d8d851015f9aa12d9c53a\u0005token4native\u0006detail\u0004\bproof_id9\u0006reason\u0004\u0006status<COUNTED\u0002tx�\u00040xab7f14e2b75e70c8b136c8facb7a94d1947b812749660d0cb961e1a0db7c2f64F\battempts\t\u0005chainDethereum\u0007credits\r6\u0006amount�\u0001499996758239285385644\u0004from�\u00020x5217c6923a4efc5bcf53d9a30ec4b0089f080ed0\u0003key�\u0005ethereum:0xcf3f1f4d4db1782fa16d34e180c7c632a944e61f60ff7aae4e50bf145b0184f2:native\u0003log\u0002\u0002to�\u00020xb7af0aa318706d94469d8d851015f9aa12d9c53a\u0005token4native\u0006detail\u0004\bproof_idA\u0006reason\u0004\u0006status<COUNTED\u0002tx�\u00040xcf3f1f4d4db1782fa16d34e180c7c632a944e61f60ff7aae4e50bf145b0184f2F\battempts\t\u0005chainDethereum\u0007credits\r6\u0006amount�\u0001499996912519013149613\u0004from�\u00020xe83b072433f025ef06b73e0caa3095133e7c5bd0\u0003key�\u0005ethereum:0x8e19428c50722538b0a98690c3621d644543950e9d852adad956a5ee70dd7cd8:native\u0003log\u0002\u0002to�\u00020xb7af0aa318706d94469d8d851015f9aa12d9c53a\u0005token4native\u0006detail\u0004\bproof_idI\u0006reason\u0004\u0006status<COUNTED\u0002tx�\u00040x8e19428c50722538b0a98690c3621d644543950e9d852adad956a5ee70dd7cd8",
+      "hash": "0xd4962cb480db00f1475fa0ff24ecc12925dcdf1c8734537638552c500e85fa1b"
+    },
+    {
+      "label": "E-rejections",
+      "fn": "create_offer",
+      "args": [
+        "demo-rejections",
+        "Rejection catalogue (demo)",
+        "[\"arbitrum\",\"ethereum\"]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0xdce5d6b41c32f578f875efffc0d422c57a75d7d8\"},{\"chain\":\"arbitrum\",\"address\":\"0xdf205931e9df00f8a2b53ca2d7b31427bc0adaf5\"}]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9\"},{\"chain\":\"arbitrum\",\"address\":\"0x33a936693a1a9d5714d4ee284145d23d5c34c61c\"}]",
+        "[{\"chain\":\"ethereum\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"1000000000000000000000000\",\"weight\":\"300000\"},{\"chain\":\"arbitrum\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"1000000000000000000000000\",\"weight\":\"300000\"}]",
+        1000,
+        1691107200,
+        1691262000,
+        "EXPLOITER_OR_NAMED",
+        "{\"demo\":true,\"note\":\"every rejection that can be produced live\"}"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\u0006bounty�\u0001100000000000000000\boffer_idy\u0002ok\u0010\tsettle_at�뒶5",
+      "hash": "0xcb29c66da3f9269faa1b757ece94f221efc364c1c778eec1bc84929d99ff9f29"
+    },
+    {
+      "label": "E-batch-1",
+      "fn": "submit_proofs",
+      "args": [
+        15,
+        "[[\"arbitrum\",\"0xa12a9a82948ab77697ceefc83390908a23ab7314d82a58ec16a8919fcb5c9d2a\"],[\"ethereum\",\"0x7ad3111bb69abd88f4095e2cec8e8c058ad3e17e8ba7fbd538a4828658d564ff\"],[\"ethereum\",\"0x431103213d34873abb561fdd7cc66574af5dc77698ce9515533df3e0d7d3d2cb\"],[\"ethereum\",\"0xdbf1d8dca9858119e3852d52f18821754640013d9914d692589b13f8181a08e8\"],[\"ethereum\",\"0xab7f14e2b75e70c8b136c8facb7a94d1947b812749660d0cb961e1a0db7c2f64\"]]"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\ffraction_ppm\u0001\boffer_idy\u0002ok\u0010\u0007results-F\battempts\t\u0005chainDarbitrum\u0007credits\u0005\u0006detail\u0004\bproof_idQ\u0006reasonlNOT_FINALIZED\u0006status<PENDING\u0002tx�\u00040xa12a9a82948ab77697ceefc83390908a23ab7314d82a58ec16a8919fcb5c9d2aF\battempts\t\u0005chainDethereum\u0007credits\u0005\u0006detail\u0004\bproof_idY\u0006reasonLTX_FAILED\u0006statusDREJECTED\u0002tx�\u00040x7ad3111bb69abd88f4095e2cec8e8c058ad3e17e8ba7fbd538a4828658d564ffF\battempts\t\u0005chainDethereum\u0007credits\u0005\u0006detail\u0004\bproof_ida\u0006reason�\u0001BEFORE_OFFER_START\u0006statusDREJECTED\u0002tx�\u00040x431103213d34873abb561fdd7cc66574af5dc77698ce9515533df3e0d7d3d2cbF\battempts\t\u0005chainDethereum\u0007credits\u0005\u0006detail\u0004\bproof_idi\u0006reasontAFTER_DEADLINE\u0006statusDREJECTED\u0002tx�\u00040xdbf1d8dca9858119e3852d52f18821754640013d9914d692589b13f8181a08e8F\battempts\t\u0005chainDethereum\u0007credits\u0005\u0006detail\u0004\bproof_idq\u0006reasontAFTER_DEADLINE\u0006statusDREJECTED\u0002tx�\u00040xab7f14e2b75e70c8b136c8facb7a94d1947b812749660d0cb961e1a0db7c2f64",
+      "hash": "0x14ddb9cf8bc9c8792c5c136dd63f18e4004e874acf0c803191f5e4f576e5f0e2"
+    },
+    {
+      "label": "E-batch-2",
+      "fn": "submit_proofs",
+      "args": [
+        15,
+        "[[\"ethereum\",\"0xd83072cfc1126e23f18d13529c8fa832015a06f0a6988c65f53b4a8a0c403665\"],[\"ethereum\",\"0x4197ed0ef9b60ab1cacdc31d6d3ce06413b333b14b8947be5c0cfe29cb88b088\"],[\"ethereum\",\"0xabababababababababababababababababababababababababababababababab\"],[\"ethereum\",\"0x25bc0a257301b4168e2e1862669c68dacb46aace6921f9efc6dd152c040a45c2\"]]"
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: SUBMISSIONS_CLOSED_AT_1792579263",
+      "hash": "0xae23e0d5492907c137b37b87b898f847ce02d9147e2529549b208ca9117cd790"
+    },
+    {
+      "label": "E-duplicate",
+      "fn": "submit_proofs",
+      "args": [
+        15,
+        "[[\"ethereum\",\"0x25bc0a257301b4168e2e1862669c68dacb46aace6921f9efc6dd152c040a45c2\"]]"
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: SUBMISSIONS_CLOSED_AT_1792579263",
+      "hash": "0x6af0744e4a366325df3b453ef77bb79c54ee316f7ad09046ac9335028330c0f5"
+    },
+    {
+      "label": "E-chain-not-in-offer",
+      "fn": "submit_proofs",
+      "args": [
+        15,
+        "[[\"polygon\",\"0x25bc0a257301b4168e2e1862669c68dacb46aace6921f9efc6dd152c040a45c2\"]]"
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: SUBMISSIONS_CLOSED_AT_1792579263",
+      "hash": "0xbbd5979ef3ff6a2fb99f05de7869e8006993472a4c1fa17f9b018715399006d0"
+    },
+    {
+      "label": "E-extend-after-deadline",
+      "fn": "extend_deadline",
+      "args": [
+        15,
+        1691348400
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: AMENDMENTS_CLOSED_AT_1691261880",
+      "hash": "0x5b52d76d292656eba4bbf2122c3f55511a5892e929bfacc2a113602654b28407"
+    },
+    {
+      "label": "E-add-recovery-after-deadline",
+      "fn": "add_recovery",
+      "args": [
+        15,
+        "ethereum",
+        "0xbabe61887f1de2713c6f97e567623453d3c79f67"
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: AMENDMENTS_CLOSED_AT_1691261880",
+      "hash": "0xc7106c6d4f5009a6d7beb3c0aca0f1b1a0e68fc6761e46b101fe2df32d9ab0f6"
+    },
+    {
+      "label": "H-amendments",
+      "fn": "create_offer",
+      "args": [
+        "demo-amendments",
+        "Amendment rules (demo)",
+        "[\"wfdemo\"]",
+        "[{\"chain\":\"wfdemo\",\"address\":\"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\"}]",
+        "[{\"chain\":\"wfdemo\",\"address\":\"0x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe\"}]",
+        "[{\"chain\":\"wfdemo\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"1000000000000000000\",\"weight\":\"300000\"}]",
+        1000,
+        1792562432,
+        1792579939,
+        "EXPLOITER_OR_NAMED",
+        "{\"demo\":true,\"note\":\"amendments before the lock, refusals near settlement\"}"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\u0006bounty�\u0001100000000000000000\boffer_id�\u0001\u0002ok\u0010\tsettle_at����5",
+      "hash": "0x24717555df1b70624ab58cef4882ddb1aab80d09bff8085acc38e8a152a82a87"
+    },
+    {
+      "label": "H-extend",
+      "fn": "extend_deadline",
+      "args": [
+        16,
+        1792580179
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": ".\tamendment.\u0002at��5\u0004from����5\u0003seq\t\u0002to����5\u0004whatDdeadline\bdeadline����5\boffer_id�\u0001\u0002ok\u0010\tsettle_at����5",
+      "hash": "0x0bfb28785cdc73b6b2e33a78bdc5ba16383aa541142f2101c436d4f854dfbee5"
+    },
+    {
+      "label": "H-add-recovery",
+      "fn": "add_recovery",
+      "args": [
+        16,
+        "wfdemo",
+        "0x5afe5afe5afe5afe5afe5afe5afe5afe5afe0002"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\tamendment.\u0007address�\u00020x5afe5afe5afe5afe5afe5afe5afe5afe5afe0002\u0002at��5\u0005chain4wfdemo\u0003seq\u0011\u0004whatDrecovery\boffer_id�\u0001\u0002ok\u0010\nrecoveries\u0011",
+      "hash": "0x644ffd7ae925a116cbce0ea4bd091d40ea1f6f656f96460af4183f15a4215723"
+    },
+    {
+      "label": "H-extend-by-stranger",
+      "fn": "extend_deadline",
+      "args": [
+        16,
+        1792580239
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: ONLY_THE_PROTOCOL",
+      "hash": "0x5068c967a15010b3fd92e185d879ae84a13e6ca3510942a9d92a2efb01a621d7"
+    },
+    {
+      "label": "H-extend-past-cap",
+      "fn": "extend_deadline",
+      "args": [
+        16,
+        1792583540
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: EXTENSION_CAP_1792583539",
+      "hash": "0x48d4a1a370ae5197f3a5e2fcf8d0870cfc50dc23abee6e3c9625525f02ad1b1d"
+    },
+    {
+      "label": "F-retry-after-finality",
+      "fn": "retry_proofs",
+      "args": [
+        9,
+        "[5]"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": ".\ffraction_ppm���\u0001\boffer_idI\u0002ok\u0010\u0007pending\u0001\u0007results\rF\battempts\u0011\u0005chainDethereum\u0007credits\r6\u0006amount�\u00012000000000000000000\u0004from�\u00020x62425cd6bdcb6bfe51558ea465b063486b70dc9f\u0003key�\u0005ethereum:0x478526ef6199db08faa2f7832d0116a5137840bcaf62ff7b9c498026d91b8bff:native\u0003log\u0002\u0002to�\u00020x4f16bf7f771339b3177d3673531b4d178790cdb7\u0005token4native\u0006detail\u0004\bproof_id)\u0006reason\u0004\u0006status<COUNTED\u0002tx�\u00040x478526ef6199db08faa2f7832d0116a5137840bcaf62ff7b9c498026d91b8bff",
+      "hash": "0xcedef8d8ef4c6a0c30939edfebfc95d667679f7418546bb6e929f6be2fd5ab0b"
+    },
+    {
+      "label": "G-retry",
+      "fn": "retry_proofs",
+      "args": [
+        10,
+        "[6]"
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: RECOVERY_CLOSED_AT_1792579776",
+      "hash": "0x7ab2bb1b609cdf2b004f63f61a33c682d5c9982e2737c243aa71487e5f105a9b"
+    },
+    {
+      "label": "A-full",
+      "fn": "create_offer",
+      "args": [
+        "demo-full",
+        "Full return, claimed to a committed beneficiary (demo)",
+        "[\"wfdemo\"]",
+        "[{\"chain\":\"wfdemo\",\"address\":\"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\"},{\"chain\":\"wfdemo\",\"address\":\"0x346a860297878340d4253e503e36d0b01ebe695f\"}]",
+        "[{\"chain\":\"wfdemo\",\"address\":\"0x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe\"}]",
+        "[{\"chain\":\"wfdemo\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"2000000000000000000\",\"weight\":\"300000\"}]",
+        2000,
+        1792562432,
+        1792666624,
+        "EXPLOITER_OR_NAMED",
+        "{\"demo\":true}"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\u0006bounty�\u0001100000000000000000\boffer_id�\u0001\u0002ok\u0010\tsettle_at�ý�5",
+      "hash": "0x4483c832232f9ef6e70d44f0c0af650f99e1066cf5a170acda420b99b70be852"
+    },
+    {
+      "label": "A-proof",
+      "fn": "submit_proofs",
+      "args": [
+        17,
+        "[[\"wfdemo\",\"0xa97cb516ff1ec59b7e924e4fa35a601cecf24568c659ab612f13bae08e7bf668\"]]"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\ffraction_ppm���\u0003\boffer_id�\u0001\u0002ok\u0010\u0007results\rF\battempts\t\u0005chain4wfdemo\u0007credits\r6\u0006amount�\u00012000000000000000000\u0004from�\u00020xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\u0003key�\u0005wfdemo:0xa97cb516ff1ec59b7e924e4fa35a601cecf24568c659ab612f13bae08e7bf668:native\u0003log\u0002\u0002to�\u00020x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe\u0005token4native\u0006detail\u0004\bproof_id�\u0001\u0006reason\u0004\u0006status<COUNTED\u0002tx�\u00040xa97cb516ff1ec59b7e924e4fa35a601cecf24568c659ab612f13bae08e7bf668",
+      "hash": "0x0a1120e1ac92eb79b5cd48303a701ff809e8c2a273236c0aba69ea471839f6d9"
+    },
+    {
+      "label": "A-commit-by-stranger",
+      "fn": "commit_beneficiary",
+      "args": [
+        17,
+        "0x2e1f3d50623462fe0b14b978c3a7c220149d60ed"
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: NOT_AN_EXPLOITER_ADDRESS",
+      "hash": "0x6c3a1d4c24587838524d02b8df8260de53788e5845652ec1c3c8a9bdb9a68dea"
+    },
+    {
+      "label": "A-commit-beneficiary",
+      "fn": "commit_beneficiary",
+      "args": [
+        17,
+        "0x0f893accbf43bd4459955fc33005b268b99b074f"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\u000bbeneficiary�\u00020x0f893accbf43bd4459955fc33005b268b99b074f\texploiter�\u00020xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\boffer_id�\u0001\u0002ok\u0010",
+      "hash": "0x3d5fe3756f8eae012ff947498f78d450e9783738672fea75482269dcfb998424"
+    },
+    {
+      "label": "A-commit-again",
+      "fn": "commit_beneficiary",
+      "args": [
+        17,
+        "0x2e1f3d50623462fe0b14b978c3a7c220149d60ed"
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: BENEFICIARY_ALREADY_COMMITTED",
+      "hash": "0xcd7d3d608d6dec0728d0f7546fabe895d78390808bc138c485aeb7240e2ea1b5"
+    },
+    {
+      "label": "A-settle-early",
+      "fn": "settle",
+      "args": [
+        17
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "F\u000eclaim_deadline鷓�5\ffraction_ppm���\u0003\boffer_id�\u0001\u0002ok\u0010\u0004owed�\u0001100000000000000000\trefund_to\u0004\brefunded\f0\u0006statusdSETTLED_FULL",
+      "hash": "0x8f02ec181b809ce10ca91a9445250d5c987292a6b580647a2818a7bf643208aa"
+    },
+    {
+      "label": "A-claim-by-affiliated-address",
+      "fn": "claim",
+      "args": [
+        17
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: NOTHING_OWED_TO_THIS_ADDRESS",
+      "hash": "0x71809d89313f26f686b890cab346773e56ded00970c0f837f770adf739b1cc24"
+    },
+    {
+      "label": "A-claim-to-beneficiary",
+      "fn": "claim",
+      "args": [
+        17
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": ".\texploiter�\u00020xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\boffer_id�\u0001\u0002ok\u0010\u0004paid�\u0001100000000000000000\u0002to�\u00020x0f893accbf43bd4459955fc33005b268b99b074f",
+      "hash": "0xc0c53929dbd276b59df1617cd3742919cbb856a6dba3f263aac74afce83d2e2d"
+    },
+    {
+      "label": "B-shared",
+      "fn": "create_offer",
+      "args": [
+        "demo-shared",
+        "Two exploiter addresses, partial (demo)",
+        "[\"wfdemo\"]",
+        "[{\"chain\":\"wfdemo\",\"address\":\"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\"},{\"chain\":\"wfdemo\",\"address\":\"0x346a860297878340d4253e503e36d0b01ebe695f\"}]",
+        "[{\"chain\":\"wfdemo\",\"address\":\"0x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe\"}]",
+        "[{\"chain\":\"wfdemo\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"12000000000000000000\",\"weight\":\"300000\"}]",
+        1000,
+        1792562432,
+        1792580519,
+        "EXPLOITER_ONLY",
+        "{\"demo\":true}"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\u0006bounty�\u0001100000000000000000\boffer_id�\u0001\u0002ok\u0010\tsettle_at����5",
+      "hash": "0x1cb38b9323044e5a5b550df6e3eb456c9c369fd2a2e8849f3797ff2e6160467a"
+    },
+    {
+      "label": "B-proofs",
+      "fn": "submit_proofs",
+      "args": [
+        18,
+        "[[\"wfdemo\",\"0x494a5ef651875d5d4aef6457a27fa5a268ad94ba41db65ee8c097541813feb20\"],[\"wfdemo\",\"0x014d164b03810ac4c8bce70573ca6086302adc6d2c6a3aa2ccdf746411855845\"],[\"wfdemo\",\"0xd1f98f21ee6682d55335225f7e028b66f4cae9c22b99e60cb4a0714928b957b0\"]]"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\ffraction_ppm���\u0002\boffer_id�\u0001\u0002ok\u0010\u0007results\u001dF\battempts\t\u0005chain4wfdemo\u0007credits\r6\u0006amount�\u00013000000000000000000\u0004from�\u00020xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\u0003key�\u0005wfdemo:0x494a5ef651875d5d4aef6457a27fa5a268ad94ba41db65ee8c097541813feb20:native\u0003log\u0002\u0002to�\u00020x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe\u0005token4native\u0006detail\u0004\bproof_id�\u0001\u0006reason\u0004\u0006status<COUNTED\u0002tx�\u00040x494a5ef651875d5d4aef6457a27fa5a268ad94ba41db65ee8c097541813feb20F\battempts\t\u0005chain4wfdemo\u0007credits\r6\u0006amount�\u00016000000000000000000\u0004from�\u00020x346a860297878340d4253e503e36d0b01ebe695f\u0003key�\u0005wfdemo:0x014d164b03810ac4c8bce70573ca6086302adc6d2c6a3aa2ccdf746411855845:native\u0003log\u0002\u0002to�\u00020x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe\u0005token4native\u0006detail\u0004\bproof_id�\u0001\u0006reason\u0004\u0006status<COUNTED\u0002tx�\u00040x014d164b03810ac4c8bce70573ca6086302adc6d2c6a3aa2ccdf746411855845F\battempts\t\u0005chain4wfdemo\u0007credits\u0005\u0006detail\u0004\bproof_id�\u0001\u0006reason�\u0001SENDER_NOT_EXPLOITER\u0006statusDREJECTED\u0002tx�\u00040xd1f98f21ee6682d55335225f7e028b66f4cae9c22b99e60cb4a0714928b957b0",
+      "hash": "0x220f97aed7229b741e830166b1193985b6c8fcb3308371202f2a853869f9a9fe"
+    },
+    {
+      "label": "copy-of-A",
+      "fn": "create_offer",
+      "args": [
+        "demo-full",
+        "Copy of the demo-full incident, opened by a stranger",
+        "[\"wfdemo\"]",
+        "[{\"chain\":\"wfdemo\",\"address\":\"0x2e1f3d50623462fe0b14b978c3a7c220149d60ed\"}]",
+        "[{\"chain\":\"wfdemo\",\"address\":\"0x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe\"}]",
+        "[{\"chain\":\"wfdemo\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"1000000000000000000\",\"weight\":\"300000\"}]",
+        1000,
+        1792562432,
+        1792666831,
+        "EXPLOITER_OR_NAMED",
+        "{\"demo\":true,\"note\":\"the gate must not answer this for the protocol\"}"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\u0006bounty�\u00011000000000000000\boffer_id�\u0001\u0002ok\u0010\tsettle_at�н�5",
+      "hash": "0x485ad910624614db6fff17662f16937681e02ad61b809cbf7b4ba974d02654cc"
+    },
+    {
+      "label": "copy-proof",
+      "fn": "submit_proofs",
+      "args": [
+        19,
+        "[[\"wfdemo\",\"0xd1f98f21ee6682d55335225f7e028b66f4cae9c22b99e60cb4a0714928b957b0\"]]"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\ffraction_ppm���\u0003\boffer_id�\u0001\u0002ok\u0010\u0007results\rF\battempts\t\u0005chain4wfdemo\u0007credits\r6\u0006amount�\u00011000000000000000000\u0004from�\u00020x2e1f3d50623462fe0b14b978c3a7c220149d60ed\u0003key�\u0005wfdemo:0xd1f98f21ee6682d55335225f7e028b66f4cae9c22b99e60cb4a0714928b957b0:native\u0003log\u0002\u0002to�\u00020x5afe5afe5afe5afe5afe5afe5afe5afe5afe5afe\u0005token4native\u0006detail\u0004\bproof_id�\u0001\u0006reason\u0004\u0006status<COUNTED\u0002tx�\u00040xd1f98f21ee6682d55335225f7e028b66f4cae9c22b99e60cb4a0714928b957b0",
+      "hash": "0x4d4394622fc5fb421b6729e1356b378d877a72f9c5ee7ed3a8e9c8f217226c6e"
+    },
+    {
+      "label": "copy-settle",
+      "fn": "settle",
+      "args": [
+        19
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "F\u000eclaim_deadline��5\ffraction_ppm���\u0003\boffer_id�\u0001\u0002ok\u0010\u0004owed�\u00011000000000000000\trefund_to\u0004\brefunded\f0\u0006statusdSETTLED_FULL",
+      "hash": "0x68868888f00f03d545794d64e3fac9eabcf5fc270a5251832c36464257893429"
+    },
+    {
+      "label": "B-commit-under-EXPLOITER_ONLY",
+      "fn": "commit_beneficiary",
+      "args": [
+        18,
+        "0x0f893accbf43bd4459955fc33005b268b99b074f"
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: PAYOUT_RULE_IS_EXPLOITER_ONLY",
+      "hash": "0xcd8c97a0d89a06ed6a49fd1e7a75cf755f6fee92c6a02cb4a7b7f7b74f1ba9d7"
+    },
+    {
+      "label": "B-settle-refund-remainder",
+      "fn": "settle",
+      "args": [
+        18
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "F\u000eclaim_deadline�ʓ�5\ffraction_ppm���\u0002\boffer_id�\u0001\u0002ok\u0010\u0004owed�\u000175000000000000000\trefund_to�\u00020xa774b496796adbb4cf6bf3fa9dc23befd04a1a07\brefunded�\u000125000000000000000\u0006status|SETTLED_PARTIAL",
+      "hash": "0x7e4453dcbb7f831f5e862608886b4c639d1c6490a040d4ac17f0550dde4cd4ad"
+    },
+    {
+      "label": "B-claim-by-stranger",
+      "fn": "claim",
+      "args": [
+        18
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: NOT_AN_EXPLOITER_ADDRESS",
+      "hash": "0x398fdccae76ddd5cefe8288c010c4fa95be68ddeb30ac45412789b001fd555dd"
+    },
+    {
+      "label": "B-claim-exploiter2-first",
+      "fn": "claim",
+      "args": [
+        18
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": ".\texploiter�\u00020x346a860297878340d4253e503e36d0b01ebe695f\boffer_id�\u0001\u0002ok\u0010\u0004paid�\u000150000000000000000\u0002to�\u00020x346a860297878340d4253e503e36d0b01ebe695f",
+      "hash": "0xb24fca03c0fabcfacbe4b7bb4ae7bd6f23f4cca878223092aeeb89c3c74e0752"
+    },
+    {
+      "label": "B-claim-exploiter",
+      "fn": "claim",
+      "args": [
+        18
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: CLAIM_WINDOW_CLOSED",
+      "hash": "0xaa948c9a64e1a608848270bf85f51afddcd90ba5ded72b0397a74181ab6796c5"
+    },
+    {
+      "label": "gate-attest",
+      "fn": "attest",
+      "args": [
+        "0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+        "demo-full"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "v\u000eattestation_id\t\u000battested_at�ғ�5\u0006bounty�\u0001100000000000000000\u000eclaim_deadline鷓�5\tfavorable\u0010\ffraction_ppm���\u0003\bincidentLdemo-full\boffer_id�\u0001\u0004owed�\u0001100000000000000000\u0004paid�\u0001100000000000000000\bprotocol�\u00020xa774b496796adbb4cf6bf3fa9dc23befd04a1a07\brefunded\f0\u0005statedSETTLED_FULL\u0003why�\u0001settled by the registry",
+      "hash": "0x3f5f2f9b86273f47e75dc10503955ed79e91fe7147fad3abf8ef0923b7defa34"
+    },
+    {
+      "label": "H-extend-inside-final-window",
+      "fn": "extend_deadline",
+      "args": [
+        16,
+        1792580239
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: AMENDMENTS_CLOSED_AT_1792580059",
+      "hash": "0x3bcd9917b8d3c28f6d20fc7065e9a22906a0f2443885b7f2e07d42de93f37102"
+    },
+    {
+      "label": "H-add-recovery-inside-final-window",
+      "fn": "add_recovery",
+      "args": [
+        16,
+        "wfdemo",
+        "0x5afe5afe5afe5afe5afe5afe5afe5afe5afe0003"
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: AMENDMENTS_CLOSED_AT_1792580059",
+      "hash": "0xcbc7c9c573ff20cf8b07a0916c1e3a1d83f9768f09791af096c5232540b7191d"
+    },
+    {
+      "label": "C-settle-refund-all",
+      "fn": "settle",
+      "args": [
+        11
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "F\u000eclaim_deadline\u0001\ffraction_ppm\u0001\boffer_idY\u0002ok\u0010\u0004owed\f0\trefund_to�\u00020xa774b496796adbb4cf6bf3fa9dc23befd04a1a07\brefunded�\u0001100000000000000000\u0006statusdSETTLED_NONE",
+      "hash": "0x7ca5aada222387ffc2ce4064018e3eec2db8919e59488048c41f508b404d650c"
+    },
+    {
+      "label": "D-settle-refund-remainder",
+      "fn": "settle",
+      "args": [
+        12
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "F\u000eclaim_deadline�擶5\ffraction_ppm���\u0001\boffer_ida\u0002ok\u0010\u0004owed�\u000150000000000000000\trefund_to�\u00020xa774b496796adbb4cf6bf3fa9dc23befd04a1a07\brefunded�\u000150000000000000000\u0006status|SETTLED_PARTIAL",
+      "hash": "0x00ed087a67a1c7ae0e59e6714902ea1e82fb8c685e3a4ec11fff4f5d7ed51eec"
+    },
+    {
+      "label": "D-claim-by-listed-demo-key",
+      "fn": "claim",
+      "args": [
+        12
+      ],
+      "status": "ACCEPTED",
+      "ok": false,
+      "reason": "REFUSED: NOTHING_OWED_TO_THIS_ADDRESS",
+      "hash": "0x4ac465e20a0039e4685e7e5dff8dda442c25bc349bf2ceb5e9776f24ab6b7aab"
+    },
+    {
+      "label": "G-settle-after-recovery-window",
+      "fn": "settle",
+      "args": [
+        10
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "F\u000eclaim_deadline\u0001\ffraction_ppm\u0001\boffer_idQ\u0002ok\u0010\u0004owed\f0\trefund_to�\u00020xa774b496796adbb4cf6bf3fa9dc23befd04a1a07\brefunded�\u0001100000000000000000\u0006statusdSETTLED_NONE",
+      "hash": "0x5b0046404a95c07490985f44589b56ef1683a2361c57f4f5f82f3c0b809a455d"
+    },
+    {
+      "label": "F-settle",
+      "fn": "settle",
+      "args": [
+        9
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "F\u000eclaim_deadline��5\ffraction_ppm���\u0001\boffer_idI\u0002ok\u0010\u0004owed�\u000150000000000000000\trefund_to�\u00020xa774b496796adbb4cf6bf3fa9dc23befd04a1a07\brefunded�\u000150000000000000000\u0006status|SETTLED_PARTIAL",
+      "hash": "0x826e125136edb165c3e64f8d1b50f57387c03e17b2b500dd4ef420d18ea943a9"
+    },
+    {
+      "label": "E-settle",
+      "fn": "settle",
+      "args": [
+        15
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "F\u000eclaim_deadline\u0001\ffraction_ppm\u0001\boffer_idy\u0002ok\u0010\u0004owed\f0\trefund_to�\u00020xa774b496796adbb4cf6bf3fa9dc23befd04a1a07\brefunded�\u0001100000000000000000\u0006statusdSETTLED_NONE",
+      "hash": "0xde62384c50c301b19af9c7101ff155e269c96df6489767d40010a8d9fbd707f2"
+    },
+    {
+      "label": "H-settle",
+      "fn": "settle",
+      "args": [
+        16
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "F\u000eclaim_deadline\u0001\ffraction_ppm\u0001\boffer_id�\u0001\u0002ok\u0010\u0004owed\f0\trefund_to�\u00020xa774b496796adbb4cf6bf3fa9dc23befd04a1a07\brefunded�\u0001100000000000000000\u0006statusdSETTLED_NONE",
+      "hash": "0x4487b61febe1de66ff15b44034ff824e4b5b8f7a54da7f0dda987f031edb5ee1"
+    },
+    {
+      "label": "B-refund-unclaimed",
+      "fn": "refund_unclaimed",
+      "args": [
+        18
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "&\boffer_id�\u0001\u0002ok\u0010\brefunded�\u000125000000000000000\u0002to�\u00020xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+      "hash": "0x16f3735b6562ddf6201102a42b03f5493ff5aecaa1d55f501f4d3b106110216b"
+    },
+    {
+      "label": "copy-refund-unclaimed",
+      "fn": "refund_unclaimed",
+      "args": [
+        19
+      ],
+      "status": "UNSETTLED",
+      "ok": false,
+      "reason": "never settled in 900s — RPC unreadable for the last 0s, tx may still be in flight",
+      "hash": "0x1030e7a8bade283c07e31b1930c6b790416316d34eb14c383f223fbe416b52df"
+    }
+  ],
+  "payouts": [
+    {
+      "label": "withdraw-refund",
+      "tx": "0xe1589411ff598a90fc346314e5cad7c792246b81a1f1dcb8acad59c15d6d6f0f",
+      "status": "FINALIZED",
+      "payee": "0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+      "amount": "50000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "950000000000000000",
+      "payee_delta": "49873694249999177",
+      "payee_paid_fee": true,
+      "net_fee": "126305750000823",
+      "balances_ok": false,
+      "balances_why": "contract balance moved by 950000000000000000, expected -50000000000000000"
+    },
+    {
+      "label": "A-claim-to-beneficiary",
+      "tx": "0xc0c53929dbd276b59df1617cd3742919cbb856a6dba3f263aac74afce83d2e2d",
+      "status": "FINALIZED",
+      "payee": "0x0f893accbf43bd4459955fc33005b268b99b074f",
+      "amount": "100000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "-100000000000000000",
+      "payee_delta": "100000000000000000",
+      "payee_paid_fee": false,
+      "net_fee": "126307250000823",
+      "balances_ok": true,
+      "balances_why": ""
+    },
+    {
+      "label": "B-settle-refund-remainder",
+      "tx": "0x7e4453dcbb7f831f5e862608886b4c639d1c6490a040d4ac17f0550dde4cd4ad",
+      "status": "FINALIZED",
+      "payee": "0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+      "amount": "25000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "-25000000000000000",
+      "payee_delta": "25000000000000000",
+      "payee_paid_fee": false,
+      "net_fee": "126309750000823",
+      "balances_ok": true,
+      "balances_why": ""
+    },
+    {
+      "label": "B-claim-exploiter2-first",
+      "tx": "0xb24fca03c0fabcfacbe4b7bb4ae7bd6f23f4cca878223092aeeb89c3c74e0752",
+      "status": "FINALIZED",
+      "payee": "0x346a860297878340d4253e503e36d0b01ebe695f",
+      "amount": "50000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "-50000000000000000",
+      "payee_delta": "49873692749999177",
+      "payee_paid_fee": true,
+      "net_fee": "126307250000823",
+      "balances_ok": true,
+      "balances_why": ""
+    },
+    {
+      "label": "C-settle-refund-all",
+      "tx": "0x7ca5aada222387ffc2ce4064018e3eec2db8919e59488048c41f508b404d650c",
+      "status": "FINALIZED",
+      "payee": "0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+      "amount": "100000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "-100000000000000000",
+      "payee_delta": "100000000000000000",
+      "payee_paid_fee": false,
+      "net_fee": "126310250000823",
+      "balances_ok": true,
+      "balances_why": ""
+    },
+    {
+      "label": "D-settle-refund-remainder",
+      "tx": "0x00ed087a67a1c7ae0e59e6714902ea1e82fb8c685e3a4ec11fff4f5d7ed51eec",
+      "status": "FINALIZED",
+      "payee": "0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+      "amount": "50000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "-50000000000000000",
+      "payee_delta": "50000000000000000",
+      "payee_paid_fee": false,
+      "net_fee": "126310000000823",
+      "balances_ok": true,
+      "balances_why": ""
+    },
+    {
+      "label": "G-settle-after-recovery-window",
+      "tx": "0x5b0046404a95c07490985f44589b56ef1683a2361c57f4f5f82f3c0b809a455d",
+      "status": "FINALIZED",
+      "payee": "0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+      "amount": "100000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "-100000000000000000",
+      "payee_delta": "100000000000000000",
+      "payee_paid_fee": false,
+      "net_fee": "126310500000823",
+      "balances_ok": true,
+      "balances_why": ""
+    },
+    {
+      "label": "F-settle",
+      "tx": "0x826e125136edb165c3e64f8d1b50f57387c03e17b2b500dd4ef420d18ea943a9",
+      "status": "FINALIZED",
+      "payee": "0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+      "amount": "50000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "-50000000000000000",
+      "payee_delta": "50000000000000000",
+      "payee_paid_fee": false,
+      "net_fee": "126309000000823",
+      "balances_ok": true,
+      "balances_why": ""
+    },
+    {
+      "label": "E-settle",
+      "tx": "0xde62384c50c301b19af9c7101ff155e269c96df6489767d40010a8d9fbd707f2",
+      "status": "FINALIZED",
+      "payee": "0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+      "amount": "100000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "-100000000000000000",
+      "payee_delta": "100000000000000000",
+      "payee_paid_fee": false,
+      "net_fee": "126309000000823",
+      "balances_ok": true,
+      "balances_why": ""
+    },
+    {
+      "label": "H-settle",
+      "tx": "0x4487b61febe1de66ff15b44034ff824e4b5b8f7a54da7f0dda987f031edb5ee1",
+      "status": "FINALIZED",
+      "payee": "0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+      "amount": "100000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "-100000000000000000",
+      "payee_delta": "100000000000000000",
+      "payee_paid_fee": false,
+      "net_fee": "126308750000823",
+      "balances_ok": true,
+      "balances_why": ""
+    },
+    {
+      "label": "B-refund-unclaimed",
+      "tx": "0x16f3735b6562ddf6201102a42b03f5493ff5aecaa1d55f501f4d3b106110216b",
+      "status": "FINALIZED",
+      "payee": "0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+      "amount": "25000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "-25000000000000000",
+      "payee_delta": "25000000000000000",
+      "payee_paid_fee": false,
+      "net_fee": "126306250000823",
+      "balances_ok": true,
+      "balances_why": ""
+    }
+  ],
+  "checks": [
+    {
+      "label": "refused create credited the value back",
+      "ok": true,
+      "detail": "50000000000000000 wei (RECOVERY_IS_EXPLOITER)"
+    },
+    {
+      "label": "proof #5 (offer 9) is PENDING, not rejected",
+      "ok": true,
+      "detail": "PENDING NOT_FINALIZED"
+    },
+    {
+      "label": "proof #6 (offer 10) is PENDING, not rejected",
+      "ok": true,
+      "detail": "PENDING NOT_FINALIZED"
+    },
+    {
+      "label": "E-duplicate refused with ALREADY_COUNTED",
+      "ok": false,
+      "detail": "REFUSED: SUBMISSIONS_CLOSED_AT_1792579263"
+    },
+    {
+      "label": "E-chain-not-in-offer refused with CHAIN_NOT_IN_OFFER",
+      "ok": false,
+      "detail": "REFUSED: SUBMISSIONS_CLOSED_AT_1792579263"
+    },
+    {
+      "label": "E-extend-after-deadline refused with AMENDMENTS_CLOSED_AT_",
+      "ok": true,
+      "detail": "REFUSED: AMENDMENTS_CLOSED_AT_1691261880"
+    },
+    {
+      "label": "E-add-recovery-after-deadline refused with AMENDMENTS_CLOSED_AT_",
+      "ok": true,
+      "detail": "REFUSED: AMENDMENTS_CLOSED_AT_1691261880"
+    },
+    {
+      "label": "H-extend-by-stranger refused with ONLY_THE_PROTOCOL",
+      "ok": true,
+      "detail": "REFUSED: ONLY_THE_PROTOCOL"
+    },
+    {
+      "label": "H-extend-past-cap refused with EXTENSION_CAP_",
+      "ok": true,
+      "detail": "REFUSED: EXTENSION_CAP_1792583539"
+    },
+    {
+      "label": "H amendments recorded in order with seq and time",
+      "ok": true,
+      "detail": "[{\"at\":1792579373,\"from\":1792579939,\"seq\":1,\"to\":1792580179,\"what\":\"deadline\"},{\"address\":\"0x5afe5afe5afe5afe5afe5afe5afe5afe5afe0002\",\"at\":1792579390,\"chain\":\"wfdemo\",\"seq\":2,\"what\":\"recovery\"}]"
+    },
+    {
+      "label": "F retry accepted",
+      "ok": true,
+      "detail": ".\ffraction_ppm���\u0001\boffer_idI\u0002ok\u0010\u0007pending\u0001\u0007results\rF\battempts\u0011\u0005chainDethereum\u0007credits\r6\u0006amount�\u00012000000000000000000\u0004from�\u00020x62425cd6bdcb6bfe51558ea465b063486b70dc9f\u0003key�\u0005ethereum:0x478526ef6199db08faa2f7832d0116a5137840bcaf62ff7b9c498026d91b8bff:native\u0003log\u0002\u0002to�\u00020x4f16bf7f771339b3177d3673531b4d178790cdb7\u0005token4native\u0006detail\u0004\bproof_id)\u0006reason\u0004\u0006status<COUNTED\u0002tx�\u00040x478526ef6199db08faa2f7832d0116a5137840bcaf62ff7b9c498026d91b8bff"
+    },
+    {
+      "label": "F proof #5 COUNTED after the retry",
+      "ok": true,
+      "detail": "COUNTED  attempts 2"
+    },
+    {
+      "label": "G proof #6 still PENDING (block not final)",
+      "ok": true,
+      "detail": "PENDING NOT_FINALIZED"
+    },
+    {
+      "label": "A-commit-by-stranger refused with NOT_AN_EXPLOITER_ADDRESS",
+      "ok": true,
+      "detail": "REFUSED: NOT_AN_EXPLOITER_ADDRESS"
+    },
+    {
+      "label": "A-commit-again refused with BENEFICIARY_ALREADY_COMMITTED",
+      "ok": true,
+      "detail": "REFUSED: BENEFICIARY_ALREADY_COMMITTED"
+    },
+    {
+      "label": "A-settle-early refunded the remainder at settlement",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "label": "A settled FULL before its deadline",
+      "ok": true,
+      "detail": "SETTLED_FULL"
+    },
+    {
+      "label": "A-claim-by-affiliated-address refused with NOTHING_OWED_TO_THIS_ADDRESS",
+      "ok": true,
+      "detail": "REFUSED: NOTHING_OWED_TO_THIS_ADDRESS"
+    },
+    {
+      "label": "A-claim-to-beneficiary paid exactly the address's own share",
+      "ok": true,
+      "detail": "100000000000000000 to 0x0f893accbf43bd4459955fc33005b268b99b074f"
+    },
+    {
+      "label": "B-commit-under-EXPLOITER_ONLY refused with PAYOUT_RULE_IS_EXPLOITER_ONLY",
+      "ok": true,
+      "detail": "REFUSED: PAYOUT_RULE_IS_EXPLOITER_ONLY"
+    },
+    {
+      "label": "B-settle-refund-remainder refunded the remainder at settlement",
+      "ok": true,
+      "detail": "25000000000000000"
+    },
+    {
+      "label": "B shares are 3/12 and 6/12 of the bounty, by sender",
+      "ok": true,
+      "detail": "{\"0x346a860297878340d4253e503e36d0b01ebe695f\":\"50000000000000000\",\"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\":\"25000000000000000\"}"
+    },
+    {
+      "label": "B-claim-by-stranger refused with NOT_AN_EXPLOITER_ADDRESS",
+      "ok": true,
+      "detail": "REFUSED: NOT_AN_EXPLOITER_ADDRESS"
+    },
+    {
+      "label": "B-claim-exploiter2-first paid exactly the address's own share",
+      "ok": true,
+      "detail": "50000000000000000 to 0x346a860297878340d4253e503e36d0b01ebe695f"
+    },
+    {
+      "label": "B's late claim refused after the claim window",
+      "ok": true,
+      "detail": "REFUSED: CLAIM_WINDOW_CLOSED"
+    },
+    {
+      "label": "gate check_for(protocol, demo-recovery) is OPEN",
+      "ok": true,
+      "detail": "OPEN"
+    },
+    {
+      "label": "gate check_for(protocol, demo-full) is SETTLED_FULL",
+      "ok": true,
+      "detail": "SETTLED_FULL"
+    },
+    {
+      "label": "gate check_for(protocol, demo-shared) is SETTLED_PARTIAL",
+      "ok": true,
+      "detail": "SETTLED_PARTIAL"
+    },
+    {
+      "label": "gate check_for(protocol, demo-never-opened) is NO_OFFER",
+      "ok": true,
+      "detail": "NO_OFFER"
+    },
+    {
+      "label": "the copy opened by a stranger does not shadow the protocol's offer",
+      "ok": true,
+      "detail": "offer 17"
+    },
+    {
+      "label": "asking for the stranger's copy names the stranger",
+      "ok": true,
+      "detail": "offer 19"
+    },
+    {
+      "label": "H-extend-inside-final-window refused with AMENDMENTS_CLOSED_AT_",
+      "ok": true,
+      "detail": "REFUSED: AMENDMENTS_CLOSED_AT_1792580059"
+    },
+    {
+      "label": "H-add-recovery-inside-final-window refused with AMENDMENTS_CLOSED_AT_",
+      "ok": true,
+      "detail": "REFUSED: AMENDMENTS_CLOSED_AT_1792580059"
+    },
+    {
+      "label": "C-settle-refund-all refunded the remainder at settlement",
+      "ok": true,
+      "detail": "100000000000000000"
+    },
+    {
+      "label": "C SETTLED_NONE, whole bounty back",
+      "ok": true,
+      "detail": "SETTLED_NONE"
+    },
+    {
+      "label": "D-settle-refund-remainder refunded the remainder at settlement",
+      "ok": true,
+      "detail": "50000000000000000"
+    },
+    {
+      "label": "D-claim-by-listed-demo-key refused with NOTHING_OWED_TO_THIS_ADDRESS",
+      "ok": true,
+      "detail": "REFUSED: NOTHING_OWED_TO_THIS_ADDRESS"
+    },
+    {
+      "label": "G-settle-after-recovery-window refunded the remainder at settlement",
+      "ok": true,
+      "detail": "100000000000000000"
+    },
+    {
+      "label": "G proof EXPIRED after the recovery window",
+      "ok": true,
+      "detail": "EXPIRED"
+    },
+    {
+      "label": "F-settle refunded the remainder at settlement",
+      "ok": true,
+      "detail": "50000000000000000"
+    },
+    {
+      "label": "F counted the recovered proof (50%)",
+      "ok": true,
+      "detail": "500000"
+    },
+    {
+      "label": "E-settle refunded the remainder at settlement",
+      "ok": true,
+      "detail": "100000000000000000"
+    },
+    {
+      "label": "E's unfinalized Arbitrum proof: COUNTED if it finalized and was retried, else EXPIRED",
+      "ok": true,
+      "detail": "EXPIRED"
+    },
+    {
+      "label": "H-settle refunded the remainder at settlement",
+      "ok": true,
+      "detail": "100000000000000000"
+    },
+    {
+      "label": "H SETTLED_NONE",
+      "ok": true,
+      "detail": "SETTLED_NONE"
+    },
+    {
+      "label": "every demo offer settled",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "registry eth_getBalance is 0",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "label": "every payout delivered with exact balances",
+      "ok": false,
+      "detail": "10/11"
+    }
+  ],
+  "rejections": [
+    {
+      "proof_id": 10,
+      "chain": "arbitrum",
+      "tx": "0xa12a9a82948ab77697ceefc83390908a23ab7314d82a58ec16a8919fcb5c9d2a",
+      "status": "PENDING",
+      "reason": "NOT_FINALIZED",
+      "detail": ""
+    },
+    {
+      "proof_id": 11,
+      "chain": "ethereum",
+      "tx": "0x7ad3111bb69abd88f4095e2cec8e8c058ad3e17e8ba7fbd538a4828658d564ff",
+      "status": "REJECTED",
+      "reason": "TX_FAILED",
+      "detail": ""
+    },
+    {
+      "proof_id": 12,
+      "chain": "ethereum",
+      "tx": "0x431103213d34873abb561fdd7cc66574af5dc77698ce9515533df3e0d7d3d2cb",
+      "status": "REJECTED",
+      "reason": "BEFORE_OFFER_START",
+      "detail": ""
+    },
+    {
+      "proof_id": 13,
+      "chain": "ethereum",
+      "tx": "0xdbf1d8dca9858119e3852d52f18821754640013d9914d692589b13f8181a08e8",
+      "status": "REJECTED",
+      "reason": "AFTER_DEADLINE",
+      "detail": ""
+    },
+    {
+      "proof_id": 14,
+      "chain": "ethereum",
+      "tx": "0xab7f14e2b75e70c8b136c8facb7a94d1947b812749660d0cb961e1a0db7c2f64",
+      "status": "REJECTED",
+      "reason": "AFTER_DEADLINE",
+      "detail": ""
+    }
+  ],
+  "gate": [
+    {
+      "expected": "OPEN",
+      "incident": "demo-recovery",
+      "offer": 9,
+      "state": "OPEN",
+      "favorable": false,
+      "fraction_ppm": 500000,
+      "why": "the offer is open; nothing is settled"
+    },
+    {
+      "expected": "SETTLED_FULL",
+      "incident": "demo-full",
+      "offer": 17,
+      "state": "SETTLED_FULL",
+      "favorable": true,
+      "fraction_ppm": 1000000,
+      "why": "settled by the registry"
+    },
+    {
+      "expected": "SETTLED_PARTIAL",
+      "incident": "demo-shared",
+      "offer": 18,
+      "state": "SETTLED_PARTIAL",
+      "favorable": false,
+      "fraction_ppm": 750000,
+      "why": "settled by the registry; below the gate's threshold"
+    },
+    {
+      "expected": "NO_OFFER",
+      "incident": "demo-never-opened",
+      "offer": 0,
+      "state": "NO_OFFER",
+      "favorable": false,
+      "fraction_ppm": 0,
+      "why": "the registry has no such offer"
+    }
+  ],
+  "final": {
+    "registry_balance": "0",
+    "stats": {
+      "balance": "0",
+      "counts": {
+        "beneficiaries": 1,
+        "claims": 3,
+        "create_refused": 2,
+        "credit_withdrawals": 2,
+        "extensions": 1,
+        "offers": 19,
+        "proofs_counted": 10,
+        "proofs_expired": 4,
+        "proofs_pending": 5,
+        "proofs_rejected": 8,
+        "recoveries_added": 1,
+        "reject:AFTER_DEADLINE": 2,
+        "reject:ALREADY_COUNTED": 0,
+        "reject:BEFORE_OFFER_START": 1,
+        "reject:NOT_FINALIZED": 0,
+        "reject:NO_RETURN_TO_RECOVERY": 0,
+        "reject:RPC_DISAGREE": 0,
+        "reject:RPC_UNREADABLE": 0,
+        "reject:SENDER_NOT_EXPLOITER": 4,
+        "reject:TX_FAILED": 1,
+        "reject:TX_NOT_FOUND": 0,
+        "reject:TX_PENDING": 0,
+        "reject:UNSUPPORTED_CHAIN": 0,
+        "reject:WRONG_CHAIN_ID": 0,
+        "retries": 1,
+        "settled": 19,
+        "settled:SETTLED_FULL": 2,
+        "settled:SETTLED_NONE": 12,
+        "settled:SETTLED_PARTIAL": 5,
+        "sweeps": 0,
+        "unclaimed_refunds": 5
+      },
+      "credit_owed_total": "0",
+      "credit_paid_total": "100000000000000000",
+      "held": "0",
+      "offers": 19,
+      "open_total": "0",
+      "owed_total": "0",
+      "paid_total": "400000000000000000",
+      "proofs": 22,
+      "received_total": "4701000000000000000",
+      "refunded_total": "4201000000000000000",
+      "stray_swept_total": "0"
+    },
+    "finished_at": "2026-10-21T12:36:54.871Z"
+  }
+}

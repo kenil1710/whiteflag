@@ -6,7 +6,8 @@ two independent RPCs per chain, and code pays the bounty pro rata to the returne
 protocol. Nobody decides anything after the offer is opened: no admin, no vote, no model.
 
 Live: **https://whiteflag-ledger.vercel.app** · Rules: [docs/RULES.md](docs/RULES.md) · Seeds: [docs/SEEDS.md](docs/SEEDS.md) ·
-Final check: [docs/FINAL_CHECK.md](docs/FINAL_CHECK.md) · Real-world check: [docs/REAL_WORLD_CHECK.md](docs/REAL_WORLD_CHECK.md)
+Final check: [docs/FINAL_CHECK.md](docs/FINAL_CHECK.md) · Audit A-N: [docs/AUDIT.md](docs/AUDIT.md) · Steward response:
+[docs/STEWARD_RESPONSE.md](docs/STEWARD_RESPONSE.md) · Real-world check: [docs/REAL_WORLD_CHECK.md](docs/REAL_WORLD_CHECK.md)
 
 ## What and why
 
@@ -66,20 +67,23 @@ Each outcome was checked against public reporting and every outgoing transfer of
 
 ## Addresses (GenLayer Studio Dev, chain 61997)
 
-Every contract was deployed from commit `ce7a77282beee2a8c9b121aa95ac9639388a64d0`. Final commit `4251f48bdbc925c7d811e03ea0ce0c86826fc2bf`: every evidence link in
-[docs/SUBMISSION.md](docs/SUBMISSION.md) is pinned to it, and later commits change only README.md, docs/SUBMISSION.md
-and docs/FINAL_CHECK.md.
+Every contract was deployed from commit `2c92d0692a0b5ce33cdba522f3a95f27d7e3c8ca`. Final commit `FINAL_COMMIT_PENDING`: every evidence link in
+[docs/SUBMISSION.md](docs/SUBMISSION.md) is pinned to it, and later commits change only README.md and
+docs/{SUBMISSION,FINAL_CHECK,AUDIT,STEWARD_RESPONSE}.md.
 
 | Contract | Address | Deployed file | sha256 | Constructor |
 |---|---|---|---|---|
-| WhiteFlagRegistry | [`0x461399B65edA1C0634a47A658d34624eC4C24a31`](https://explorer-studio-dev.genlayer.com/address/0x461399B65edA1C0634a47A658d34624eC4C24a31) | `build/WhiteFlagRegistry.py` | `dba2a5da09d13de0` | `["CANONICAL"]` |
-| WhiteFlagRegistryDemo | [`0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2`](https://explorer-studio-dev.genlayer.com/address/0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2) | `build/WhiteFlagRegistry.py` | `dba2a5da09d13de0` | `["DEMO"]` |
-| SafeHarborGate | [`0x54035218daFDf7fB68F01cF36E70044f51878c75`](https://explorer-studio-dev.genlayer.com/address/0x54035218daFDf7fB68F01cF36E70044f51878c75) | `build/SafeHarborGate.py` | `f4b6411127c1f7b3` | `["0x461399B65edA1C0634a47A658d34624eC4C24a31", 900000]` |
-| SafeHarborGateDemo | [`0x886095700276BA236Fc00cfd710AEb2f2d594E37`](https://explorer-studio-dev.genlayer.com/address/0x886095700276BA236Fc00cfd710AEb2f2d594E37) | `build/SafeHarborGate.py` | `f4b6411127c1f7b3` | `["0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2", 900000]` |
+| WhiteFlagRegistry | [`0x11b9e1d185ADd2b88dF872743734Db1124b80390`](https://explorer-studio-dev.genlayer.com/address/0x11b9e1d185ADd2b88dF872743734Db1124b80390) | `build/WhiteFlagRegistry.py` | `71dd89eafcb47d3c` | `["CANONICAL"]` |
+| WhiteFlagRegistryDemo | [`0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55`](https://explorer-studio-dev.genlayer.com/address/0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55) | `build/WhiteFlagRegistry.py` | `71dd89eafcb47d3c` | `["DEMO"]` |
+| SafeHarborGate | [`0xd7a4A4a7836aB46c003606884d9962320460aEB8`](https://explorer-studio-dev.genlayer.com/address/0xd7a4A4a7836aB46c003606884d9962320460aEB8) | `build/SafeHarborGate.py` | `fbae007f37857a19` | `["0x11b9e1d185ADd2b88dF872743734Db1124b80390", 900000]` |
+| SafeHarborGateDemo | [`0x5d7376dD53bCb4f3A8791A2ddB79F5F2f230F43f`](https://explorer-studio-dev.genlayer.com/address/0x5d7376dD53bCb4f3A8791A2ddB79F5F2f230F43f) | `build/SafeHarborGate.py` | `fbae007f37857a19` | `["0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55", 900000]` |
 
 The canonical registry runs the 1 h claim window and holds the real incidents; the demo registry runs a 3 minute
-window and holds the [demo run](docs/demo-run.log), in which every path was exercised and every payout was checked at
-its recipient ([docs/payouts.json](docs/payouts.json)).
+window and holds the [demo run](docs/demo-run.log), in which every path was exercised under the steward-review rules
+and every payout was checked at its recipient ([docs/payouts.json](docs/payouts.json)), and the recorded
+[browser-wallet flows](docs/e2e/README.md). The steward review and what changed: [docs/STEWARD_RESPONSE.md](docs/STEWARD_RESPONSE.md).
+The contracts before the review (`0x461399B6…`, `0xa06816B6…`, `0x54035218…`, `0x88609570…`) are superseded; their
+records are in [docs/superseded/](docs/superseded/2026-10-21-before-steward-review/README.md).
 
 ## How to verify
 
@@ -102,7 +106,10 @@ its recipient ([docs/payouts.json](docs/payouts.json)).
   boundary, RPC disagreement, fund conservation), the attack round ([docs/ATTACK_REPORT.md](docs/ATTACK_REPORT.md)),
   meaning tests (the gate never favorable on missing data, docs equal to code), and the keeper (outages, more than 50
   offers, crashes, transactions accepted but not final).
-- **Everything at once.** `node tools/final_check.mjs`, result in [docs/FINAL_CHECK.md](docs/FINAL_CHECK.md).
+- **Everything at once.** `node tools/final_check.mjs`, result in [docs/FINAL_CHECK.md](docs/FINAL_CHECK.md);
+  `node tools/audit.mjs`, the A-N audit read from chain, in [docs/AUDIT.md](docs/AUDIT.md).
+- **Browser flows.** `cd test/e2e && npx playwright test`: throwaway wallets injected as `window.ethereum` create an
+  offer, prove, settle, claim and refund through the live site ([docs/e2e](docs/e2e/README.md)).
 - **API.** `/api/incident?id=<offer>` returns an incident as JSON read from chain; `&format=svg` returns a badge:
   ![badge](https://whiteflag-ledger.vercel.app/api/incident?id=1&format=svg)
 
@@ -120,6 +127,10 @@ its recipient ([docs/payouts.json](docs/payouts.json)).
   latest offer a given protocol address opened under a given incident name; the consumer names the protocol it trusts.
 - Chains: Ethereum and Arbitrum One, each read from two RPCs run by different operators. Adding a chain means adding
   two RPCs that serve old receipts and the `finalized` tag from GenVM under validator load.
+- Demo chain: a DEMO registry also reads `wfdemo` (chain id 357357), a JSON-RPC served by this site from
+  `data/demochain.json`, so the throwaway demo keys can send real signed returns and claim. Both of its endpoints are run
+  by the same operator; its transactions are EIP-155 signed and `node tools/verify_demochain.mjs --live` recovers every
+  sender. A CANONICAL registry never accepts it.
 - The weights are the protocol's own valuation, frozen when the offer opens. A partial return of a token that later
   changes price keeps the weight it had.
 - Each listed exploiter address claims only its own share; listing an extra address the exploiter controls gives it nothing unless it returned funds.
