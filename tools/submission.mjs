@@ -26,7 +26,7 @@ const md = ["# Submission", "", "Plain ASCII. Lengths checked by `node tools/sub
   "## Evidence (pinned to the final commit)", "",
   `Final commit \`${commit}\`; contracts deployed from \`${deployCommit}\`.`, "",
   `- Seeds, every proof and payout, read from chain: ${pin("docs/SEEDS.md")}`,
-  `- Final check: ${pin("docs/FINAL_CHECK.md")}`,
+  `- Final check (written after the final commit, so on main): ${REPO}/blob/main/docs/FINAL_CHECK.md`,
   `- Steward review response: ${pin("docs/STEWARD_RESPONSE.md")}`,
   `- Audit A-N from chain: ${pin("docs/AUDIT.md")}`,
   `- Browser-wallet flows (screenshots, videos): ${pin("docs/e2e/README.md")}`,

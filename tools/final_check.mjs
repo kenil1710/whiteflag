@@ -57,7 +57,7 @@ const sh = (cmd, args) => spawnSync(cmd, args, { cwd: root, encoding: "utf8", ma
 }
 // 4
 {
-  const BROWSER_ONLY = /(etherscan\.io|arbiscan\.io|medium\.com|theblock\.co|cointelegraph\.com|decrypt\.co|dlnews\.com|rekt\.news|merklescience\.com|unchainedcrypto\.com|x\.com|twitter\.com)/;
+  const BROWSER_ONLY = /(etherscan\.io|arbiscan\.io|medium\.com|theblock\.co|cointelegraph\.com|decrypt\.co|dlnews\.com|rekt\.news|hackmd\.io|merklescience\.com|unchainedcrypto\.com|x\.com|twitter\.com)/;
   const docs = ["README.md", ...readdirSync(root + "docs").filter((f) => f.endsWith(".md")).map((f) => "docs/" + f)];
   const urls = new Set();
   // JSON-RPC endpoints answer POSTs only; tools/feasibility.mjs reads them for real
@@ -171,7 +171,8 @@ const sh = (cmd, args) => spawnSync(cmd, args, { cwd: root, encoding: "utf8", ma
   if (!fin) probs.push("README names no final commit");
   else {
     if (!sub.includes(fin)) probs.push("SUBMISSION.md does not name the final commit");
-    const blobs = [...sub.matchAll(/github\.com\/kenil1710\/whiteflag\/blob\/([0-9a-f]+)\//g)].map((m) => m[1]);
+    // FINAL_CHECK.md is written after the final commit, so it alone is linked on main
+    const blobs = [...sub.matchAll(/github\.com\/kenil1710\/whiteflag\/blob\/([0-9a-f]+|main)\/(\S+)/g)].filter((m) => !(m[1] === "main" && m[2].startsWith("docs/FINAL_CHECK.md"))).map((m) => m[1]);
     if (blobs.length === 0) probs.push("SUBMISSION.md has no pinned evidence links");
     if (blobs.some((b) => b !== fin)) probs.push("an evidence link is not pinned to the final commit");
     const pushed = sh("git", ["branch", "-r", "--contains", fin]).stdout.includes("origin/main");
