@@ -13,7 +13,10 @@ import typing
 # recovery addresses, the stolen tokens (chain, token, amount, value weight),
 # the public bounty share, the return window [start, deadline], the claim
 # window and the payout rule. There is no cancel: the protocol may only extend
-# the deadline or add recovery addresses.
+# the deadline (in total at most MAX_EXTEND_S past the original) or add
+# recovery addresses, and only before the deadline minus the amendment lock
+# (24 h canonical) - never in the final day, never after. Every amendment is
+# kept in the offer's amendment history with its time and sequence number.
 #
 # Anyone may submit RETURN PROOFS (transaction hashes on any listed chain).
 # Validators read each transaction, its receipt, its block header and the
@@ -88,7 +91,8 @@ COUNT_KEYS = ("offers", "create_refused", "extensions", "recoveries_added", "pro
               "unclaimed_refunds", "credit_withdrawals", "sweeps", "proofs_pending", "retries", "proofs_expired") \
     + tuple("reject:" + r for r in REASONS)
 
-# mode -> (claim_window_s, min_open_s, rate_n, rate_window_s, sweep_delay_s, finality_grace_s, recovery_s)
+# mode -> (claim_window_s, min_open_s, rate_n, rate_window_s, sweep_delay_s, finality_grace_s, recovery_s,
+#          amend_lock_s, max_extend_s)
 #   claim_window_s  how long the owed bounty stays claimable after settlement
 #   min_open_s      an offer can be settled no earlier than created + this
 #                   (unless 100% returned), so an offer opened after its
@@ -102,9 +106,12 @@ COUNT_KEYS = ("offers", "create_refused", "extensions", "recoveries_added", "pro
 #                   head trails by up to about an hour) and be proved
 #   recovery_s      after submissions close, PENDING proofs may be retried
 #                   this long; settle waits for it only while any remain
+#   amend_lock_s    amendments (deadline extension, new recovery address)
+#                   close this long before the current deadline
+#   max_extend_s    the deadline may move at most this far past the original
 MODES = {
-    "CANONICAL": (3600, 10800, 20, 3600, 172800, 7200, 86400),
-    "DEMO": (180, 60, 20, 600, 3600, 60, 300),
+    "CANONICAL": (3600, 10800, 20, 3600, 172800, 7200, 86400, 86400, 180 * 86400),
+    "DEMO": (180, 60, 20, 600, 3600, 60, 300, 120, 3600),
 }
 
 MAX_ITEMS = 5               # proofs per submission
@@ -112,7 +119,7 @@ MAX_EXPLOITERS = 24
 MAX_RECOVERIES = 24
 MAX_TOKENS = 12
 MAX_SPAN_S = 3653 * 86400   # deadline - start (ten years: historic incidents open late)
-MAX_EXTEND_S = 180 * 86400  # how far a deadline may be pushed past the original
+MAX_EXTEND_S = MODES["CANONICAL"][8]   # canonical cap on deadline extensions, in total
 MAX_NAME = 80
 MAX_META = 800
 MIN_BOUNTY = 10 ** 15       # 0.001 GEN
@@ -681,7 +688,7 @@ class Offer:
     returned_by_json: str
     shares_json: str
     claims_json: str
-    history_json: str
+    amendments_json: str
     n_proofs: u64
     n_counted: u64
     n_rejected: u64
@@ -731,6 +738,9 @@ class WhiteFlagRegistry(gl.contract.Contract):
     sweep_delay_s: u64
     finality_grace_s: u64
     recovery_s: u64
+    amend_lock_s: u64
+    max_extend_s: u64
+    n_amendments: u64
     last_send_at: u64
     n_offers: u64
     n_proofs: u64
@@ -768,6 +778,8 @@ class WhiteFlagRegistry(gl.contract.Contract):
         self.sweep_delay_s = u64(p[4])
         self.finality_grace_s = u64(p[5])
         self.recovery_s = u64(p[6])
+        self.amend_lock_s = u64(p[7])
+        self.max_extend_s = u64(p[8])
         self.n_offers = u64(0)
         self.n_proofs = u64(0)
 
@@ -922,7 +934,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
             bounty_share_bps=u64(bps), payout_rule=rule, claim_window_s=u64(int(self.claim_window_s)),
             chains_json=_canon(chains), exploiters_json=_canon(ex), recoveries_json=_canon(rec),
             tokens_json=_canon(toks), returned_json="{}", returned_by_json="{}", shares_json="{}", claims_json="{}",
-            history_json="[]", n_proofs=u64(0),
+            amendments_json="[]", n_proofs=u64(0),
             n_counted=u64(0), n_rejected=u64(0), n_pending=u64(0), n_expired=u64(0), status=ST_OPEN, num="0", den="0", owed=u256(0),
             settled_at=u64(0), settled_by="", refunded_at_settle=u256(0), claim_deadline=u64(0),
             claimed=u256(0), unclaimed_refunded=u256(0),
@@ -934,41 +946,59 @@ class WhiteFlagRegistry(gl.contract.Contract):
         self._bump("offers")
         return {"ok": True, "offer_id": oid, "bounty": str(value), "settle_at": self._settle_at(self.offers[u64(oid)])}
 
-    @gl.public.write
-    def extend_deadline(self, offer_id: int, new_deadline: int) -> typing.Any:
-        """The protocol may push its deadline later while the offer is open."""
-        now = self._now()
-        o = self._offer(offer_id)
-        if o is None:
-            raise gl.vm.UserError("REFUSED: NO_SUCH_OFFER")
+    def _amendable(self, o: Offer, now: int) -> None:
+        """The protocol may amend its open offer only before deadline - amend_lock_s."""
         if o.protocol != self._sender():
             raise gl.vm.UserError("REFUSED: ONLY_THE_PROTOCOL")
         if o.status != ST_OPEN:
             raise gl.vm.UserError("REFUSED: OFFER_IS_" + o.status)
+        closes = int(o.deadline) - int(self.amend_lock_s)
+        if now >= closes:
+            raise gl.vm.UserError("REFUSED: AMENDMENTS_CLOSED_AT_" + str(closes))
+
+    def _amend(self, o: Offer, now: int, entry: dict) -> dict:
+        seq = int(self.n_amendments) + 1
+        self.n_amendments = u64(seq)
+        entry["seq"] = seq
+        entry["at"] = now
+        h = json.loads(o.amendments_json)
+        h.append(entry)
+        o.amendments_json = _canon(h)
+        return entry
+
+    @gl.public.write
+    def extend_deadline(self, offer_id: int, new_deadline: int) -> typing.Any:
+        """The protocol may push its deadline later, before the amendment lock;
+        in total at most max_extend_s past the original deadline."""
+        now = self._now()
+        if now <= 0:
+            raise gl.vm.UserError("REFUSED: NO_CLOCK")
+        o = self._offer(offer_id)
+        if o is None:
+            raise gl.vm.UserError("REFUSED: NO_SUCH_OFFER")
+        self._amendable(o, now)
         nd = _as_int(new_deadline, -1)
         if nd <= int(o.deadline):
             raise gl.vm.UserError("REFUSED: DEADLINE_CAN_ONLY_MOVE_LATER")
-        if nd - int(o.start) > MAX_SPAN_S or nd - int(o.original_deadline) > MAX_EXTEND_S:
-            raise gl.vm.UserError("REFUSED: WINDOW_TOO_LONG")
+        if nd - int(o.start) > MAX_SPAN_S or nd - int(o.original_deadline) > int(self.max_extend_s):
+            raise gl.vm.UserError("REFUSED: EXTENSION_CAP_" + str(int(o.original_deadline) + int(self.max_extend_s)))
         # --- writes
-        h = json.loads(o.history_json)
-        h.append({"at": now, "what": "deadline", "from": int(o.deadline), "to": nd})
-        o.history_json = _canon(h)
+        e = self._amend(o, now, {"what": "deadline", "from": int(o.deadline), "to": nd})
         o.deadline = u64(nd)
         self._bump("extensions")
-        return {"ok": True, "offer_id": int(o.offer_id), "deadline": nd, "settle_at": self._settle_at(o)}
+        return {"ok": True, "offer_id": int(o.offer_id), "deadline": nd, "settle_at": self._settle_at(o),
+                "amendment": e}
 
     @gl.public.write
     def add_recovery(self, offer_id: int, chain: str, address: str) -> typing.Any:
-        """The protocol may add a recovery address while the offer is open."""
+        """The protocol may add a recovery address, before the amendment lock."""
         now = self._now()
+        if now <= 0:
+            raise gl.vm.UserError("REFUSED: NO_CLOCK")
         o = self._offer(offer_id)
         if o is None:
             raise gl.vm.UserError("REFUSED: NO_SUCH_OFFER")
-        if o.protocol != self._sender():
-            raise gl.vm.UserError("REFUSED: ONLY_THE_PROTOCOL")
-        if o.status != ST_OPEN:
-            raise gl.vm.UserError("REFUSED: OFFER_IS_" + o.status)
+        self._amendable(o, now)
         ch = str(chain).strip().lower()
         if ch not in json.loads(o.chains_json):
             raise gl.vm.UserError("REFUSED: CHAIN_NOT_IN_OFFER")
@@ -987,11 +1017,9 @@ class WhiteFlagRegistry(gl.contract.Contract):
         rec.append({"chain": ch, "address": a})
         rec = sorted(rec, key=lambda x: x["chain"] + "|" + x["address"])
         o.recoveries_json = _canon(rec)
-        h = json.loads(o.history_json)
-        h.append({"at": now, "what": "recovery", "chain": ch, "address": a})
-        o.history_json = _canon(h)
+        e = self._amend(o, now, {"what": "recovery", "chain": ch, "address": a})
         self._bump("recoveries_added")
-        return {"ok": True, "offer_id": int(o.offer_id), "recoveries": len(rec)}
+        return {"ok": True, "offer_id": int(o.offer_id), "recoveries": len(rec), "amendment": e}
 
     # --- proofs -----------------------------------------------------------------
 
@@ -1315,9 +1343,6 @@ class WhiteFlagRegistry(gl.contract.Contract):
             raise gl.vm.UserError("REFUSED: ALREADY_CLAIMED")
         # --- writes
         self.beneficiaries[bk] = a
-        h = json.loads(o.history_json)
-        h.append({"at": now, "what": "beneficiary", "exploiter": who, "address": a})
-        o.history_json = _canon(h)
         self._bump("beneficiaries")
         return {"ok": True, "offer_id": int(o.offer_id), "exploiter": who, "beneficiary": a}
 
@@ -1479,7 +1504,9 @@ class WhiteFlagRegistry(gl.contract.Contract):
             if b != "":
                 bens[e["address"]] = b
         out["beneficiaries"] = bens
-        out["history"] = json.loads(o.history_json)
+        out["amendments"] = json.loads(o.amendments_json)
+        out["amendments_close_at"] = int(o.deadline) - int(self.amend_lock_s)
+        out["max_deadline"] = int(o.original_deadline) + int(self.max_extend_s)
         out["num"] = o.num
         out["den"] = o.den
         out["settled_by"] = o.settled_by
@@ -1616,7 +1643,8 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 "claim_window_s": int(self.claim_window_s), "min_open_s": int(self.min_open_s),
                 "rate_n": int(self.rate_n), "rate_window_s": int(self.rate_window_s), "max_items": MAX_ITEMS,
                 "max_exploiters": MAX_EXPLOITERS, "max_recoveries": MAX_RECOVERIES, "max_tokens": MAX_TOKENS,
-                "max_span_s": MAX_SPAN_S, "max_extend_s": MAX_EXTEND_S, "min_bounty": str(MIN_BOUNTY),
+                "max_span_s": MAX_SPAN_S, "max_extend_s": int(self.max_extend_s), "amend_lock_s": int(self.amend_lock_s),
+                "amendments": int(self.n_amendments), "min_bounty": str(MIN_BOUNTY),
                 "payout_rules": list(PAYOUT_RULES), "page_max": PAGE_MAX, "sweep_delay_s": int(self.sweep_delay_s),
                 "finality_grace_s": int(self.finality_grace_s), "recovery_s": int(self.recovery_s),
                 "transient_reasons": list(TRANSIENT),

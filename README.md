@@ -32,8 +32,10 @@ Each outcome was checked against public reporting and every outgoing transfer of
 
 1. **The offer is frozen.** Incident, chains, exploiter addresses, recovery addresses, stolen tokens (chain, token,
    amount, the protocol's value weight), bounty share, return window, claim window, payout rule. The bounty is the
-   GEN sent with `create_offer`. No cancel; the protocol may only extend the deadline (180 days at most) or add a
-   recovery address.
+   GEN sent with `create_offer`. No cancel; the protocol may only extend the deadline (180 days past the original at
+   most, in total) or add a recovery address, and only until 24 h before the deadline: nothing changes in the final
+   day or after it. Every amendment is kept in the offer's on-chain amendment history (sequence number, time) and
+   shown on the incident page ([amendment rules](docs/RULES.md#1a-amendment-rules)).
 2. **Anyone proves returns.** `submit_proofs` takes up to 5 transaction hashes. Every validator reads each transaction,
    its receipt, its block header and the finalized head from both RPCs of its chain, and the answers must be
    identical. A proof counts only if the transaction succeeded, its block is finalized, its time is inside the

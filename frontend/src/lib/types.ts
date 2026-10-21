@@ -10,7 +10,7 @@ export type OfferSummary = {
 };
 export type Offer = OfferSummary & {
   found: boolean; original_deadline: number; payout_rule: string; claim_window_s: number; exploiters: Pair[]; recoveries: Pair[];
-  tokens: Token[]; returned: Record<string, string>; history: { at: number; what: string; [k: string]: unknown }[]; num: string; den: string;
+  tokens: Token[]; returned: Record<string, string>; amendments: Amendment[]; amendments_close_at: number; max_deadline: number; num: string; den: string;
   settled_by: string; refunded_at: number;
   /** what each exploiter address returned, per "chain:token" */
   returned_by: Record<string, Record<string, string>>;
@@ -34,3 +34,5 @@ export type GateState = {
 };
 export type TxProgress = { phase: "signing" | "submitted" | "accepted" | "finalized" | "failed" | "rejected"; hash: string | null; message: string };
 export type WriteResult<T> = { kind: "ok"; hash: string; data: T } | { kind: "rejected"; hash: string; reason: string } | { kind: "failed"; hash: string | null; error: string };
+/** one entry of an offer's on-chain amendment history: seq is registry-wide, at is the transaction's consensus time */
+export type Amendment = { seq: number; at: number; what: "deadline" | "recovery"; from?: number; to?: number; chain?: string; address?: string };

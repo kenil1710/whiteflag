@@ -725,10 +725,10 @@ class Settle(Base):
         self.assertTrue(self.d.settle(oid)["ok"])
 
     def test_extended_deadline_delays_settle(self):
-        oid = self.d.offer(deadline=NOW + 100)
-        self.d.w.call(self.d.reg, "extend_deadline", oid, NOW + 500, sender=PROTOCOL)
-        self.d.w.set_time(NOW + 200)
-        self.refused(self.d.settle, oid, reason="TOO_EARLY_UNTIL_" + str(NOW + 500 + RG.MODES["DEMO"][5]))
+        oid = self.d.offer(deadline=NOW + 1000)
+        self.d.w.call(self.d.reg, "extend_deadline", oid, NOW + 1500, sender=PROTOCOL)
+        self.d.w.set_time(NOW + 1200)
+        self.refused(self.d.settle, oid, reason="TOO_EARLY_UNTIL_" + str(NOW + 1500 + RG.MODES["DEMO"][5]))
 
 
 # =============================================================================
@@ -877,77 +877,128 @@ class Claim(Base):
 # =============================================================================
 
 class Protocol(Base):
+    """The protocol's two powers, before the amendment lock (DEMO: 120 s before the deadline)."""
+    D = NOW + 1000
+
+    def future(self, **k):
+        return self.d.offer(deadline=self.D, **k)
+
+    def ext(self, oid, nd, sender=PROTOCOL):
+        return self.d.w.call(self.d.reg, "extend_deadline", oid, nd, sender=sender)
+
+    def addrec(self, oid, a, chain="ethereum", sender=PROTOCOL):
+        return self.d.w.call(self.d.reg, "add_recovery", oid, chain, a, sender=sender)
+
     def test_extend_deadline(self):
-        oid = self.d.offer()
-        r = self.d.w.call(self.d.reg, "extend_deadline", oid, DEADLINE + 100, sender=PROTOCOL)
-        self.assertEqual(r["deadline"], DEADLINE + 100)
+        oid = self.future()
+        r = self.ext(oid, self.D + 100)
+        self.assertEqual(r["deadline"], self.D + 100)
         o = self.d.get(oid)
-        self.assertEqual((o["deadline"], o["original_deadline"]), (DEADLINE + 100, DEADLINE))
-        self.assertEqual(o["history"][0]["what"], "deadline")
+        self.assertEqual((o["deadline"], o["original_deadline"]), (self.D + 100, self.D))
+        self.assertEqual(o["amendments"], [{"seq": 1, "at": NOW, "what": "deadline", "from": self.D, "to": self.D + 100}])
 
     def test_extend_counts_later_returns(self):
-        oid = self.d.offer()
-        h = self.native(ts=DEADLINE + 50)
+        oid = self.future()
+        h = self.native(ts=self.D + 50)
         self.assertEqual(self.d.prove(oid, "ethereum", h)["reason"], "AFTER_DEADLINE")
-        self.d.w.call(self.d.reg, "extend_deadline", oid, DEADLINE + 100, sender=PROTOCOL)
+        self.ext(oid, self.D + 100)
         self.assertEqual(self.d.prove(oid, "ethereum", h)["status"], "COUNTED")
 
     def test_extend_only_later(self):
-        oid = self.d.offer()
-        self.refused(self.d.w.call, self.d.reg, "extend_deadline", oid, DEADLINE, sender=PROTOCOL, reason="ONLY_MOVE_LATER")
+        oid = self.future()
+        self.refused(self.ext, oid, self.D, reason="ONLY_MOVE_LATER")
 
     def test_extend_only_protocol(self):
-        oid = self.d.offer()
-        self.refused(self.d.w.call, self.d.reg, "extend_deadline", oid, DEADLINE + 1, sender=STRANGER, reason="ONLY_THE_PROTOCOL")
+        oid = self.future()
+        self.refused(self.ext, oid, self.D + 1, sender=STRANGER, reason="ONLY_THE_PROTOCOL")
 
-    def test_extend_cap(self):
-        oid = self.d.offer()
-        self.refused(self.d.w.call, self.d.reg, "extend_deadline", oid, DEADLINE + RG.MAX_EXTEND_S + 1, sender=PROTOCOL,
-                     reason="WINDOW_TOO_LONG")
+    def test_extend_cap_is_total(self):
+        cap = RG.MODES["DEMO"][8]
+        oid = self.future()
+        self.refused(self.ext, oid, self.D + cap + 1, reason="EXTENSION_CAP_%d" % (self.D + cap))
+        self.ext(oid, self.D + cap // 2)
+        self.ext(oid, self.D + cap)                        # the cap counts from the original deadline, in total
+        self.refused(self.ext, oid, self.D + cap + 1, reason="EXTENSION_CAP_")
+
+    def test_canonical_cap_and_lock(self):
+        self.assertEqual(RG.MODES["CANONICAL"][7], 86400)
+        self.assertEqual(RG.MODES["CANONICAL"][8], 180 * 86400)
 
     def test_extend_after_settle_refused(self):
         oid = self.d.offer()
         self.d.to_settle_time(oid)
         self.d.settle(oid)
-        self.refused(self.d.w.call, self.d.reg, "extend_deadline", oid, DEADLINE + 100, sender=PROTOCOL, reason="OFFER_IS_SETTLED")
+        self.refused(self.ext, oid, DEADLINE + 100, reason="OFFER_IS_SETTLED")
+
+    def test_amendments_closed_after_the_deadline(self):
+        oid = self.d.offer()      # a historic incident: its deadline has passed
+        self.refused(self.ext, oid, DEADLINE + 100, reason="AMENDMENTS_CLOSED_AT_%d" % (DEADLINE - RG.MODES["DEMO"][7]))
+        self.refused(self.addrec, oid, RECOVERY2, reason="AMENDMENTS_CLOSED_AT_")
+
+    def test_amendments_close_at_the_lock_near_settlement(self):
+        lock = RG.MODES["DEMO"][7]
+        oid = self.future()
+        self.d.w.set_time(self.D - lock - 1)
+        self.addrec(oid, RECOVERY2)
+        self.ext(oid, self.D + 10)                          # the lock now counts from the new deadline
+        self.d.w.set_time(self.D + 10 - lock)
+        self.refused(self.ext, oid, self.D + 20, reason="AMENDMENTS_CLOSED_AT_%d" % (self.D + 10 - lock))
+        self.refused(self.addrec, oid, F.addr(7000), reason="AMENDMENTS_CLOSED_AT_")
+        self.d.w.set_time(self.D + 5)                       # inside the final window, before the deadline
+        self.refused(self.ext, oid, self.D + 20, reason="AMENDMENTS_CLOSED_AT_")
+        # nothing amended late: settlement follows the deadline fixed before the lock
+        self.d.w.set_time(self.D + 10 + RG.MODES["DEMO"][5])
+        self.assertEqual(self.d.settle(oid)["status"], "SETTLED_NONE")
+        self.assertEqual([e["what"] for e in self.d.get(oid)["amendments"]], ["recovery", "deadline"])
+
+    def test_amendment_history_is_ordered_and_public(self):
+        oid = self.future()
+        other = self.future(incident="other")
+        self.ext(oid, self.D + 1)
+        self.d.w.advance(5)
+        self.addrec(other, RECOVERY2)
+        self.addrec(oid, RECOVERY2)
+        h = self.d.get(oid)["amendments"]
+        self.assertEqual([(e["seq"], e["what"], e["at"]) for e in h], [(1, "deadline", NOW), (3, "recovery", NOW + 5)])
+        o = self.d.get(oid)
+        self.assertEqual(o["amendments_close_at"], self.D + 1 - RG.MODES["DEMO"][7])
+        self.assertEqual(o["max_deadline"], self.D + RG.MODES["DEMO"][8])
+        self.assertEqual(self.d.w.view(self.d.reg, "get_config")["amendments"], 3)
+
+    def test_refused_amendment_records_nothing(self):
+        oid = self.future()
+        self.refused(self.ext, oid, self.D, reason="ONLY_MOVE_LATER")
+        self.refused(self.addrec, oid, EXPLOITER, reason="RECOVERY_IS_EXPLOITER")
+        self.assertEqual(self.d.get(oid)["amendments"], [])
 
     def test_add_recovery(self):
-        oid = self.d.offer()
+        oid = self.future()
         h = self.native(to=RECOVERY2)
         self.assertEqual(self.d.prove(oid, "ethereum", h)["reason"], "NO_RETURN_TO_RECOVERY")
-        self.d.w.call(self.d.reg, "add_recovery", oid, "ethereum", RECOVERY2, sender=PROTOCOL)
+        self.addrec(oid, RECOVERY2)
         self.assertEqual(self.d.prove(oid, "ethereum", h)["status"], "COUNTED")
-        self.assertEqual(self.d.get(oid)["history"][-1]["what"], "recovery")
+        self.assertEqual(self.d.get(oid)["amendments"][-1]["what"], "recovery")
 
     def test_add_recovery_not_exploiter(self):
-        oid = self.d.offer()
-        self.refused(self.d.w.call, self.d.reg, "add_recovery", oid, "ethereum", EXPLOITER, sender=PROTOCOL,
-                     reason="RECOVERY_IS_EXPLOITER")
+        self.refused(self.addrec, self.future(), EXPLOITER, reason="RECOVERY_IS_EXPLOITER")
 
     def test_add_recovery_only_protocol(self):
-        oid = self.d.offer()
-        self.refused(self.d.w.call, self.d.reg, "add_recovery", oid, "ethereum", RECOVERY2, sender=EXPLOITER,
-                     reason="ONLY_THE_PROTOCOL")
+        self.refused(self.addrec, self.future(), RECOVERY2, sender=EXPLOITER, reason="ONLY_THE_PROTOCOL")
 
     def test_add_recovery_duplicate(self):
-        oid = self.d.offer()
-        self.refused(self.d.w.call, self.d.reg, "add_recovery", oid, "ethereum", RECOVERY, sender=PROTOCOL,
-                     reason="ALREADY_A_RECOVERY_ADDRESS")
+        self.refused(self.addrec, self.future(), RECOVERY, reason="ALREADY_A_RECOVERY_ADDRESS")
 
     def test_add_recovery_chain_not_in_offer(self):
-        oid = self.d.offer()
-        self.refused(self.d.w.call, self.d.reg, "add_recovery", oid, "arbitrum", RECOVERY2, sender=PROTOCOL,
-                     reason="CHAIN_NOT_IN_OFFER")
+        self.refused(self.addrec, self.future(), RECOVERY2, chain="arbitrum", reason="CHAIN_NOT_IN_OFFER")
 
     def test_add_recovery_bad_address(self):
-        oid = self.d.offer()
-        self.refused(self.d.w.call, self.d.reg, "add_recovery", oid, "ethereum", "0x00", sender=PROTOCOL, reason="BAD_ADDRESS")
+        self.refused(self.addrec, self.future(), "0x00", reason="BAD_ADDRESS")
 
     def test_add_recovery_cap(self):
-        oid = self.d.offer()
+        oid = self.future()
         for i in range(RG.MAX_RECOVERIES - 1):
-            self.d.w.call(self.d.reg, "add_recovery", oid, "ethereum", F.addr(5000 + i), sender=PROTOCOL)
-        self.refused(self.d.w.call, self.d.reg, "add_recovery", oid, "ethereum", F.addr(6000), sender=PROTOCOL, reason="TOO_MANY")
+            self.addrec(oid, F.addr(5000 + i))
+        self.refused(self.addrec, oid, F.addr(6000), reason="TOO_MANY")
 
     def test_protocol_cannot_change_tokens_or_exploiters(self):
         for name in ("set_tokens", "add_exploiter", "remove_exploiter", "remove_recovery", "set_weight", "set_bounty"):

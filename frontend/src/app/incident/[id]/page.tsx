@@ -68,9 +68,9 @@ export default async function Incident({ params, searchParams }: { params: Promi
             )}
             <li className="tl tl-flag"><div className="tl-when">{iso(o.created_at)}</div><div className="tl-title">Offer opened on GenLayer, {gen(o.bounty, 4)} GEN locked</div>
               <div className="mono small">by <a href={studioAddr(o.protocol)}>{short(o.protocol)}</a> on <a href={studioAddr(reg)}>{short(reg)}</a></div></li>
-            {o.history.map((h, i) => (
-              <li key={i} className="tl"><div className="tl-when">{iso(h.at)}</div>
-                <div className="tl-title">{h.what === "deadline" ? "Deadline extended" : "Recovery address added"}</div>
+            {o.amendments.map((h) => (
+              <li key={h.seq} className="tl"><div className="tl-when">{iso(h.at)}</div>
+                <div className="tl-title">Amendment #{h.seq}: {h.what === "deadline" ? "deadline extended" : "recovery address added"}</div>
                 <div className="mono small">{h.what === "deadline" ? <>{iso(Number(h.from))} → {iso(Number(h.to))}</> : <>{String(h.chain)} <Ext href={addrLink(String(h.chain), String(h.address))}>{short(String(h.address))}</Ext></>}</div></li>
             ))}
             {counted.map((p) => <ProofItem key={p.proof_id} p={p} sym={sym} dec={dec} />)}
@@ -181,6 +181,7 @@ export default async function Incident({ params, searchParams }: { params: Promi
           <div className="section-head"><h2>Terms, frozen</h2></div>
           <div className="table-wrap"><table className="ledger"><tbody>
             <tr><td className="caps">Return window</td><td className="mono">{iso(o.start)} → {iso(o.deadline)}{o.original_deadline !== o.deadline ? ` (originally ${iso(o.original_deadline)})` : ""}</td></tr>
+            <tr><td className="caps">Amendments</td><td className="mono">{o.amendments.length} recorded; {o.status === "OPEN" && Math.floor(Date.now() / 1000) < o.amendments_close_at ? `the protocol may extend the deadline (to ${iso(o.max_deadline)} at most) or add a recovery address until ${iso(o.amendments_close_at)}` : "closed: no extension or new recovery address is possible"} (rules: none in the final {o.deadline - o.amendments_close_at} s before the deadline or after it; extensions capped in total)</td></tr>
             <tr><td className="caps">Submissions close</td><td className="mono">{iso(o.settle_at)}; settles then if no proof is PENDING (at once if 100% returned)</td></tr>
             <tr><td className="caps">Recovery window</td><td className="mono">until {iso(o.recover_until)}: anyone retries PENDING proofs; then settle always succeeds and leftover PENDING proofs are EXPIRED</td></tr>
             <tr><td className="caps">Claim window</td><td className="mono">{o.claim_window_s} s after settlement</td></tr>

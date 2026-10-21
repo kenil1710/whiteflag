@@ -25,10 +25,23 @@ A protocol that was hacked calls `create_offer` and sends the bounty in GEN with
 (`withdraw_refund` pays it out) and returns `{"ok": false, "reason": ...}`. Studio keeps the value of a failing call,
 so raising there would strand it.
 
-There is no cancel. The protocol (the address that created the offer) may only, while the offer is open:
+There is no cancel. The protocol (the address that created the offer) may only amend it, two ways:
 
-- `extend_deadline`: move the deadline later, at most 180 days past the original deadline;
+- `extend_deadline`: move the deadline later; in total at most 180 days past the original deadline (canonical) or
+  3600 s (demo), however many extensions;
 - `add_recovery`: add a recovery address on one of the offer's chains (never an exploiter address).
+
+### 1a. Amendment rules
+
+- Amendments are possible only while the offer is open and **before `deadline - amendment lock`**: the lock is 86400 s
+  (24 h, canonical) or 120 s (demo). In the final day before the deadline, and at any time after it, nothing can be
+  amended (`AMENDMENTS_CLOSED_AT_<time>`). An offer opened after its deadline (a historic incident) can never be
+  amended. After an extension the lock counts from the new deadline.
+- Every amendment is appended to the offer's on-chain `amendments` list as `{seq, at, what, ...}`: `seq` is a
+  registry-wide sequence number (the order of every amendment across all offers), `at` the transaction's consensus
+  time (GenVM gives a contract the transaction's time, not a block number), `what` is `deadline` (`from`, `to`) or
+  `recovery` (`chain`, `address`). A refused amendment records nothing. The incident page shows the list.
+- `get_offer` also returns `amendments_close_at` and `max_deadline` (the original deadline plus the cap).
 
 ## 2. Return proofs
 

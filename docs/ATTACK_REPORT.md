@@ -49,7 +49,9 @@ Direct Mode `test/direct/test_gate_direct.py`.
 
 Extending the deadline is one of the protocol's two powers; unbounded, it could keep a partially returned bounty
 unsettled for years. Extensions are capped at 180 days past the original deadline. A 100% return settles at once
-regardless. Test: `Protocol.test_extend_cap`.
+regardless. The cap is on the total of all extensions, and since the steward review every amendment closes 24 h
+before the deadline (none in the final day, none after it) and is recorded in the offer's amendment history.
+Tests: `Protocol.test_extend_cap_is_total`, `Protocol.test_amendments_close_at_the_lock_near_settlement`.
 
 ### 5. Non-canonical address topics (Low, fixed)
 
