@@ -21,8 +21,8 @@
     },
     "0x0c5c9cb1826530a5a90ca1676ca0477f36fc9d55": {
       "cursor": 0,
-      "scans_completed": 6,
-      "last_scan_at": 1792619961,
+      "scans_completed": 7,
+      "last_scan_at": 1792625281,
       "total": 19
     }
   },
@@ -757,5 +757,5 @@
     "0x11b9e1d185ADd2b88dF872743734Db1124b80390",
     "0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55"
   ],
-  "saved_at": "2026-10-21T23:27:58.993Z"
+  "saved_at": "2026-10-21T23:28:01.575Z"
 }
