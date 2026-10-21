@@ -67,7 +67,7 @@ Each outcome was checked against public reporting and every outgoing transfer of
 
 ## Addresses (GenLayer Studio Dev, chain 61997)
 
-Every contract was deployed from commit `2c92d0692a0b5ce33cdba522f3a95f27d7e3c8ca`. Final commit `FINAL_COMMIT_PENDING`: every evidence link in
+Every contract was deployed from commit `2c92d0692a0b5ce33cdba522f3a95f27d7e3c8ca`. Final commit `b6e648449b573f712cbb693185f848849a36ad23`: every evidence link in
 [docs/SUBMISSION.md](docs/SUBMISSION.md) is pinned to it, and later commits change only README.md and
 docs/{SUBMISSION,FINAL_CHECK,AUDIT,STEWARD_RESPONSE}.md.
 
