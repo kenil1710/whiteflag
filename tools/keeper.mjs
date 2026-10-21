@@ -1,7 +1,9 @@
 /**
  * The keeper bot (GitHub Actions, hourly; runnable by hand). Settles every
- * offer whose settle time has passed (or that reached 100%) and refunds every
- * owed bounty left unclaimed after its claim window, on every registry in
+ * offer that may settle (100% returned, settle time passed with no PENDING
+ * proof, or the recovery window over), retries PENDING proofs during the
+ * recovery window, and refunds every share left unclaimed after the claim
+ * window, on every registry in
  * deployments.json. Logic: tools/lib/keeper_core.mjs.
  *
  *   node tools/keeper.mjs --state=<dir> [--push] [--max=25] [--wait=600]
@@ -77,6 +79,17 @@ const chain = {
   getOffer: (reg, id) => view(reg, "get_offer", [id]),
   async submit(reg, action, offer) {
     reg = canonical(reg);
+    if (action === "RETRY_PENDING") {
+      const ids = [];
+      for (let off = 0; off !== -1 && ids.length < 5;) {
+        const pg = await view(reg, "get_proofs", [offer.offer_id, off, 50]);
+        for (const p of pg.items) if (p.status === "PENDING" && ids.length < 5) ids.push(p.proof_id);
+        off = pg.next_offset;
+      }
+      if (ids.length === 0) throw new Error("no PENDING proof found");
+      const args = [offer.offer_id, JSON.stringify(ids)];
+      return await retry(() => wallet.writeContract({ address: reg, functionName: "retry_proofs", args, value: 0n }), { label: "retry_proofs" });
+    }
     const fn = action === "SETTLE" ? "settle" : "refund_unclaimed";
     const args = [offer.offer_id];
     // settle sends the remainder to the protocol unless 100% came back; a refund always sends

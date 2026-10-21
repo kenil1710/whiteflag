@@ -22,12 +22,34 @@ export function ProveForm() {
   const [busy, setBusy] = useState(false);
   const [p, setP] = useState<TxProgress | null>(null);
   const [recorded, setRecorded] = useState<Proof[] | null>(null);
+  const [pending, setPending] = useState<Proof[]>([]);
 
   useEffect(() => {
     void viewOf<Page<OfferSummary>>(reg, "get_offers", [0, 50]).then((pg) => { setOffers(pg.items); if (!oid) { const o = pg.items.find((x) => x.status === "OPEN"); if (o) setOid(o.offer_id); } }).catch(() => setOffers([]));
   }, [reg]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const offer = offers.find((o) => o.offer_id === oid);
+  useEffect(() => {
+    if (!oid || !offer || offer.n_pending === 0) { setPending([]); return; }
+    // PENDING proofs of this offer, newest pages first, bounded to three pages
+    void (async () => {
+      const out: Proof[] = [];
+      for (let off = Math.max(offer.n_proofs - 50, 0), pages = 0; off >= 0 && pages < 3 && out.length < 5; off -= 50, pages++) {
+        const pg = await viewOf<Page<Proof>>(reg, "get_proofs", [oid, off, 50]);
+        out.push(...pg.items.filter((x) => x.status === "PENDING"));
+        if (off === 0) break;
+      }
+      setPending(out.slice(0, 5));
+    })().catch(() => setPending([]));
+  }, [reg, oid, offer]);
+
+  async function retry() {
+    if (!w.account || !offer || pending.length === 0) return;
+    const ids = pending.map((x) => x.proof_id);
+    await send(w.account, reg, "retry_proofs", [oid, JSON.stringify(ids)], 0n, {
+      onProgress: setP, confirm: async () => (await viewOf<Proof>(reg, "get_proof", [ids[0]])).attempts > pending[0].attempts,
+    });
+  }
   const items = text.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean).map((s) => {
     const m = s.match(/^(ethereum|arbitrum)[:/](0x[0-9a-fA-F]{64})$/);
     return m ? { chain: m[1], hash: m[2].toLowerCase() } : { chain, hash: s.toLowerCase() };
@@ -63,6 +85,13 @@ export function ProveForm() {
           {offers.map((o) => <option key={o.offer_id} value={o.offer_id}>#{o.offer_id} {o.name} · {o.status === "OPEN" ? `open, ${pct(o.fraction_ppm)} back` : o.status.toLowerCase()}</option>)}
         </select>
         {offer && offer.status !== "OPEN" && <div className="hint bad">This offer is settled; it takes no more proofs.</div>}
+        {offer && offer.status === "OPEN" && Date.now() / 1000 > offer.settle_at && <div className="hint bad">Submissions closed {new Date(offer.settle_at * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC; only PENDING proofs can be retried, until {new Date(offer.recover_until * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC.</div>}
+        {pending.length > 0 && (
+          <div className="hint">
+            {pending.length} PENDING proof(s) on this offer ({pending.map((x) => `#${x.proof_id} ${x.reason}`).join(", ")}): an RPC error, the two RPCs disagreeing, or a block not final yet. Anyone can retry them until the recovery window ends.
+            <div className="row" style={{ marginTop: 8 }}><button className="btn" disabled={!w.account} onClick={() => void retry()}>Retry PENDING proofs</button></div>
+          </div>
+        )}
       </div>
       <div className="field"><label htmlFor="chain">Chain for bare hashes</label>
         <select id="chain" value={chain} onChange={(e) => setChain(e.target.value)}><option value="ethereum">Ethereum</option><option value="arbitrum">Arbitrum One</option></select></div>
@@ -84,14 +113,14 @@ export function ProveForm() {
             </tr>))}</tbody>
         </table></div>
       )}
-      <p className="small muted">The live check is advice. The registry records what its validators read: a rejected proof keeps its reason and can be sent again; a counted one cannot be counted twice.</p>
+      <p className="small muted">The live check is advice. The registry records what its validators read: COUNTED, REJECTED (permanent: the facts are wrong) or PENDING (transient: an RPC error, disagreement or a block not final yet; anyone retries it until the recovery window ends). A counted transfer cannot be counted twice.</p>
       <WalletBar />
       <div className="row"><button className="btn btn-flag" disabled={!w.account || !offer || offer.status !== "OPEN" || items.length === 0 || bad.length > 0} onClick={() => void submit()}>Send to the validators</button></div>
       <Progress p={p} />
       {recorded && (
         <div className="panel">
           <span className="caps">Recorded by the registry</span>
-          <ul className="mono small">{recorded.map((r) => <li key={r.proof_id}>#{r.proof_id} {short(r.tx_hash)} · {r.status === "COUNTED" ? <span className="ok">COUNTED</span> : <span className="bad">{r.reason}</span>}</li>)}</ul>
+          <ul className="mono small">{recorded.map((r) => <li key={r.proof_id}>#{r.proof_id} {short(r.tx_hash)} · {r.status === "COUNTED" ? <span className="ok">COUNTED</span> : <span className={r.status === "REJECTED" ? "bad" : ""}>{r.status} {r.reason}</span>}</li>)}</ul>
           <Link href={`/incident/${oid}${q}`}>Open the case file</Link>
         </div>
       )}

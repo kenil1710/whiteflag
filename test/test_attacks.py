@@ -90,7 +90,7 @@ class ProofSpoofing(Base):
             return ans
         stub.WEB.tamper[url] = lie
         r = self.d.prove(self.oid, "ethereum", self.native(frm=STRANGER))
-        self.assertEqual((r["status"], r["reason"]), ("REJECTED", "RPC_DISAGREE"))
+        self.assertEqual((r["status"], r["reason"]), ("PENDING", "RPC_DISAGREE"))
 
     def test_both_rpcs_on_the_wrong_chain(self):
         self.c.c["ethereum"].chain_id = 56
@@ -173,7 +173,7 @@ class Reorgs(Base):
                 ans["result"]["blockNumber"] = hex(int(ans["result"]["blockNumber"], 16) + 1)
             return ans
         stub.WEB.tamper[url] = fork
-        self.assertEqual(self.d.prove(self.oid, "ethereum", self.native())["status"], "REJECTED")
+        self.assertEqual(self.d.prove(self.oid, "ethereum", self.native())["status"], "PENDING")
 
     def test_receipt_block_hash_not_the_header(self):
         for url in RG.CHAINS["ethereum"][1]:
@@ -245,10 +245,11 @@ class Griefing(Base):
 
     def test_early_junk_submission_of_a_real_tx_is_resubmittable(self):
         h = self.native(block=F.FINALIZED["ethereum"] + 1)
-        self.assertEqual(self.d.prove(self.oid, "ethereum", h, sender=ATTACKER)["reason"], "NOT_FINALIZED")
+        r = self.d.prove(self.oid, "ethereum", h, sender=ATTACKER)
+        self.assertEqual((r["status"], r["reason"]), ("PENDING", "NOT_FINALIZED"))
         self.c.c["ethereum"].finalized += 10
         self.c.c["ethereum"].set_block(self.c.c["ethereum"].finalized, NOW - 600)
-        self.assertEqual(self.d.prove(self.oid, "ethereum", h)["status"], "COUNTED")
+        self.assertEqual(self.d.retry(self.oid, [r["proof_id"]])["results"][0]["status"], "COUNTED")
 
     def test_rate_limit_binds_the_griefer_only(self):
         for _ in range(4):

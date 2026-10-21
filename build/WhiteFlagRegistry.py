@@ -23,9 +23,16 @@ import typing
 # sender is a listed exploiter address, and it moved a listed token from an
 # exploiter address to a recovery address (the native value of the
 # transaction, or an ERC-20 Transfer log emitted by the listed token
-# contract). Each (chain, tx, log index) counts once per offer. Any
-# read error or disagreement rejects the proof with a reason; it may be
-# submitted again.
+# contract). Each (chain, tx, log index) counts once per offer.
+#
+# Every proof ends COUNTED, REJECTED or PENDING. REJECTED is permanent: the
+# facts are wrong (failed transaction, wrong sender, recipient, token or
+# window, unknown hash). PENDING is transient: an RPC error, the two RPCs
+# disagreeing, or a block not final yet. Submissions close at the offer's
+# settle time; a RECOVERY WINDOW (24 h canonical) follows, in which anyone may
+# retry PENDING proofs. Settlement waits for the recovery window only while
+# PENDING proofs remain; after it, settle always succeeds and leftover
+# PENDING proofs are EXPIRED. Nothing extends the window.
 #
 #   fraction = sum(min(returned, stolen) * weight) / sum(stolen * weight)
 #   owed     = bounty * fraction            (integer math, rounded down)
@@ -64,6 +71,8 @@ ST_NONE = "SETTLED_NONE"
 
 P_COUNTED = "COUNTED"
 P_REJECTED = "REJECTED"
+P_PENDING = "PENDING"
+P_EXPIRED = "EXPIRED"     # shown for a proof still PENDING when its offer settled
 
 RULE_OR_NAMED = "EXPLOITER_OR_NAMED"
 RULE_ONLY = "EXPLOITER_ONLY"
@@ -72,11 +81,14 @@ PAYOUT_RULES = (RULE_OR_NAMED, RULE_ONLY)
 REASONS = ("UNSUPPORTED_CHAIN", "RPC_UNREADABLE", "RPC_DISAGREE", "WRONG_CHAIN_ID", "TX_NOT_FOUND", "TX_PENDING",
            "TX_FAILED", "NOT_FINALIZED", "BEFORE_OFFER_START", "AFTER_DEADLINE", "SENDER_NOT_EXPLOITER",
            "NO_RETURN_TO_RECOVERY", "ALREADY_COUNTED")
+# transient: the facts could not be read yet, a retry may count them
+TRANSIENT = ("RPC_UNREADABLE", "RPC_DISAGREE", "WRONG_CHAIN_ID", "TX_PENDING", "NOT_FINALIZED")
 COUNT_KEYS = ("offers", "create_refused", "extensions", "recoveries_added", "proofs_counted", "proofs_rejected",
               "settled", "settled:" + ST_FULL, "settled:" + ST_PARTIAL, "settled:" + ST_NONE, "claims", "beneficiaries",
-              "unclaimed_refunds", "credit_withdrawals", "sweeps") + tuple("reject:" + r for r in REASONS)
+              "unclaimed_refunds", "credit_withdrawals", "sweeps", "proofs_pending", "retries", "proofs_expired") \
+    + tuple("reject:" + r for r in REASONS)
 
-# mode -> (claim_window_s, min_open_s, rate_n, rate_window_s, sweep_delay_s, finality_grace_s)
+# mode -> (claim_window_s, min_open_s, rate_n, rate_window_s, sweep_delay_s, finality_grace_s, recovery_s)
 #   claim_window_s  how long the owed bounty stays claimable after settlement
 #   min_open_s      an offer can be settled no earlier than created + this
 #                   (unless 100% returned), so an offer opened after its
@@ -88,9 +100,11 @@ COUNT_KEYS = ("offers", "create_refused", "extensions", "recoveries_added", "pro
 #   finality_grace_s settle waits this long after the deadline, so a return
 #                   made just before it can finalize (Arbitrum's finalized
 #                   head trails by up to about an hour) and be proved
+#   recovery_s      after submissions close, PENDING proofs may be retried
+#                   this long; settle waits for it only while any remain
 MODES = {
-    "CANONICAL": (3600, 10800, 20, 3600, 172800, 7200),
-    "DEMO": (180, 60, 20, 600, 3600, 60),
+    "CANONICAL": (3600, 10800, 20, 3600, 172800, 7200, 86400),
+    "DEMO": (180, 60, 20, 600, 3600, 60, 300),
 }
 
 MAX_ITEMS = 5               # proofs per submission
@@ -671,6 +685,8 @@ class Offer:
     n_proofs: u64
     n_counted: u64
     n_rejected: u64
+    n_pending: u64
+    n_expired: u64
     status: str
     num: str
     den: str
@@ -701,6 +717,8 @@ class Proof:
     block_time: u64
     tx_from: str
     tx_to: str
+    attempts: u64
+    updated_at: u64
 
 
 class WhiteFlagRegistry(gl.contract.Contract):
@@ -712,6 +730,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
     rate_window_s: u64
     sweep_delay_s: u64
     finality_grace_s: u64
+    recovery_s: u64
     last_send_at: u64
     n_offers: u64
     n_proofs: u64
@@ -720,6 +739,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
     offer_proofs: gl.storage.TreeMap[str, u64]
     used: gl.storage.TreeMap[str, u64]
     counted_tx: gl.storage.TreeMap[str, u64]
+    pending_tx: gl.storage.TreeMap[str, u64]
     rate: gl.storage.TreeMap[str, str]
     credits: gl.storage.TreeMap[str, u256]
     beneficiaries: gl.storage.TreeMap[str, str]
@@ -746,6 +766,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
         self.rate_window_s = u64(p[3])
         self.sweep_delay_s = u64(p[4])
         self.finality_grace_s = u64(p[5])
+        self.recovery_s = u64(p[6])
         self.n_offers = u64(0)
         self.n_proofs = u64(0)
 
@@ -772,9 +793,23 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 "tokens": json.loads(o.tokens_json)}
 
     def _settle_at(self, o: Offer) -> int:
+        """Submissions close here; settle may run from here if no proof is PENDING."""
         a = int(o.deadline) + int(self.finality_grace_s)
         b = int(o.created_at) + int(self.min_open_s)
         return a if a > b else b
+
+    def _recover_until(self, o: Offer) -> int:
+        """PENDING proofs may be retried until here; from here settle always succeeds."""
+        return self._settle_at(o) + int(self.recovery_s)
+
+    def _can_settle(self, o: Offer, now: int) -> bool:
+        n = int(o.num)
+        d = int(o.den)
+        if d > 0 and n >= d:
+            return True
+        if now >= self._recover_until(o):
+            return True
+        return now >= self._settle_at(o) and int(o.n_pending) == 0
 
     def _is_exploiter(self, o: Offer, who: str) -> bool:
         for e in json.loads(o.exploiters_json):
@@ -887,7 +922,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
             chains_json=_canon(chains), exploiters_json=_canon(ex), recoveries_json=_canon(rec),
             tokens_json=_canon(toks), returned_json="{}", returned_by_json="{}", shares_json="{}", claims_json="{}",
             history_json="[]", n_proofs=u64(0),
-            n_counted=u64(0), n_rejected=u64(0), status=ST_OPEN, num="0", den="0", owed=u256(0),
+            n_counted=u64(0), n_rejected=u64(0), n_pending=u64(0), n_expired=u64(0), status=ST_OPEN, num="0", den="0", owed=u256(0),
             settled_at=u64(0), settled_by="", refunded_at_settle=u256(0), claim_deadline=u64(0),
             claimed=u256(0), unclaimed_refunded=u256(0),
             refunded_at=u64(0))
@@ -958,61 +993,9 @@ class WhiteFlagRegistry(gl.contract.Contract):
 
     # --- proofs -----------------------------------------------------------------
 
-    @gl.public.write
-    def submit_proofs(self, offer_id: int, items_json: str) -> typing.Any:
-        """Anyone: up to MAX_ITEMS [chain, tx_hash] pairs for one open offer.
-        Each is read by every validator from both RPCs of its chain, then
-        judged; each is recorded COUNTED or REJECTED with a reason."""
-        now = self._now()
-        if now <= 0:
-            raise gl.vm.UserError("REFUSED: NO_CLOCK")
-        o = self._offer(offer_id)
-        if o is None:
-            raise gl.vm.UserError("REFUSED: NO_SUCH_OFFER")
-        if o.status != ST_OPEN:
-            raise gl.vm.UserError("REFUSED: OFFER_IS_" + o.status)
-        try:
-            items = json.loads(items_json) if isinstance(items_json, str) else items_json
-        except Exception:
-            raise gl.vm.UserError("REFUSED: BAD_JSON")
-        if not isinstance(items, list) or len(items) == 0:
-            raise gl.vm.UserError("REFUSED: NO_ITEMS")
-        if len(items) > MAX_ITEMS:
-            raise gl.vm.UserError("REFUSED: TOO_MANY_ITEMS")
-        chains = json.loads(o.chains_json)
-        clean = []
-        seen = {}
-        for it in items:
-            if not isinstance(it, list) or len(it) != 2:
-                raise gl.vm.UserError("REFUSED: BAD_ITEM")
-            ch = str(it[0]).strip().lower()
-            h = _hash32(it[1])
-            if ch not in chains:
-                raise gl.vm.UserError("REFUSED: CHAIN_NOT_IN_OFFER")
-            if h == "":
-                raise gl.vm.UserError("REFUSED: BAD_HASH")
-            k = ch + ":" + h
-            if seen.get(k, False):
-                raise gl.vm.UserError("REFUSED: DUPLICATE_ITEM")
-            if int(self.counted_tx.get(str(int(o.offer_id)) + "|" + k, u64(0))) > 0:
-                raise gl.vm.UserError("REFUSED: ALREADY_COUNTED")
-            seen[k] = True
-            clean.append([ch, h])
-        who = self._sender()
-        rk = str(int(o.offer_id)) + "|" + who
-        w = self.rate.get(rk)
-        ws = 0
-        wn = 0
-        if w is not None and w != "":
-            parts = w.split(",")
-            ws = int(parts[0])
-            wn = int(parts[1])
-        if now - ws >= int(self.rate_window_s):
-            ws = now
-            wn = 0
-        if wn + len(clean) > int(self.rate_n):
-            raise gl.vm.UserError("REFUSED: RATE_LIMITED_UNTIL_" + str(ws + int(self.rate_window_s)))
-        frozen = json.loads(_canon(clean))
+    def _read_and_judge(self, o: Offer, frozen: list) -> list:
+        """Every validator reads `frozen` ([chain, hash] pairs) from both RPCs
+        of each chain; the agreed reads are judged. -> [[chain, hash, read, judgement]]."""
 
         def leader() -> list:
             return read_proofs(frozen)
@@ -1030,7 +1013,10 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 if not isinstance(a, dict):
                     return False
                 if "reason" in a and "reason" in b:
-                    continue        # both unreadable: a rejection, resubmittable
+                    # the same failure, or both transient (a PENDING proof, retried later)
+                    if a["reason"] == b["reason"] or (a["reason"] in TRANSIENT and b["reason"] in TRANSIENT):
+                        continue
+                    return False
                 if _canon(a) != _canon(b):
                     return False
             return True
@@ -1061,53 +1047,190 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 for c in j["credits"]:
                     used[c["key"]] = True
             results.append([ch, h, r, j])
-        # --- writes
-        returned = json.loads(o.returned_json)
-        returned_by = json.loads(o.returned_by_json)
-        out = []
-        for row in results:
-            ch = row[0]
-            h = row[1]
-            r = row[2]
-            j = row[3]
-            pid = int(self.n_proofs) + 1
-            p = r.get("read", None)
-            st = P_COUNTED if "credits" in j else P_REJECTED
-            self.proofs[u64(pid)] = Proof(
-                proof_id=u64(pid), offer_id=o.offer_id, chain=ch, tx_hash=h, submitter=who, submitted_at=u64(now),
-                status=st, reason="" if st == P_COUNTED else str(j["reason"]),
-                detail="" if st == P_COUNTED else clean_text(r.get("detail", ""), 100),
-                credits_json=_canon(j.get("credits", [])), block=u64(int(p["block"]) if p is not None else 0),
-                block_time=u64(int(p["time"]) if p is not None else 0), tx_from=p["from"] if p is not None else "",
-                tx_to=p["to"] if p is not None else "")
-            self.n_proofs = u64(pid)
-            self.offer_proofs[str(int(o.offer_id)) + ":" + str(int(o.n_proofs))] = u64(pid)
-            o.n_proofs = u64(int(o.n_proofs) + 1)
-            if st == P_COUNTED:
-                for c in j["credits"]:
-                    self.used[str(int(o.offer_id)) + "|" + c["key"]] = u64(pid)
-                    tk = ch + ":" + c["token"]
-                    returned[tk] = str(int(returned.get(tk, "0")) + int(c["amount"]))
-                    mine = returned_by.get(c["from"], {})
-                    mine[tk] = str(int(mine.get(tk, "0")) + int(c["amount"]))
-                    returned_by[c["from"]] = mine
-                self.counted_tx[str(int(o.offer_id)) + "|" + ch + ":" + h] = u64(pid)
-                o.n_counted = u64(int(o.n_counted) + 1)
-                self._bump("proofs_counted")
-            else:
-                o.n_rejected = u64(int(o.n_rejected) + 1)
-                self._bump("proofs_rejected")
-                self._bump("reject:" + str(j["reason"]))
-            out.append({"proof_id": pid, "chain": ch, "tx": h, "status": st, "reason": "" if st == P_COUNTED else j["reason"],
-                        "detail": "" if st == P_COUNTED else clean_text(r.get("detail", ""), 100),
-                        "credits": j.get("credits", [])})
+        return results
+
+    def _record(self, o: Offer, row: list, pid: int, who: str, now: int, returned: dict, returned_by: dict) -> dict:
+        """Writes one judged proof as proof `pid` (a new record, or the PENDING
+        record being retried) and returns its result row."""
+        ch = row[0]
+        h = row[1]
+        r = row[2]
+        j = row[3]
+        oid = str(int(o.offer_id))
+        p = r.get("read", None)
+        if "credits" in j:
+            st = P_COUNTED
+        elif str(j["reason"]) in TRANSIENT:
+            st = P_PENDING
+        else:
+            st = P_REJECTED
+        old = self.proofs.get(u64(pid))
+        reason = "" if st == P_COUNTED else str(j["reason"])
+        detail = "" if st == P_COUNTED else clean_text(r.get("detail", ""), 100)
+        rec = Proof(
+            proof_id=u64(pid), offer_id=o.offer_id, chain=ch, tx_hash=h,
+            submitter=who if old is None else old.submitter, submitted_at=u64(now) if old is None else old.submitted_at,
+            status=st, reason=reason, detail=detail, credits_json=_canon(j.get("credits", [])),
+            block=u64(int(p["block"]) if p is not None else 0), block_time=u64(int(p["time"]) if p is not None else 0),
+            tx_from=p["from"] if p is not None else "", tx_to=p["to"] if p is not None else "",
+            attempts=u64(1 if old is None else int(old.attempts) + 1), updated_at=u64(now))
+        self.proofs[u64(pid)] = rec
+        pk = oid + "|" + ch + ":" + h
+        if st == P_PENDING:
+            self.pending_tx[pk] = u64(pid)
+        elif old is not None:
+            self.pending_tx[pk] = u64(0)
+        if st == P_COUNTED:
+            for c in j["credits"]:
+                self.used[oid + "|" + c["key"]] = u64(pid)
+                tk = ch + ":" + c["token"]
+                returned[tk] = str(int(returned.get(tk, "0")) + int(c["amount"]))
+                mine = returned_by.get(c["from"], {})
+                mine[tk] = str(int(mine.get(tk, "0")) + int(c["amount"]))
+                returned_by[c["from"]] = mine
+            self.counted_tx[pk] = u64(pid)
+            o.n_counted = u64(int(o.n_counted) + 1)
+            self._bump("proofs_counted")
+        elif st == P_REJECTED:
+            o.n_rejected = u64(int(o.n_rejected) + 1)
+            self._bump("proofs_rejected")
+            self._bump("reject:" + str(j["reason"]))
+        else:
+            o.n_pending = u64(int(o.n_pending) + 1)
+            self._bump("proofs_pending")
+        return {"proof_id": pid, "chain": ch, "tx": h, "status": st, "reason": reason, "detail": detail,
+                "credits": j.get("credits", []), "attempts": int(rec.attempts)}
+
+    def _finish(self, o: Offer, returned: dict, returned_by: dict) -> list:
         o.returned_json = _canon(returned)
         o.returned_by_json = _canon(returned_by)
         parts = fraction_parts(json.loads(o.tokens_json), returned)
         o.num = str(parts[0])
         o.den = str(parts[1])
+        return parts
+
+    @gl.public.write
+    def submit_proofs(self, offer_id: int, items_json: str) -> typing.Any:
+        """Anyone: up to MAX_ITEMS [chain, tx_hash] pairs for one open offer,
+        until its settle time. Each is read by every validator from both RPCs
+        of its chain, then judged and recorded COUNTED, REJECTED or PENDING."""
+        now = self._now()
+        if now <= 0:
+            raise gl.vm.UserError("REFUSED: NO_CLOCK")
+        o = self._offer(offer_id)
+        if o is None:
+            raise gl.vm.UserError("REFUSED: NO_SUCH_OFFER")
+        if o.status != ST_OPEN:
+            raise gl.vm.UserError("REFUSED: OFFER_IS_" + o.status)
+        if now > self._settle_at(o):
+            raise gl.vm.UserError("REFUSED: SUBMISSIONS_CLOSED_AT_" + str(self._settle_at(o)))
+        try:
+            items = json.loads(items_json) if isinstance(items_json, str) else items_json
+        except Exception:
+            raise gl.vm.UserError("REFUSED: BAD_JSON")
+        if not isinstance(items, list) or len(items) == 0:
+            raise gl.vm.UserError("REFUSED: NO_ITEMS")
+        if len(items) > MAX_ITEMS:
+            raise gl.vm.UserError("REFUSED: TOO_MANY_ITEMS")
+        chains = json.loads(o.chains_json)
+        oid = str(int(o.offer_id))
+        clean = []
+        seen = {}
+        for it in items:
+            if not isinstance(it, list) or len(it) != 2:
+                raise gl.vm.UserError("REFUSED: BAD_ITEM")
+            ch = str(it[0]).strip().lower()
+            h = _hash32(it[1])
+            if ch not in chains:
+                raise gl.vm.UserError("REFUSED: CHAIN_NOT_IN_OFFER")
+            if h == "":
+                raise gl.vm.UserError("REFUSED: BAD_HASH")
+            k = ch + ":" + h
+            if seen.get(k, False):
+                raise gl.vm.UserError("REFUSED: DUPLICATE_ITEM")
+            if int(self.counted_tx.get(oid + "|" + k, u64(0))) > 0:
+                raise gl.vm.UserError("REFUSED: ALREADY_COUNTED")
+            pend = int(self.pending_tx.get(oid + "|" + k, u64(0)))
+            if pend > 0:
+                raise gl.vm.UserError("REFUSED: PENDING_RETRY_PROOF_" + str(pend))
+            seen[k] = True
+            clean.append([ch, h])
+        who = self._sender()
+        rk = oid + "|" + who
+        w = self.rate.get(rk)
+        ws = 0
+        wn = 0
+        if w is not None and w != "":
+            parts = w.split(",")
+            ws = int(parts[0])
+            wn = int(parts[1])
+        if now - ws >= int(self.rate_window_s):
+            ws = now
+            wn = 0
+        if wn + len(clean) > int(self.rate_n):
+            raise gl.vm.UserError("REFUSED: RATE_LIMITED_UNTIL_" + str(ws + int(self.rate_window_s)))
+        results = self._read_and_judge(o, json.loads(_canon(clean)))
+        # --- writes
+        returned = json.loads(o.returned_json)
+        returned_by = json.loads(o.returned_by_json)
+        out = []
+        for row in results:
+            pid = int(self.n_proofs) + 1
+            self.n_proofs = u64(pid)
+            self.offer_proofs[oid + ":" + str(int(o.n_proofs))] = u64(pid)
+            o.n_proofs = u64(int(o.n_proofs) + 1)
+            out.append(self._record(o, row, pid, who, now, returned, returned_by))
+        parts = self._finish(o, returned, returned_by)
         self.rate[rk] = str(ws) + "," + str(wn + len(clean))
         return {"ok": True, "offer_id": int(o.offer_id), "results": out,
+                "fraction_ppm": (parts[0] * 1000000) // parts[1] if parts[1] > 0 else 0}
+
+    @gl.public.write
+    def retry_proofs(self, offer_id: int, proof_ids_json: str) -> typing.Any:
+        """Anyone: re-read up to MAX_ITEMS PENDING proofs of an open offer, until
+        its recovery window ends. Each becomes COUNTED, REJECTED or stays PENDING."""
+        now = self._now()
+        if now <= 0:
+            raise gl.vm.UserError("REFUSED: NO_CLOCK")
+        o = self._offer(offer_id)
+        if o is None:
+            raise gl.vm.UserError("REFUSED: NO_SUCH_OFFER")
+        if o.status != ST_OPEN:
+            raise gl.vm.UserError("REFUSED: OFFER_IS_" + o.status)
+        if now > self._recover_until(o):
+            raise gl.vm.UserError("REFUSED: RECOVERY_CLOSED_AT_" + str(self._recover_until(o)))
+        try:
+            ids = json.loads(proof_ids_json) if isinstance(proof_ids_json, str) else proof_ids_json
+        except Exception:
+            raise gl.vm.UserError("REFUSED: BAD_JSON")
+        if not isinstance(ids, list) or len(ids) == 0:
+            raise gl.vm.UserError("REFUSED: NO_ITEMS")
+        if len(ids) > MAX_ITEMS:
+            raise gl.vm.UserError("REFUSED: TOO_MANY_ITEMS")
+        pids = []
+        frozen = []
+        for x in ids:
+            pid = _as_int(x, 0)
+            p = self.proofs.get(u64(pid)) if pid > 0 else None
+            if p is None or int(p.offer_id) != int(o.offer_id):
+                raise gl.vm.UserError("REFUSED: NOT_A_PROOF_OF_THIS_OFFER")
+            if p.status != P_PENDING:
+                raise gl.vm.UserError("REFUSED: PROOF_" + str(pid) + "_IS_" + p.status)
+            if pid in pids:
+                raise gl.vm.UserError("REFUSED: DUPLICATE_ITEM")
+            pids.append(pid)
+            frozen.append([p.chain, p.tx_hash])
+        results = self._read_and_judge(o, frozen)
+        # --- writes
+        returned = json.loads(o.returned_json)
+        returned_by = json.loads(o.returned_by_json)
+        out = []
+        for i in range(len(results)):
+            o.n_pending = u64(int(o.n_pending) - 1)
+            out.append(self._record(o, results[i], pids[i], self._sender(), now, returned, returned_by))
+        parts = self._finish(o, returned, returned_by)
+        self._bump("retries", len(pids))
+        return {"ok": True, "offer_id": int(o.offer_id), "results": out, "pending": int(o.n_pending),
                 "fraction_ppm": (parts[0] * 1000000) // parts[1] if parts[1] > 0 else 0}
 
     # --- settlement, claim, refunds -------------------------------------------
@@ -1128,6 +1251,8 @@ class WhiteFlagRegistry(gl.contract.Contract):
         full = parts[1] > 0 and parts[0] >= parts[1]
         if not full and now < self._settle_at(o):
             raise gl.vm.UserError("REFUSED: TOO_EARLY_UNTIL_" + str(self._settle_at(o)))
+        if not self._can_settle(o, now):
+            raise gl.vm.UserError("REFUSED: PENDING_PROOFS_UNTIL_" + str(self._recover_until(o)))
         bounty = int(o.bounty)
         shares = shares_of(json.loads(o.tokens_json), json.loads(o.returned_json), json.loads(o.returned_by_json), bounty)
         owed = 0
@@ -1139,6 +1264,9 @@ class WhiteFlagRegistry(gl.contract.Contract):
         st = ST_FULL if full else (ST_NONE if parts[0] == 0 else ST_PARTIAL)
         # --- writes
         o.status = st
+        o.n_expired = o.n_pending
+        if int(o.n_pending) > 0:
+            self._bump("proofs_expired", int(o.n_pending))
         o.num = str(parts[0])
         o.den = str(parts[1])
         o.owed = u256(owed)
@@ -1307,10 +1435,10 @@ class WhiteFlagRegistry(gl.contract.Contract):
 
     def _due(self, o: Offer, now: int) -> str:
         if o.status == ST_OPEN:
-            n = int(o.num)
-            d = int(o.den)
-            if (d > 0 and n >= d) or now >= self._settle_at(o):
+            if self._can_settle(o, now):
                 return "SETTLE"
+            if int(o.n_pending) > 0 and now >= self._settle_at(o):
+                return "RETRY_PENDING"
             return ""
         if int(o.owed) > int(o.claimed) and int(o.unclaimed_refunded) == 0 and now > int(o.claim_deadline):
             return "REFUND_UNCLAIMED"
@@ -1321,12 +1449,14 @@ class WhiteFlagRegistry(gl.contract.Contract):
         d = int(o.den)
         return {"offer_id": int(o.offer_id), "incident": o.incident, "name": o.name, "protocol": o.protocol,
                 "status": o.status, "created_at": int(o.created_at), "start": int(o.start),
-                "deadline": int(o.deadline), "settle_at": self._settle_at(o), "settled_at": int(o.settled_at),
+                "deadline": int(o.deadline), "settle_at": self._settle_at(o), "recover_until": self._recover_until(o),
+                "settled_at": int(o.settled_at),
                 "claim_deadline": int(o.claim_deadline), "bounty": str(int(o.bounty)),
                 "bounty_share_bps": int(o.bounty_share_bps), "fraction_ppm": (n * 1000000) // d if d > 0 else 0,
                 "owed": str(int(o.owed)), "refunded_at_settle": str(int(o.refunded_at_settle)),
                 "claimed": str(int(o.claimed)), "unclaimed_refunded": str(int(o.unclaimed_refunded)),
                 "n_proofs": int(o.n_proofs), "n_counted": int(o.n_counted), "n_rejected": int(o.n_rejected),
+                "n_pending": int(o.n_pending) if o.status == ST_OPEN else 0, "n_expired": int(o.n_expired),
                 "chains": json.loads(o.chains_json), "meta": json.loads(o.meta_json)}
 
     def _full(self, o: Offer) -> dict:
@@ -1406,8 +1536,14 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 "next_offset": nxt if nxt < n else -1}
 
     def _proof_view(self, p: Proof) -> dict:
+        st = p.status
+        if st == P_PENDING:
+            o = self.offers.get(p.offer_id)
+            if o is not None and o.status != ST_OPEN:
+                st = P_EXPIRED
         return {"proof_id": int(p.proof_id), "offer_id": int(p.offer_id), "chain": p.chain, "tx_hash": p.tx_hash,
-                "submitter": p.submitter, "submitted_at": int(p.submitted_at), "status": p.status,
+                "submitter": p.submitter, "submitted_at": int(p.submitted_at), "status": st,
+                "attempts": int(p.attempts), "updated_at": int(p.updated_at), "transient": p.reason in TRANSIENT,
                 "reason": p.reason, "detail": p.detail, "credits": json.loads(p.credits_json), "block": int(p.block),
                 "block_time": int(p.block_time), "from": p.tx_from, "to": p.tx_to}
 
@@ -1465,7 +1601,8 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 "max_exploiters": MAX_EXPLOITERS, "max_recoveries": MAX_RECOVERIES, "max_tokens": MAX_TOKENS,
                 "max_span_s": MAX_SPAN_S, "max_extend_s": MAX_EXTEND_S, "min_bounty": str(MIN_BOUNTY),
                 "payout_rules": list(PAYOUT_RULES), "page_max": PAGE_MAX, "sweep_delay_s": int(self.sweep_delay_s),
-                "finality_grace_s": int(self.finality_grace_s),
+                "finality_grace_s": int(self.finality_grace_s), "recovery_s": int(self.recovery_s),
+                "transient_reasons": list(TRANSIENT),
                 "last_send_at": int(self.last_send_at), "reasons": list(REASONS),
                 "chains": {k: {"chain_id": CHAINS[k][0], "rpcs": list(CHAINS[k][1])} for k in CHAINS}}
 

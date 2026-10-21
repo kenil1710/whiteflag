@@ -57,9 +57,25 @@ validator's own reading is identical. A proof is then judged, in this order:
    exploiter address, to a recovery address, for an amount above zero. None -> `NO_RETURN_TO_RECOVERY`;
 8. every credit already counted for this offer -> `ALREADY_COUNTED`; otherwise the new credits are COUNTED.
 
-Each (chain, transaction, log index) counts once per offer (`native` stands for the transaction's value). A rejected
-proof is recorded with its reason and may be submitted again; a counted transaction is refused before reading
-(`ALREADY_COUNTED`). The rate limit is 20 proofs per (offer, sender) per window of 3600 s (canonical) or 600 s
+Each (chain, transaction, log index) counts once per offer (`native` stands for the transaction's value). A counted
+transaction is refused before reading (`ALREADY_COUNTED`).
+
+**COUNTED, REJECTED, PENDING, EXPIRED.** A proof that is not counted is either REJECTED or PENDING:
+
+- **REJECTED** is permanent: the facts are wrong (`TX_FAILED`, `BEFORE_OFFER_START`, `AFTER_DEADLINE`,
+  `SENDER_NOT_EXPLOITER`, `NO_RETURN_TO_RECOVERY`, `TX_NOT_FOUND`, `ALREADY_COUNTED`, `UNSUPPORTED_CHAIN`).
+- **PENDING** is transient: the facts could not be read yet (`RPC_UNREADABLE`, `RPC_DISAGREE`, `WRONG_CHAIN_ID`,
+  `TX_PENDING`, `NOT_FINALIZED`). A PENDING transaction cannot be submitted again; it is retried.
+- `submit_proofs` is accepted until `settle_at` (below). Then a **recovery window** of 86400 s (canonical) or 300 s
+  (demo) follows, until `recover_until = settle_at + recovery window`. Until then anyone may call
+  `retry_proofs(offer_id, [proof ids])` (up to 5 PENDING proofs of the offer): each is read again by every validator
+  and becomes COUNTED, REJECTED or stays PENDING (`attempts` counts the reads).
+- A proof still PENDING when its offer settles is shown **EXPIRED** and never counts.
+- Both windows are fixed when the offer opens (and move only with a deadline extension, section 4a). No submission,
+  retry or junk proof moves them: a junk hash is REJECTED (`TX_NOT_FOUND`) and never holds settlement, and a PENDING
+  one holds it at most until `recover_until`.
+- Validators agree on a PENDING read when the leader and the validator both fail transiently (the wording may
+  differ); a permanent failure must match exactly, and a successful read must be identical. The rate limit is 20 proofs per (offer, sender) per window of 3600 s (canonical) or 600 s
 (demo). Transfers inside contract calls (internal ETH transfers, self-destructs) and transfers from addresses that are
 not listed do not count; the protocol lists the address that emits a token's events (for a proxy token, the proxy).
 
@@ -82,14 +98,16 @@ A token returned beyond its stolen amount counts only up to the stolen amount; i
 Anyone may call `settle(offer_id)`:
 
 - at once if the fraction is exactly 100%;
-- otherwise at or after `settle_at` = the later of `deadline + finality grace` and `created + minimum open time`.
+- at or after `settle_at` = the later of `deadline + finality grace` and `created + minimum open time`, if no proof is
+  PENDING;
+- at or after `recover_until` (`settle_at` + the recovery window) always; leftover PENDING proofs become EXPIRED.
   Finality grace: 7200 s canonical, 60 s demo (a return made just before the deadline can still finalize and be
   proved). Minimum open time: 10800 s canonical, 60 s demo (an offer opened after its deadline, a historic incident,
   still takes proofs).
 
 Status: OPEN -> `SETTLED_FULL` (100%), `SETTLED_PARTIAL` (above 0, below 100%) or `SETTLED_NONE` (0). The refund goes
 to the protocol in the settling transaction. The owed bounty becomes claimable until `claim_deadline` = settlement
-time + claim window. Proofs are refused once an offer is settled.
+time + claim window. Proofs are refused after `settle_at`; retries after `recover_until` or once settled.
 
 ## 5. Claim and refunds
 
@@ -116,7 +134,7 @@ time + claim window. Proofs are refused once an offer is settled.
 
 Every payout is one external value message, posted in the transaction that marks it paid, funded by the caller's fee
 (an External message allocation for the recipient). Every state has an exit and every timeout leads to a refund:
-OPEN always becomes settled after `settle_at`; each owed share is either claimed or refunded after the claim window.
+OPEN always becomes settled by `recover_until`; each owed share is either claimed or refunded after the claim window.
 
 ## 6. The ledger
 
@@ -143,26 +161,26 @@ stores the state with the time it was read.
 ## 8. Lists
 
 Every list is paginated by `offset` and `limit` (at most 50 per page): `get_offers`, `get_due` (offers needing
-`SETTLE` or `REFUND_UNCLAIMED` at a given time), `get_proofs`, and the gate's `get_attestations`. Each offer summary
+`SETTLE`, `RETRY_PENDING` or `REFUND_UNCLAIMED` at a given time), `get_proofs`, and the gate's `get_attestations`. Each offer summary
 carries `deadline`, `settle_at`, `claim_deadline`, `status`, `owed`, `claimed` and `unclaimed_refunded`.
 
 ## Rejection reasons
 
-| Reason | Meaning |
-|---|---|
-| `UNSUPPORTED_CHAIN` | the chain is not one of the registry's chains |
-| `RPC_UNREADABLE` | an RPC did not answer, answered an error, or answered something malformed |
-| `RPC_DISAGREE` | the two RPCs of the chain answered differently (or only one knows the transaction) |
-| `WRONG_CHAIN_ID` | an RPC is not on the expected chain |
-| `TX_NOT_FOUND` | neither RPC knows the transaction |
-| `TX_PENDING` | the transaction has no receipt yet |
-| `TX_FAILED` | the transaction reverted |
-| `NOT_FINALIZED` | its block is above a finalized head |
-| `BEFORE_OFFER_START` | its block time is before the return window |
-| `AFTER_DEADLINE` | its block time is after the deadline |
-| `SENDER_NOT_EXPLOITER` | it was not sent by a listed exploiter address |
-| `NO_RETURN_TO_RECOVERY` | it moved no listed token from an exploiter address to a recovery address |
-| `ALREADY_COUNTED` | everything it moved was already counted for this offer |
+| Reason | Result | Meaning |
+|---|---|---|
+| `UNSUPPORTED_CHAIN` | REJECTED | the chain is not one of the registry's chains |
+| `RPC_UNREADABLE` | PENDING | an RPC did not answer, answered an error, or answered something malformed |
+| `RPC_DISAGREE` | PENDING | the two RPCs of the chain answered differently (or only one knows the transaction) |
+| `WRONG_CHAIN_ID` | PENDING | an RPC is not on the expected chain |
+| `TX_NOT_FOUND` | REJECTED | neither RPC knows the transaction |
+| `TX_PENDING` | PENDING | the transaction has no receipt yet |
+| `TX_FAILED` | REJECTED | the transaction reverted |
+| `NOT_FINALIZED` | PENDING | its block is above a finalized head |
+| `BEFORE_OFFER_START` | REJECTED | its block time is before the return window |
+| `AFTER_DEADLINE` | REJECTED | its block time is after the deadline |
+| `SENDER_NOT_EXPLOITER` | REJECTED | it was not sent by a listed exploiter address |
+| `NO_RETURN_TO_RECOVERY` | REJECTED | it moved no listed token from an exploiter address to a recovery address |
+| `ALREADY_COUNTED` | REJECTED | everything it moved was already counted for this offer |
 
-The stored reason and detail of a rejection are the leading validator's; validators agree that the proof is rejected,
+The stored reason and detail of a PENDING proof are the leading validator's; validators agree that it is transient,
 not on the wording.

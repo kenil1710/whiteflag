@@ -149,6 +149,12 @@ class Deployment:
     def prove(self, oid, chain, hsh, sender=PROVER):
         return self.submit(oid, [[chain, hsh]], sender=sender)["results"][0]
 
+    def retry(self, oid, pids, sender=PROVER):
+        return self.w.call(self.reg, "retry_proofs", oid, json.dumps(pids), sender=sender)
+
+    def proofs(self, oid):
+        return self.w.view(self.reg, "get_proofs", oid, 0, 50)["items"]
+
     def settle(self, oid, sender=KEEPER):
         return self.w.call(self.reg, "settle", oid, sender=sender)
 

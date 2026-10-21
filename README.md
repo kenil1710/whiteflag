@@ -39,11 +39,15 @@ Each outcome was checked against public reporting and every outgoing transfer of
    identical. A proof counts only if the transaction succeeded, its block is finalized, its time is inside the
    window, it was sent by an exploiter address, and it moved a listed token (native value, or a Transfer log of the
    listed token contract) from an exploiter address to a recovery address. Each (chain, tx, log) counts once per
-   offer. Anything unreadable or inconsistent is rejected with a reason and can be resubmitted.
+   offer. A proof that does not count is REJECTED when the facts are wrong (permanent) or PENDING when they could not
+   be read yet (RPC error, the RPCs disagree, block not final). PENDING proofs can be retried by anyone during a
+   fixed recovery window after submissions close (24 h canonical, 5 min demo); one still PENDING at settlement is
+   EXPIRED. Nothing a submitter does moves the window.
 3. **The fraction is arithmetic.** `sum(min(returned, stolen) * weight) / sum(stolen * weight)`, integer math;
    owed = bounty × fraction.
-4. **Settlement.** Anyone settles at once at 100%, otherwise at the later of the deadline plus a finality grace (2 h)
-   and the offer's creation plus a minimum open time (3 h):
+4. **Settlement.** Anyone settles at once at 100%; otherwise at `settle_at`, the later of the deadline plus a finality
+   grace (2 h) and the offer's creation plus a minimum open time (3 h), when no proof is PENDING, and always once the
+   recovery window after `settle_at` has ended:
    SETTLED_FULL, SETTLED_PARTIAL or SETTLED_NONE. The remainder goes back to the protocol in the same transaction.
 5. **Claim.** Every counted transfer is attributed to the exploiter address that sent it, and each address claims only
    the share its own weighted returns earned: paid to itself, or to a beneficiary it committed on chain from that
@@ -52,7 +56,7 @@ Each outcome was checked against public reporting and every outgoing transfer of
 6. **SafeHarborGate.** Other contracts ask it whether an incident is resolved: NO_OFFER, OPEN, SETTLED_FULL,
    SETTLED_PARTIAL, SETTLED_NONE (or UNREADABLE), never favorable on missing data, pinned to the protocol that opened
    the offer with `check_for`.
-7. **Keeper.** A GitHub Actions job ([.github/workflows/keeper.yml](.github/workflows/keeper.yml)) settles and refunds
+7. **Keeper.** A GitHub Actions job ([.github/workflows/keeper.yml](.github/workflows/keeper.yml)) settles, retries PENDING proofs and refunds
    on an hourly schedule with a 6-hourly fallback (GitHub starts scheduled runs late, sometimes by hours),
    checkpointing each step on the [keeper-state](https://github.com/kenil1710/whiteflag/tree/keeper-state)
    branch. Everything it does, anyone can do.
@@ -98,8 +102,8 @@ its recipient ([docs/payouts.json](docs/payouts.json)).
   does not list or on a chain it does not list does not move the fraction. Returns by other people (an MEV bot that
   ran the same exploit, a front-runner) belong to no offer but their own.
 - Only submitted returns count. Nothing is discovered automatically: anyone may submit a return's transaction hash
-  while the offer is open, and every submission is recorded COUNTED or REJECTED with its reason; a rejected one may be
-  submitted again. A return nobody submits before settlement is not counted.
+  until the offer's settle time, and every submission is recorded COUNTED, REJECTED (permanent) or PENDING
+  (transient, retried until the recovery window ends) with its reason. A return nobody submits in time is not counted.
 - An offer is the protocol's own statement of the incident. SafeHarborGate reports what the registry settled for one
   offer id; a consumer pins the protocol address it trusts with `check_for`.
 - Chains: Ethereum and Arbitrum One, each read from two RPCs run by different operators. Adding a chain means adding

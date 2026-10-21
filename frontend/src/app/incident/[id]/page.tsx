@@ -25,7 +25,7 @@ export default async function Incident({ params, searchParams }: { params: Promi
   const dec = (chain: string, token: string) => o.tokens.find((t) => t.chain === chain && t.token === token)?.decimals ?? 18;
   const byTime = [...proofs].sort((a, b) => (a.status === b.status ? 0 : a.status === "COUNTED" ? -1 : 1) || (a.block_time || a.submitted_at) - (b.block_time || b.submitted_at));
   const counted = byTime.filter((p) => p.status === "COUNTED");
-  const rejected = byTime.filter((p) => p.status === "REJECTED");
+  const rejected = byTime.filter((p) => p.status !== "COUNTED");
   const stolenUsd = usd(o.tokens, (t) => BigInt(t.stolen));
   const q = r === "demo" ? "?r=demo" : "";
 
@@ -156,7 +156,7 @@ export default async function Incident({ params, searchParams }: { params: Promi
         </div>
 
         <section className="section">
-          <div className="section-head"><h2>Every proof submitted</h2><span className="mono small muted">{o.n_counted} counted · {o.n_rejected} rejected</span></div>
+          <div className="section-head"><h2>Every proof submitted</h2><span className="mono small muted">{o.n_counted} counted · {o.n_rejected} rejected · {o.n_pending} pending · {o.n_expired} expired</span></div>
           <div className="table-wrap">
             <table className="ledger">
               <thead><tr><th>#</th><th>Chain</th><th>Transaction</th><th>Block time</th><th>Verdict</th><th className="num">Credited</th></tr></thead>
@@ -167,7 +167,7 @@ export default async function Incident({ params, searchParams }: { params: Promi
                     <td>{p.chain}</td>
                     <td className="mono"><Ext href={txLink(p.chain, p.tx_hash)}>{short(p.tx_hash, 8)}</Ext></td>
                     <td className="mono small">{p.block_time ? iso(p.block_time) : "—"}</td>
-                    <td>{p.status === "COUNTED" ? <span className="ok mono small">COUNTED</span> : <span className="mono small bad">{p.reason}</span>}{p.detail ? <div className="small muted">{p.detail}</div> : null}</td>
+                    <td>{p.status === "COUNTED" ? <span className="ok mono small">COUNTED</span> : <span className={`mono small ${p.status === "REJECTED" ? "bad" : ""}`}>{p.status} · {p.reason}</span>}{p.attempts > 1 ? <div className="small muted">{p.attempts} reads</div> : null}{p.detail ? <div className="small muted">{p.detail}</div> : null}</td>
                     <td className="num mono">{p.credits.map((c) => `${units(c.amount, dec(p.chain, c.token), 3)} ${sym(p.chain, c.token)}`).join(" + ") || "—"}</td>
                   </tr>
                 ))}
@@ -181,7 +181,8 @@ export default async function Incident({ params, searchParams }: { params: Promi
           <div className="section-head"><h2>Terms, frozen</h2></div>
           <div className="table-wrap"><table className="ledger"><tbody>
             <tr><td className="caps">Return window</td><td className="mono">{iso(o.start)} → {iso(o.deadline)}{o.original_deadline !== o.deadline ? ` (originally ${iso(o.original_deadline)})` : ""}</td></tr>
-            <tr><td className="caps">Settles</td><td className="mono">{iso(o.settle_at)} (at once if 100% returned)</td></tr>
+            <tr><td className="caps">Submissions close</td><td className="mono">{iso(o.settle_at)}; settles then if no proof is PENDING (at once if 100% returned)</td></tr>
+            <tr><td className="caps">Recovery window</td><td className="mono">until {iso(o.recover_until)}: anyone retries PENDING proofs; then settle always succeeds and leftover PENDING proofs are EXPIRED</td></tr>
             <tr><td className="caps">Claim window</td><td className="mono">{o.claim_window_s} s after settlement</td></tr>
             <tr><td className="caps">Payout rule</td><td className="mono">{o.payout_rule}</td></tr>
             <tr><td className="caps">Machine-readable</td><td className="mono"><a href={`/api/incident?id=${o.offer_id}${r === "demo" ? "&r=demo" : ""}`}>JSON</a> · <a href={`/api/incident?id=${o.offer_id}${r === "demo" ? "&r=demo" : ""}&format=svg`}>SVG badge</a></td></tr>

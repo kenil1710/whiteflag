@@ -30,12 +30,22 @@ class Fake {
     return id;
   }
   due(o, now) {
-    if (o.status === "OPEN") return o.fraction_ppm >= 1e6 || now >= o.settle_at ? "SETTLE" : "";
+    if (o.status === "OPEN") {
+      const pend = o.n_pending ?? 0, until = o.recover_until ?? o.settle_at;
+      if (o.fraction_ppm >= 1e6 || now >= until || (now >= o.settle_at && pend === 0)) return "SETTLE";
+      return pend > 0 && now >= o.settle_at ? "RETRY_PENDING" : "";
+    }
     if (BigInt(o.owed) > 0n && o.claimed === "0" && o.unclaimed_refunded === "0" && now > o.claim_deadline) return "REFUND_UNCLAIMED";
     return "";
   }
   apply(reg, action, id) {
     const o = this.regs[reg][id - 1];
+    if (action === "RETRY_PENDING") {
+      if (o.status !== "OPEN") return false;
+      o.retries = (o.retries ?? 0) + 1;
+      if (this.retryClears) o.n_pending = 0;
+      return true;
+    }
     if (action === "SETTLE") {
       if (o.status !== "OPEN") return false;
       o.status = o.fraction_ppm >= 1e6 ? "SETTLED_FULL" : o.fraction_ppm > 0 ? "SETTLED_PARTIAL" : "SETTLED_NONE";
@@ -490,4 +500,44 @@ test("state keys are lowercase; the chain layer gets the checksummed registry ba
   assert.equal(canonicalAddress(regs, "0x461399b65eda1c0634a47a658d34624ec4c24a31"), regs[0]);
   assert.equal(canonicalAddress(regs, regs[0]), regs[0]);
   assert.equal(canonicalAddress(regs, "0xabc"), "0xabc");
+});
+
+test("RETRY_PENDING: retried during the recovery window, then settled once nothing is pending", async () => {
+  const f = new Fake(0);
+  const id = f.add(REG, { settle_at: f.t - 10, recover_until: f.t + 86400, n_pending: 2 });
+  const store = memStore();
+  f.retryClears = false;
+  let { run } = await runKeeper({ chain: f.chain(), store, registries: [REG] });
+  assert.equal(f.regs[REG][id - 1].retries, 1);
+  assert.equal(f.regs[REG][id - 1].status, "OPEN");
+  assert.equal(run.done, 1);
+  // the same hour: no second retry
+  ({ run } = await runKeeper({ chain: f.chain(), store, registries: [REG] }));
+  assert.equal(f.regs[REG][id - 1].retries, 1);
+  // next hour: retried again, and this time the proofs resolve; the run after settles
+  f.t += 3600;
+  f.retryClears = true;
+  await runKeeper({ chain: f.chain(), store, registries: [REG] });
+  assert.equal(f.regs[REG][id - 1].retries, 2);
+  await runKeeper({ chain: f.chain(), store, registries: [REG] });
+  assert.notEqual(f.regs[REG][id - 1].status, "OPEN");
+});
+
+test("RETRY_PENDING: after the recovery window the keeper settles even with proofs still pending", async () => {
+  const f = new Fake(0);
+  const id = f.add(REG, { settle_at: f.t - 100, recover_until: f.t - 1, n_pending: 3 });
+  await runKeeper({ chain: f.chain(), store: memStore(), registries: [REG] });
+  assert.equal(f.regs[REG][id - 1].retries, undefined);
+  assert.equal(f.regs[REG][id - 1].status, "SETTLED_NONE");
+});
+
+test("stillDue mirrors the contract's settle and retry rules", () => {
+  const o = { status: "OPEN", fraction_ppm: 0, settle_at: 100, recover_until: 200, n_pending: 1 };
+  assert.equal(stillDue("SETTLE", o, 150), false);
+  assert.equal(stillDue("RETRY_PENDING", o, 150), true);
+  assert.equal(stillDue("SETTLE", o, 200), true);
+  assert.equal(stillDue("RETRY_PENDING", o, 201), false);
+  assert.equal(stillDue("SETTLE", { ...o, n_pending: 0 }, 100), true);
+  assert.equal(stillDue("REFUND_UNCLAIMED", { status: "SETTLED_PARTIAL", owed: "10", claimed: "4", unclaimed_refunded: "0", claim_deadline: 5 }, 6), true);
+  assert.equal(stillDue("REFUND_UNCLAIMED", { status: "SETTLED_PARTIAL", owed: "10", claimed: "10", unclaimed_refunded: "0", claim_deadline: 5 }, 6), false);
 });

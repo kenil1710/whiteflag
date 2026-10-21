@@ -7,7 +7,7 @@ import fixtures as F
 import stub
 import world
 from fixtures import ETH, GEN, EXPLOITER, EXPLOITER2, RECOVERY, RECOVERY2, STRANGER, PROTOCOL, PAYEE, PROVER, TOKEN, \
-    TOKEN_ARB, LOOKALIKE, START, DEADLINE, NOW, tok, pairs
+    TOKEN_ARB, LOOKALIKE, START, DEADLINE, NOW, KEEPER, tok, pairs
 
 Reverted = world.Reverted
 RG = F.RG
@@ -250,7 +250,7 @@ class Proofs(Base):
 
     def reject(self, h, reason, chain="ethereum", oid=None):
         r = self.d.prove(oid or self.oid, chain, h)
-        self.assertEqual(r["status"], "REJECTED")
+        self.assertEqual(r["status"], "PENDING" if reason in RG.TRANSIENT else "REJECTED")
         self.assertEqual(r["reason"], reason)
         return r
 
@@ -390,12 +390,14 @@ class Proofs(Base):
         stub.WEB.tamper[urls[1]] = bad_header
         self.reject(self.native(), "RPC_UNREADABLE")
 
-    def test_rejected_proof_can_be_resubmitted(self):
+    def test_pending_proof_is_retried_not_resubmitted(self):
         h = self.native()
         stub.WEB.down.add(RG.CHAINS["ethereum"][1][0])
-        self.reject(h, "RPC_UNREADABLE")
+        pid = self.reject(h, "RPC_UNREADABLE")["proof_id"]
         stub.WEB.down.clear()
-        self.assertEqual(self.d.prove(self.oid, "ethereum", h)["status"], "COUNTED")
+        self.refused(self.d.prove, self.oid, "ethereum", h, reason="PENDING_RETRY_PROOF_%d" % pid)
+        r = self.d.retry(self.oid, [pid])["results"][0]
+        self.assertEqual((r["proof_id"], r["status"], r["attempts"]), (pid, "COUNTED", 2))
 
     def test_counted_tx_cannot_be_resubmitted(self):
         h = self.native()
@@ -466,6 +468,7 @@ class Proofs(Base):
 
     def test_rate_limit_window_resets(self):
         n = RG.MODES["DEMO"][2]
+        self.oid = self.d.offer(deadline=NOW + 86400)
         for _ in range(n // 5):
             self.d.submit(self.oid, [["ethereum", self.native(1)] for _ in range(5)])
         self.d.w.advance(RG.MODES["DEMO"][3])
@@ -1290,3 +1293,187 @@ class ClaimFairness(Base):
         self.assertEqual(self.d.sent_to(PROTOCOL), 6 * GEN + 3 * GEN)
         self.assertEqual(self.d.balance(), 0)
         self.assertTrue(self.d.ledger_ok())
+
+
+# =============================================================================
+# 10. evidence recovery: PENDING proofs, the recovery window, EXPIRED
+# =============================================================================
+
+class Recovery(Base):
+    def setUp(self):
+        super().setUp()
+        self.oid = self.d.offer(deadline=NOW + 3600, tokens=json.dumps([tok(stolen=10 * ETH)]))
+        self.o = self.d.get(self.oid)
+        self.urls = RG.CHAINS["ethereum"][1]
+
+    def at_settle(self, k=0):
+        self.d.w.set_time(self.o["settle_at"] + k)
+
+    def at_recovery_end(self, k=0):
+        self.d.w.set_time(self.o["recover_until"] + k)
+
+    def pending(self, h, reason="RPC_UNREADABLE", sender=PROVER):
+        r = self.d.prove(self.oid, "ethereum", h, sender=sender)
+        self.assertEqual((r["status"], r["reason"]), ("PENDING", reason))
+        return r["proof_id"]
+
+    def test_windows_are_fixed_by_the_offer(self):
+        self.assertEqual(self.o["settle_at"], NOW + 3600 + RG.MODES["DEMO"][5])
+        self.assertEqual(self.o["recover_until"], self.o["settle_at"] + RG.MODES["DEMO"][6])
+        self.assertEqual(RG.MODES["CANONICAL"][6], 86400)
+
+    def test_permanent_and_transient_reasons_are_disjoint(self):
+        for r in RG.TRANSIENT:
+            self.assertIn(r, RG.REASONS)
+        for r in ("TX_FAILED", "BEFORE_OFFER_START", "AFTER_DEADLINE", "SENDER_NOT_EXPLOITER", "NO_RETURN_TO_RECOVERY",
+                  "TX_NOT_FOUND", "ALREADY_COUNTED"):
+            self.assertNotIn(r, RG.TRANSIENT)
+
+    def test_permanent_rejections_do_not_hold_settlement(self):
+        self.d.prove(self.oid, "ethereum", self.native(status=0))
+        self.d.prove(self.oid, "ethereum", self.native(frm=STRANGER))
+        self.at_settle()
+        self.assertEqual(self.d.settle(self.oid)["status"], "SETTLED_NONE")
+
+    def test_extended_outage_expires_after_the_window(self):
+        h = self.native(4 * ETH)
+        self.d.w.set_time(NOW + 1800)
+        stub.WEB.down.add(self.urls[0])
+        pid = self.pending(h)
+        self.at_settle()
+        self.refused(self.d.settle, self.oid, reason="PENDING_PROOFS_UNTIL_%d" % self.o["recover_until"])
+        self.assertEqual(self.d.w.view(self.d.reg, "get_due", self.d.w.now(), 0, 50)["items"][0]["due"], "RETRY_PENDING")
+        self.at_recovery_end(-1)
+        r = self.d.retry(self.oid, [pid])["results"][0]
+        self.assertEqual((r["status"], r["attempts"]), ("PENDING", 2))
+        self.refused(self.d.settle, self.oid, reason="PENDING_PROOFS_UNTIL_")
+        self.at_recovery_end()
+        r = self.d.settle(self.oid)
+        self.assertEqual(r["status"], "SETTLED_NONE")
+        p = self.d.proofs(self.oid)[0]
+        self.assertEqual((p["status"], p["reason"]), ("EXPIRED", "RPC_UNREADABLE"))
+        o = self.d.get(self.oid)
+        self.assertEqual((o["n_expired"], o["n_pending"]), (1, 0))
+        self.assertEqual(self.d.stats()["counts"]["proofs_expired"], 1)
+
+    def test_delayed_finality_recovers(self):
+        ch = self.c.c["ethereum"]
+        h = self.native(5 * ETH, block=F.FINALIZED["ethereum"] + 5, ts=NOW + 3000)
+        self.d.w.set_time(NOW + 3500)
+        pid = self.pending(h, "NOT_FINALIZED")
+        self.at_settle(10)
+        self.refused(self.d.settle, self.oid, reason="PENDING_PROOFS_UNTIL_")
+        ch.finalized += 10
+        ch.set_block(ch.finalized, NOW + 3700)
+        r = self.d.retry(self.oid, [pid], sender=STRANGER)["results"][0]
+        self.assertEqual(r["status"], "COUNTED")
+        r = self.d.settle(self.oid)
+        self.assertEqual((r["status"], r["fraction_ppm"]), ("SETTLED_PARTIAL", 500000))
+
+    def test_recovery_success_after_outage(self):
+        h = self.native(10 * ETH)
+        stub.WEB.down.add(self.urls[1])
+        pid = self.pending(h)
+        self.at_settle(30)
+        stub.WEB.down.clear()
+        self.assertEqual(self.d.retry(self.oid, [pid])["results"][0]["status"], "COUNTED")
+        self.assertEqual(self.d.settle(self.oid)["status"], "SETTLED_FULL")
+        self.assertEqual(self.d.claim(self.oid)["paid"], str(10 * GEN))
+
+    def test_provider_disagreement_is_pending_then_recovers(self):
+        h = self.native(5 * ETH)
+
+        def lie(req, ans):
+            if req["method"] == "eth_getTransactionByHash" and ans.get("result"):
+                ans = json.loads(json.dumps(ans))
+                ans["result"]["value"] = hex(10 ** 30)
+            return ans
+        stub.WEB.tamper[self.urls[0]] = lie
+        pid = self.pending(h, "RPC_DISAGREE")
+        stub.WEB.tamper.clear()
+        self.assertEqual(self.d.retry(self.oid, [pid])["results"][0]["status"], "COUNTED")
+
+    def test_retry_can_end_rejected(self):
+        h = self.native(5 * ETH, frm=STRANGER)
+        stub.WEB.down.add(self.urls[0])
+        pid = self.pending(h)
+        stub.WEB.down.clear()
+        r = self.d.retry(self.oid, [pid])["results"][0]
+        self.assertEqual((r["status"], r["reason"]), ("REJECTED", "SENDER_NOT_EXPLOITER"))
+        self.refused(self.d.retry, self.oid, [pid], reason="PROOF_%d_IS_REJECTED" % pid)
+        self.at_settle()
+        self.assertEqual(self.d.settle(self.oid)["status"], "SETTLED_NONE")
+
+    def test_recovery_expiry_refuses_late_retry(self):
+        stub.WEB.down.add(self.urls[0])
+        pid = self.pending(self.native(5 * ETH))
+        stub.WEB.down.clear()
+        self.at_recovery_end(1)
+        self.refused(self.d.retry, self.oid, [pid], reason="RECOVERY_CLOSED_AT_%d" % self.o["recover_until"])
+        self.assertEqual(self.d.settle(self.oid)["status"], "SETTLED_NONE")
+        self.refused(self.d.retry, self.oid, [pid], reason="OFFER_IS_SETTLED_NONE")
+
+    def test_competing_settle_attempts(self):
+        stub.WEB.down.add(self.urls[0])
+        pid = self.pending(self.native(5 * ETH))
+        self.at_settle()
+        for who in (KEEPER, STRANGER, PROTOCOL, EXPLOITER):
+            self.refused(self.d.settle, self.oid, sender=who, reason="PENDING_PROOFS_UNTIL_")
+        stub.WEB.down.clear()
+        self.d.retry(self.oid, [pid], sender=KEEPER)
+        self.assertEqual(self.d.settle(self.oid, sender=STRANGER)["status"], "SETTLED_PARTIAL")
+        self.refused(self.d.settle, self.oid, sender=KEEPER, reason="ALREADY_SETTLED_PARTIAL")
+        self.assertEqual(self.d.sent_to(PROTOCOL), 5 * GEN)
+        self.assertTrue(self.d.ledger_ok())
+
+    def test_settle_without_pending_needs_no_recovery_window(self):
+        self.d.prove(self.oid, "ethereum", self.native(5 * ETH))
+        self.at_settle()
+        self.assertEqual(self.d.settle(self.oid)["status"], "SETTLED_PARTIAL")
+
+    def test_junk_spam_cannot_extend_the_window(self):
+        # junk hashes are permanent rejections: they never hold settlement
+        for s in range(4):
+            self.d.submit(self.oid, [["ethereum", F.h32("junk%d-%d" % (s, i))] for i in range(5)], sender=F.addr(4000 + s))
+        self.assertEqual(self.d.get(self.oid)["n_pending"], 0)
+        # a griefer's own transactions stuck in the mempool are PENDING: they hold settlement, but only until the
+        # fixed recovery end, and nothing submitted can move it
+        for s in range(4):
+            self.d.submit(self.oid, [["ethereum", self.native(1, frm=STRANGER, pending=True)] for _ in range(5)],
+                          sender=F.addr(5000 + s))
+        self.assertEqual(self.d.get(self.oid)["n_pending"], 20)
+        self.assertEqual(self.d.get(self.oid)["recover_until"], self.o["recover_until"])
+        self.at_settle(1)
+        self.refused(self.d.submit, self.oid, [["ethereum", self.native(1)]], reason="SUBMISSIONS_CLOSED_AT_")
+        self.refused(self.d.settle, self.oid, reason="PENDING_PROOFS_UNTIL_%d" % self.o["recover_until"])
+        self.at_recovery_end()
+        self.assertEqual(self.d.settle(self.oid)["status"], "SETTLED_NONE")
+        self.assertEqual(self.d.get(self.oid)["n_expired"], 20)
+
+    def test_submissions_close_at_settle_time(self):
+        self.at_settle()
+        self.assertEqual(self.d.prove(self.oid, "ethereum", self.native(1))["status"], "COUNTED")
+        self.at_settle(1)
+        self.refused(self.d.submit, self.oid, [["ethereum", self.native(1)]], reason="SUBMISSIONS_CLOSED_AT_%d" % self.o["settle_at"])
+
+    def test_retry_refuses_foreign_and_duplicate_ids(self):
+        other = self.d.offer(deadline=NOW + 3600)
+        stub.WEB.down.add(self.urls[0])
+        pid = self.pending(self.native(5 * ETH))
+        stub.WEB.down.clear()
+        self.refused(self.d.retry, other, [pid], reason="NOT_A_PROOF_OF_THIS_OFFER")
+        self.refused(self.d.retry, self.oid, [pid, pid], reason="DUPLICATE_ITEM")
+        self.refused(self.d.retry, self.oid, [999], reason="NOT_A_PROOF_OF_THIS_OFFER")
+        self.refused(self.d.retry, self.oid, [], reason="NO_ITEMS")
+
+    def test_full_return_settles_at_once_even_with_pending(self):
+        stub.WEB.down.add(self.urls[0])
+        self.pending(self.native(1 * ETH))
+        stub.WEB.down.clear()
+        self.d.prove(self.oid, "ethereum", self.native(10 * ETH))
+        self.assertEqual(self.d.settle(self.oid)["status"], "SETTLED_FULL")
+        self.assertEqual(self.d.proofs(self.oid)[0]["status"], "EXPIRED")
+
+    def test_validator_agrees_on_two_transient_reasons_only(self):
+        src = open(F.world.ROOT / "build" / "WhiteFlagRegistry.py").read()
+        self.assertIn('a["reason"] in TRANSIENT and b["reason"] in TRANSIENT', src)

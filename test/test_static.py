@@ -99,10 +99,12 @@ class NoModel(unittest.TestCase):
         self.assertEqual(len(calls_named(ast.parse(src("WhiteFlagRegistry")), "run_nondet")), 1)
         self.assertEqual(len(calls_named(ast.parse(src("SafeHarborGate")), "run_nondet")), 0)
 
-    def test_nondet_only_in_submit_proofs(self):
+    def test_nondet_only_in_submit_and_retry(self):
         m = methods("WhiteFlagRegistry")
         users = sorted(k for k, f in m.items() if calls_named(f, "run_nondet"))
-        self.assertEqual(users, ["submit_proofs"])
+        self.assertEqual(users, ["_read_and_judge"])
+        callers = sorted(k for k, f in m.items() if calls_named(f, "_read_and_judge"))
+        self.assertEqual(callers, ["retry_proofs", "submit_proofs"])
 
     def test_web_request_only_posts_to_allowlist(self):
         t = src("WhiteFlagRegistry")

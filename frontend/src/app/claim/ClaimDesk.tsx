@@ -44,6 +44,7 @@ export function ClaimDesk() {
   }
   async function act(o: OfferSummary & { due: string }) {
     if (!w.account) return;
+    if (o.due === "RETRY_PENDING") { window.location.href = `/prove${q}${q ? "&" : "?"}offer=${o.offer_id}`; return; }
     const fn = o.due === "SETTLE" ? "settle" : "refund_unclaimed";
     const payee = o.due === "SETTLE" && o.fraction_ppm >= 1_000_000 ? null : o.protocol;
     await send(w.account, reg, fn, [o.offer_id], 0n, { payee, onProgress: setP,
@@ -99,8 +100,8 @@ export function ClaimDesk() {
           <div className="table-wrap"><table className="ledger"><thead><tr><th>Offer</th><th>Action</th><th>Pays</th><th /></tr></thead><tbody>
             {due.map((o) => (
               <tr key={o.offer_id + o.due}><td><Link href={`/incident/${o.offer_id}${q}`}>#{o.offer_id} {o.name}</Link></td><td className="mono small">{o.due}</td>
-                <td className="mono small">{o.due === "SETTLE" ? (o.fraction_ppm >= 1_000_000 ? "nothing (100% returned)" : "the remainder to the protocol") : `${gen((BigInt(o.owed) - BigInt(o.claimed)).toString(), 4)} GEN to the protocol`}</td>
-                <td><button className="btn" disabled={!w.account} onClick={() => void act(o)}>{o.due === "SETTLE" ? "Settle" : "Refund"}</button></td></tr>
+                <td className="mono small">{o.due === "RETRY_PENDING" ? `re-reads ${o.n_pending} PENDING proof(s)` : o.due === "SETTLE" ? (o.fraction_ppm >= 1_000_000 ? "nothing (100% returned)" : "the remainder to the protocol") : `${gen((BigInt(o.owed) - BigInt(o.claimed)).toString(), 4)} GEN to the protocol`}</td>
+                <td><button className="btn" disabled={!w.account} onClick={() => void act(o)}>{o.due === "SETTLE" ? "Settle" : o.due === "RETRY_PENDING" ? "Retry" : "Refund"}</button></td></tr>
             ))}</tbody></table></div>
         )}
       </section>

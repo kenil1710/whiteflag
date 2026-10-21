@@ -9,8 +9,10 @@
 //   2. SCAN every registry from its persisted cursor, page by page, to the
 //      end of its offers and around to where it started; the cursor is saved
 //      after every page.
-//   3. ACT on each due item (SETTLE / REFUND_UNCLAIMED): re-read the offer,
-//      submit, checkpoint the hash at once, then wait for it.
+//   3. ACT on each due item (SETTLE / RETRY_PENDING / REFUND_UNCLAIMED):
+//      re-read the offer, submit, checkpoint the hash at once, then wait.
+//      RETRY_PENDING re-reads an offer's PENDING proofs during its recovery
+//      window; it is keyed per hour, so each run may retry once more.
 // An action counts as DONE only when its transaction is FINALIZED, executed
 // successfully, and a read of the offer shows the effect. Failures go to a
 // persistent retry queue with backoff. Anything due that this run did not
@@ -27,13 +29,16 @@ export function emptyState() {
 /** State keys hold lowercase addresses; Studio finds a contract only by its checksummed address. */
 export const canonicalAddress = (list, a) => list.find((r) => r.toLowerCase() === String(a).toLowerCase()) ?? a;
 
-export const keyOf = (registry, offerId, action) => `${registry.toLowerCase()}:${offerId}:${action}`;
+export const RETRY_EVERY_S = 3600;
+export const keyOf = (registry, offerId, action, now = 0) =>
+  `${registry.toLowerCase()}:${offerId}:${action}${action === "RETRY_PENDING" ? "@" + Math.floor(now / RETRY_EVERY_S) : ""}`;
 
 /** Did the offer reach the state this action produces? */
 export function effectVisible(action, offer) {
   if (!offer || offer.found === false) return false;
   if (action === "SETTLE") return offer.status !== "OPEN";
-  if (action === "REFUND_UNCLAIMED") return BigInt(offer.unclaimed_refunded ?? 0) > 0n || BigInt(offer.claimed ?? 0) > 0n;
+  if (action === "REFUND_UNCLAIMED") return BigInt(offer.unclaimed_refunded ?? 0) > 0n || (BigInt(offer.claimed ?? 0) > 0n && BigInt(offer.claimed ?? 0) >= BigInt(offer.owed ?? 0));
+  if (action === "RETRY_PENDING") return offer.status !== "OPEN" || (offer.n_pending ?? 0) === 0;
   return false;
 }
 
@@ -42,10 +47,14 @@ export function stillDue(action, offer, now) {
   if (!offer || offer.found === false) return false;
   if (action === "SETTLE") {
     if (offer.status !== "OPEN") return false;
-    return offer.fraction_ppm >= 1_000_000 || now >= offer.settle_at;
+    return offer.fraction_ppm >= 1_000_000 || now >= (offer.recover_until ?? offer.settle_at)
+      || (now >= offer.settle_at && (offer.n_pending ?? 0) === 0);
+  }
+  if (action === "RETRY_PENDING") {
+    return offer.status === "OPEN" && (offer.n_pending ?? 0) > 0 && now >= offer.settle_at && now <= offer.recover_until;
   }
   if (action === "REFUND_UNCLAIMED") {
-    return offer.status !== "OPEN" && BigInt(offer.owed) > 0n && BigInt(offer.claimed) === 0n
+    return offer.status !== "OPEN" && BigInt(offer.owed) > BigInt(offer.claimed)
       && BigInt(offer.unclaimed_refunded) === 0n && now > offer.claim_deadline;
   }
   return false;
@@ -77,7 +86,7 @@ export async function runKeeper({ chain, store, registries, log = () => {}, maxA
       note(a.key, `${a.hash} reached ${tx?.statusName ?? "an unknown state"}; verifying read failed, retried next run`);
       return;
     }
-    if (tx?.statusName === "FINALIZED" && tx.ok && effectVisible(a.action, offer)) {
+    if (tx?.statusName === "FINALIZED" && tx.ok && (a.action === "RETRY_PENDING" || effectVisible(a.action, offer))) {
       a.status = "DONE"; a.verified_at = now; a.finalized_hash = a.hash; run.done++;
       log(`DONE ${a.key} ${a.hash} (finalized, executed, verified by read)`);
       return;
@@ -140,7 +149,7 @@ export async function runKeeper({ chain, store, registries, log = () => {}, maxA
       run.scanned += page.scanned ?? 0;
       for (const item of page.items) {
         run.due++;
-        const key = keyOf(reg, item.offer_id, item.due);
+        const key = keyOf(reg, item.offer_id, item.due, now);
         const a = (state.actions[key] ??= { key, registry: reg.toLowerCase(), offer_id: item.offer_id, action: item.due, status: "NEW", attempts: 0, hashes: [], first_seen_at: now });
         if (a.status === "DONE") {
           // done before, yet listed due again: never act twice; flag it

@@ -66,9 +66,10 @@ export const caseNo = (o: OfferSummary) => {
 export function nextEvent(o: OfferSummary, now: number): { label: string; at: number } | null {
   if (o.status === "OPEN") {
     if (o.fraction_ppm >= 1_000_000) return { label: "Settles on the next call", at: now };
-    return { label: "Settles", at: o.settle_at };
+    if (o.n_pending > 0 && now >= o.settle_at) return { label: `Recovery window: ${o.n_pending} PENDING proof(s) can be retried by anyone; settles at the latest`, at: o.recover_until };
+    return { label: o.n_pending > 0 ? "Submissions close (settlement waits for PENDING proofs, at most until the recovery window ends)" : "Settles", at: o.settle_at };
   }
-  if (BigInt(o.owed) > 0n && o.claimed === "0" && o.unclaimed_refunded === "0") {
+  if (BigInt(o.owed) > BigInt(o.claimed) && o.unclaimed_refunded === "0") {
     return now <= o.claim_deadline ? { label: "Claim window closes", at: o.claim_deadline } : { label: "Unclaimed bounty refundable", at: o.claim_deadline };
   }
   return null;
