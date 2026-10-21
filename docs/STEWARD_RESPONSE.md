@@ -134,11 +134,18 @@ returns they are entitled to claim.
   proofs (one COUNTED, one REJECTED), successful finalization, settle (remainder refunded), claim of the wallet's own
   share, refund of an unclaimed share. Screenshots, videos and log: [e2e/README.md](e2e/README.md).
 - Files: `frontend/src/lib/server.ts`, `frontend/src/lib/contract.ts`, `frontend/src/app/**`, `test/e2e/*`, `docs/e2e/*`.
+- The site is redeployed with Vercel; the team's free plan allows 100 deployments a day, which delayed the redeploy of
+  the demo chain by about an hour. Because of that the demo chain's scheduled endpoint outage had passed before the demo
+  ran, so the live recovery path uses a real not-yet-final Ethereum transaction instead; RPC outages and provider
+  disagreement are exercised in Direct Mode and the offline suite.
 
 ## After the six
 
 Redeploy from `2c92d06`, `node tools/verify_source.mjs` byte-identical; the six real incidents reseeded
 ([seed-canonical.json](seed-canonical.json)) and settled by the scheduled keeper, their unclaimed shares refunded to the
 protocol; every demo path rerun ([demo-run.log](demo-run.log), payouts verified at recipients in
-[payouts.json](payouts.json)); both registries end at an eth_getBalance of 0; the audit and the final check read all of
+[payouts.json](payouts.json); the run was resumed by `test/demo_finish.mjs` after one claim landed past the 3 min
+window, closed by `test/demo_close.mjs` after Studio canceled one refund, and one balance measurement that overlapped
+the browser flows was repeated cleanly by `test/demo_repeat_withdraw.mjs`; the log keeps every failed expectation and
+its explanation); both registries end at an eth_getBalance of 0; the audit and the final check read all of
 it back from chain.

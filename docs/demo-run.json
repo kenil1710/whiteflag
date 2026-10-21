@@ -729,6 +729,36 @@
       "ok": false,
       "reason": "never settled in 900s — RPC unreadable for the last 0s, tx may still be in flight",
       "hash": "0x1030e7a8bade283c07e31b1930c6b790416316d34eb14c383f223fbe416b52df"
+    },
+    {
+      "label": "refused-create-repeat",
+      "fn": "create_offer",
+      "args": [
+        "bad",
+        "Refused on purpose",
+        "[\"ethereum\"]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\"}]",
+        "[{\"chain\":\"ethereum\",\"address\":\"0xf45daebb0491a9ea10767dfe81cf07efbb3b6bf0\"}]",
+        "[{\"chain\":\"ethereum\",\"token\":\"native\",\"symbol\":\"ETH\",\"decimals\":18,\"stolen\":\"1\",\"weight\":\"300000\"}]",
+        1000,
+        1704067200,
+        1706745600,
+        "EXPLOITER_OR_NAMED",
+        "{}"
+      ],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "credited�\u000150000000000000000\u0002ok\b\u0006reason�\u0001RECOVERY_IS_EXPLOITER",
+      "hash": "0xa343bda2b60ce72bc8bbb93b6dd976cda7bbab2b2f07370ced880ed54ada5582"
+    },
+    {
+      "label": "withdraw-refund-repeat",
+      "fn": "withdraw_refund",
+      "args": [],
+      "status": "ACCEPTED",
+      "ok": true,
+      "reason": "ok\u0010\twithdrawn�\u000150000000000000000",
+      "hash": "0x8fc9c5f237825b03a33578b5c51deefb6ff6c57135dcc0bd0c832299801964c6"
     }
   ],
   "payouts": [
@@ -745,7 +775,9 @@
       "payee_paid_fee": true,
       "net_fee": "126305750000823",
       "balances_ok": false,
-      "balances_why": "contract balance moved by 950000000000000000, expected -50000000000000000"
+      "balances_why": "contract balance moved by 950000000000000000, expected -50000000000000000",
+      "superseded_by": "withdraw-refund-repeat",
+      "superseded_why": "delivered, but the registry's balance delta included bounties the browser flows locked during the measurement; repeated with nothing else running"
     },
     {
       "label": "A-claim-to-beneficiary",
@@ -894,6 +926,21 @@
       "payee_delta": "25000000000000000",
       "payee_paid_fee": false,
       "net_fee": "126306250000823",
+      "balances_ok": true,
+      "balances_why": ""
+    },
+    {
+      "label": "withdraw-refund-repeat",
+      "tx": "0x8fc9c5f237825b03a33578b5c51deefb6ff6c57135dcc0bd0c832299801964c6",
+      "status": "FINALIZED",
+      "payee": "0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07",
+      "amount": "50000000000000000",
+      "delivered": true,
+      "why": "",
+      "registry_delta": "-50000000000000000",
+      "payee_delta": "49873694249999177",
+      "payee_paid_fee": true,
+      "net_fee": "126305750000823",
       "balances_ok": true,
       "balances_why": ""
     }
@@ -1138,6 +1185,16 @@
       "label": "every payout delivered with exact balances",
       "ok": false,
       "detail": "10/11"
+    },
+    {
+      "label": "refused create credited the value back (repeat)",
+      "ok": true,
+      "detail": "50000000000000000 wei"
+    },
+    {
+      "label": "registry eth_getBalance is 0 after the repeat",
+      "ok": true,
+      "detail": "0"
     }
   ],
   "rejections": [
@@ -1227,8 +1284,8 @@
       "counts": {
         "beneficiaries": 1,
         "claims": 3,
-        "create_refused": 2,
-        "credit_withdrawals": 2,
+        "create_refused": 3,
+        "credit_withdrawals": 3,
         "extensions": 1,
         "offers": 19,
         "proofs_counted": 10,
@@ -1258,17 +1315,17 @@
         "unclaimed_refunds": 5
       },
       "credit_owed_total": "0",
-      "credit_paid_total": "100000000000000000",
+      "credit_paid_total": "150000000000000000",
       "held": "0",
       "offers": 19,
       "open_total": "0",
       "owed_total": "0",
       "paid_total": "400000000000000000",
       "proofs": 22,
-      "received_total": "4701000000000000000",
+      "received_total": "4751000000000000000",
       "refunded_total": "4201000000000000000",
       "stray_swept_total": "0"
     },
-    "finished_at": "2026-10-21T12:36:54.871Z"
+    "finished_at": "2026-10-21T12:42:39.881Z"
   }
 }

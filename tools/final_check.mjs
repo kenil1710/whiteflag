@@ -102,7 +102,8 @@ const sh = (cmd, args) => spawnSync(cmd, args, { cwd: root, encoding: "utf8", ma
   for (const x of p) {
     const tx = await finalized(C.read, x.tx, { timeoutMs: 60000 });
     const d = payoutDelivered(tx, x.payee, x.amount);
-    if (!d.ok || !x.balances_ok) bad.push(`${x.label}: ${d.why || x.balances_why}`);
+    const repeat = x.superseded_by && p.find((y) => y.label === x.superseded_by && y.balances_ok && y.delivered);
+    if (!d.ok || (!x.balances_ok && !repeat)) bad.push(`${x.label}: ${d.why || x.balances_why}`);
   }
   // the canonical keeper's payouts
   let ks = null; try { ks = await (await fetch("https://raw.githubusercontent.com/kenil1710/whiteflag/keeper-state/keeper-state.json", { cache: "no-store" })).json(); } catch { /* */ }

@@ -190,3 +190,10 @@ payouts: 11, delivered 11, balances ok 10; checks 45/48 ok
 # - withdraw-refund: delivered (value message delivered, payee +0.05 GEN less its fee), but the registry's balance
 #   delta was +0.95 GEN instead of -0.05 GEN because the browser flows (docs/e2e) locked bounties in the same registry
 #   during the measurement. Every other payout's deltas match exactly.
+
+# withdraw-refund repeated by demo_repeat_withdraw.mjs at 2026-10-21T12:40:28.502Z (the first measurement overlapped the browser flows' bounty locks)
+refused-create-repeat: create_offer ACCEPTED credited�50000000000000000okreason�RECOVERY_IS_EXPLOITER 0xa343bda2b60ce72bc8bbb93b6dd976cda7bbab2b2f07370ced880ed54ada5582
+  CHECK ok   refused create credited the value back (repeat): 50000000000000000 wei
+withdraw-refund-repeat: withdraw_refund ACCEPTED ok	withdrawn�50000000000000000 0x8fc9c5f237825b03a33578b5c51deefb6ff6c57135dcc0bd0c832299801964c6
+  PAYOUT withdraw-refund-repeat: 50000000000000000 wei to 0xa774b496796adbb4cf6bf3fa9dc23befd04a1a07: FINALIZED, delivered=true, registry Δ -50000000000000000, payee Δ 49873694249999177 BALANCES OK
+  CHECK ok   registry eth_getBalance is 0 after the repeat: 0
