@@ -1,0 +1,121 @@
+name: ci
+# Every push and pull request: the contract tests (offline suite and GenLayer
+# Direct Mode on the deployed build files), linting, the frontend typecheck and
+# build, the keeper tests, and a byte-for-byte check that the deployed
+# contracts on Studio Dev are the build files of the deploy commit.
+on:
+  push:
+    branches: [main]
+  pull_request: {}
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  # The contracts pin py-genlayer:5jycge4q..., the runner GenLayer Studio Dev
+  # accepts, which no published GenVM bundle contains. Direct Mode runs the
+  # build files with only that Depends line pointed at py-genlayer:1zr6nqk5...
+  # from this release (test/direct/conftest.py, test_runner_pin.py).
+  GENVM_VERSION: v0.3.0-rc7
+  GLTEST_REF: 343e3a358f9e235a93b49c60721ce7676585ff07
+jobs:
+  contracts-offline:
+    name: contract tests (offline)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: build/ is contracts/ with the helpers inlined
+        run: python3 tools/build.py --check
+      - name: offline suite (stub runtime, mock chains)
+        run: cd test && python3 -m unittest discover -p 'test_*.py'
+
+  contracts-direct:
+    name: contract tests (GenLayer Direct Mode)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/gltest-direct
+          key: gltest-direct-${{ env.GENVM_VERSION }}
+      - run: pip install "genlayer-test @ git+https://github.com/genlayerlabs/genlayer-testing-suite@${{ env.GLTEST_REF }}"
+      - name: Direct Mode (real contracts in the GenLayer SDK; validators re-run against changed RPC answers)
+        run: python -m pytest test/direct -q
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pip install genvm-linter pyflakes
+      - name: genvm-lint (AST safety checks of the deployed build files)
+        # `genvm-lint check` also validates against an SDK it downloads; no published SDK matches the
+        # Studio runner these files pin, so the AST checks run here and the SDK semantics run in Direct Mode.
+        run: |
+          for f in build/WhiteFlagRegistry.py build/SafeHarborGate.py; do genvm-lint lint "$f"; done
+      - name: pyflakes (tests and tools)
+        run: pyflakes test/*.py test/direct/*.py tools/*.py
+      - run: npm ci --prefix frontend
+      - name: eslint (frontend)
+        run: cd frontend && npx eslint src
+
+  frontend:
+    name: frontend typecheck and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: the site's copies of deployments, rules and chain tables match the repository
+        run: node tools/sync_frontend.mjs --check
+      - run: npm ci --prefix frontend
+      - run: cd frontend && npx tsc --noEmit -p .
+      - run: cd frontend && npx next build
+
+  keeper:
+    name: keeper tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test test/keeper.test.mjs
+
+  deployed-source:
+    name: deployed source is byte-identical
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --prefix test
+      - name: read every deployed contract back from Studio Dev and compare with build/ at the deploy commit and HEAD
+        run: node tools/verify_source.mjs

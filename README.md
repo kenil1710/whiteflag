@@ -89,6 +89,15 @@ its recipient ([docs/payouts.json](docs/payouts.json)).
   (`python3 tools/build.py`).
 - **Returns.** Every case file on the site links each counted return to Etherscan or Arbiscan; `node tools/feasibility.mjs`
   re-reads every real return from both RPCs and judges it with the same rule.
+- **CI.** [![ci](https://github.com/kenil1710/whiteflag/actions/workflows/ci.yml/badge.svg)](https://github.com/kenil1710/whiteflag/actions/workflows/ci.yml)
+  on every push: the offline contract suite, GenLayer Direct Mode, linting (genvm-lint, pyflakes, eslint), the
+  frontend typecheck and build, the keeper tests, and a byte-for-byte check of the deployed contracts.
+- **Direct Mode.** `sh test/run_direct.sh`: the build files run inside the official GenLayer Python SDK through
+  `genlayer-test`'s Direct Mode, with JSON-RPC answers that change between the leader's run and each validator's
+  re-run (`run_validator`): validator disagreement, a leader inventing or hiding a return, one RPC down, two RPCs
+  disagreeing, rate limits, finality moving mid-round, plus claim shares, recovery and amendments. Only the runner
+  line differs from `build/`: the Studio runner `5jycge4q…` is in no published GenVM bundle, so Direct Mode uses
+  `1zr6nqk5…` from GenVM v0.3.0-rc7 (`test/direct/test_runner_pin.py` checks nothing else differs).
 - **Tests.** `sh test/run_offline.sh`: contract tests against the deployed build files and mock chains (every rule and
   boundary, RPC disagreement, fund conservation), the attack round ([docs/ATTACK_REPORT.md](docs/ATTACK_REPORT.md)),
   meaning tests (the gate never favorable on missing data, docs equal to code), and the keeper (outages, more than 50
