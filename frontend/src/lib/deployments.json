@@ -1,56 +1,56 @@
 {
-  "commit": "ce7a77282beee2a8c9b121aa95ac9639388a64d0",
+  "commit": "2c92d0692a0b5ce33cdba522f3a95f27d7e3c8ca",
   "network": "studiodev",
   "chain_id": 61997,
   "explorer": "https://explorer-studio-dev.genlayer.com/",
-  "registry": "0x461399B65edA1C0634a47A658d34624eC4C24a31",
-  "registryDemo": "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2",
-  "gate": "0x54035218daFDf7fB68F01cF36E70044f51878c75",
-  "gateDemo": "0x886095700276BA236Fc00cfd710AEb2f2d594E37",
+  "registry": "0x11b9e1d185ADd2b88dF872743734Db1124b80390",
+  "registryDemo": "0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55",
+  "gate": "0xd7a4A4a7836aB46c003606884d9962320460aEB8",
+  "gateDemo": "0x5d7376dD53bCb4f3A8791A2ddB79F5F2f230F43f",
   "contracts": {
     "WhiteFlagRegistry": {
-      "address": "0x461399B65edA1C0634a47A658d34624eC4C24a31",
+      "address": "0x11b9e1d185ADd2b88dF872743734Db1124b80390",
       "file": "build/WhiteFlagRegistry.py",
-      "sha256": "dba2a5da09d13de0640c302e66263102b106c9487430938d7ff68dbdc4c776cb",
-      "bytes": 58000,
-      "commit": "ce7a77282beee2a8c9b121aa95ac9639388a64d0",
-      "deploy_tx": "0xa68a7c1ed6764fb5ce17ea50335eeceb0f73b08928eebb0c74829b631fac855f",
+      "sha256": "71dd89eafcb47d3c2c0ea7c796c89f51e4580a2a96d910c319c114f2e4b87c21",
+      "bytes": 73193,
+      "commit": "2c92d0692a0b5ce33cdba522f3a95f27d7e3c8ca",
+      "deploy_tx": "0xd8fa2b67b6b1f48a4a17256070c61ff0d28cde093acd30c197020d4d4f80290d",
       "constructor_args": [
         "CANONICAL"
       ]
     },
     "WhiteFlagRegistryDemo": {
-      "address": "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2",
+      "address": "0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55",
       "file": "build/WhiteFlagRegistry.py",
-      "sha256": "dba2a5da09d13de0640c302e66263102b106c9487430938d7ff68dbdc4c776cb",
-      "bytes": 58000,
-      "commit": "ce7a77282beee2a8c9b121aa95ac9639388a64d0",
-      "deploy_tx": "0xd4b0152dd8ad7d2e9625c308fb1f85fd4e65f522383bd6f5f7f03ab4ea4886e1",
+      "sha256": "71dd89eafcb47d3c2c0ea7c796c89f51e4580a2a96d910c319c114f2e4b87c21",
+      "bytes": 73193,
+      "commit": "2c92d0692a0b5ce33cdba522f3a95f27d7e3c8ca",
+      "deploy_tx": "0x11016da9caf3def77e8c83903e0d9633dfb61a4d7601e5d033ac9a30dbfc3233",
       "constructor_args": [
         "DEMO"
       ]
     },
     "SafeHarborGate": {
-      "address": "0x54035218daFDf7fB68F01cF36E70044f51878c75",
+      "address": "0xd7a4A4a7836aB46c003606884d9962320460aEB8",
       "file": "build/SafeHarborGate.py",
-      "sha256": "f4b6411127c1f7b35e473333076f4cde6b472f19806fc15e2251d86bc41c7de0",
-      "bytes": 13825,
-      "commit": "ce7a77282beee2a8c9b121aa95ac9639388a64d0",
-      "deploy_tx": "0x2a97214569dfbd9cc8f1cbd0616c21b7bcd2d445228db850e31e25d1b94a5cf9",
+      "sha256": "fbae007f37857a19689940f0cb270ba73a2ea64f1b568325380487cbcd1947f7",
+      "bytes": 14695,
+      "commit": "2c92d0692a0b5ce33cdba522f3a95f27d7e3c8ca",
+      "deploy_tx": "0xf30578835ef7244f95281939ff75acde6ef79de25a15886fd59cc29fe83d76f8",
       "constructor_args": [
-        "0x461399B65edA1C0634a47A658d34624eC4C24a31",
+        "0x11b9e1d185ADd2b88dF872743734Db1124b80390",
         900000
       ]
     },
     "SafeHarborGateDemo": {
-      "address": "0x886095700276BA236Fc00cfd710AEb2f2d594E37",
+      "address": "0x5d7376dD53bCb4f3A8791A2ddB79F5F2f230F43f",
       "file": "build/SafeHarborGate.py",
-      "sha256": "f4b6411127c1f7b35e473333076f4cde6b472f19806fc15e2251d86bc41c7de0",
-      "bytes": 13825,
-      "commit": "ce7a77282beee2a8c9b121aa95ac9639388a64d0",
-      "deploy_tx": "0x1453b2c32e51deb3bb438b05be1f38ca4f6a3afe74f5e3604c1d3d95ab983d4d",
+      "sha256": "fbae007f37857a19689940f0cb270ba73a2ea64f1b568325380487cbcd1947f7",
+      "bytes": 14695,
+      "commit": "2c92d0692a0b5ce33cdba522f3a95f27d7e3c8ca",
+      "deploy_tx": "0x89c61980309e8f0878d4b084867e0bc06b01f83657bb30c91d82de11aa524a27",
       "constructor_args": [
-        "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2",
+        "0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55",
         900000
       ]
     }
