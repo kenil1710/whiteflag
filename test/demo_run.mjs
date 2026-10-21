@@ -90,14 +90,14 @@ const refused = async (label, who, fn, args, want, opts = {}) => {
   check(`${label} refused with ${want}`, !r.ok && String(r.reason).includes(want), r.ok ? "ACCEPTED" : r.reason.slice(0, 120));
   return r;
 };
-const offerCount = async () => (await P.view("get_stats")).offers;
 async function create(label, args, value, who = P) {
-  const n0 = await offerCount();
+  // other clients may open offers at the same time: find this one by its creator and incident
+  const before = await P.view("get_offer_by", [who.me.toLowerCase(), args[0]]);
   const r = await step(label, who, "create_offer", args, { value });
-  const n1 = await offerCount();
-  if (n1 !== n0 + 1) throw new Error(label + ": offer not created: " + r.reason);
-  run.offers[label] = n1;
-  return n1;
+  const o = await P.view("get_offer_by", [who.me.toLowerCase(), args[0]]);
+  if (!o.found || (before.found && o.offer_id === before.offer_id)) throw new Error(label + ": offer not created: " + r.reason);
+  run.offers[label] = o.offer_id;
+  return o.offer_id;
 }
 const offer = (id) => P.view("get_offer", [id]);
 const proofsOf = async (id) => (await P.view("get_proofs", [id, 0, 50])).items;

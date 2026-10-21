@@ -41,9 +41,14 @@ async function waitPhase(page, want, ms = 20 * 60_000) {
 }
 
 async function connect(page) {
-  const btn = page.getByRole("button", { name: "Connect wallet" });
-  if (await btn.isVisible().catch(() => false)) await btn.click();
-  await expect(page.getByText("Signed in as")).toBeVisible({ timeout: 60_000 });
+  // the site remembers a connection, so after the first page the wallet may reconnect by itself
+  const signed = page.getByText("Signed in as").first();
+  for (let i = 0; i < 20 && !(await signed.isVisible().catch(() => false)); i++) {
+    const btn = page.getByRole("button", { name: "Connect wallet" });
+    if (await btn.isVisible().catch(() => false)) await btn.click({ timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(1500);
+  }
+  await expect(signed).toBeVisible({ timeout: 60_000 });
 }
 
 async function view(fn, args) {
@@ -86,8 +91,11 @@ test("browser-wallet flows on the demo registry", async ({ browser }) => {
     await page.getByRole("button", { name: "Lock the bounty and open the offer" }).click();
     await waitPhase(page, "ACCEPTED");
     await expect(page.getByText("Offer opened.")).toBeVisible({ timeout: 120_000 });
-    const href = await page.getByRole("link", { name: "Open its case file" }).getAttribute("href");
-    ids[label] = Number(href.match(/incident\/(\d+)/)[1]);
+    await page.waitForTimeout(3000);
+    // the offer this wallet opened under this incident (others may open offers at the same time)
+    const mine = await view("get_offer_by", [P.address, incident]);
+    expect(mine.found).toBe(true);
+    ids[label] = mine.offer_id;
     note(`offer ${label}: #${ids[label]} (${incident})`);
     if (label === "claim") await shot(page, "create-offer-accepted");
   }

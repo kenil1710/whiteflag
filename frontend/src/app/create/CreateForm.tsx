@@ -32,7 +32,12 @@ export function CreateForm() {
     const r = await send(w.account, reg, "create_offer", [f.incident, f.name, JSON.stringify(f.chains.split(",").map((s) => s.trim()).filter(Boolean)), f.exploiters, f.recoveries, f.tokens,
       Math.round(Number(f.share) * 100), epoch(f.start), epoch(f.deadline), f.rule, JSON.stringify(f.source ? { source: f.source } : {})], bounty,
       { onProgress: setP, confirm: async () => (await viewOf<{ offers: number }>(reg, "get_stats")).offers > before.offers });
-    if (r.kind === "ok") setDone((await viewOf<{ offers: number }>(reg, "get_stats")).offers);
+    if (r.kind === "ok") {
+      // the id the transaction returned; else this wallet's latest offer under the incident (never a count: others create offers too)
+      const id = Number((r.data as { offer_id?: number } | null)?.offer_id ?? 0)
+        || (await viewOf<{ found: boolean; offer_id: number }>(reg, "get_offer_by", [w.account.toLowerCase(), f.incident])).offer_id;
+      setDone(id);
+    }
   }
 
   return (
