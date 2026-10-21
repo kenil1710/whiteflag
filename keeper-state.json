@@ -255,6 +255,18 @@
   },
   "runs": [
     {
+      "started_at": 1792577960,
+      "finished_at": 1792578244,
+      "resumed": 0,
+      "scanned": 6,
+      "due": 6,
+      "submitted": 6,
+      "done": 6,
+      "pending": 0,
+      "failed": 0,
+      "errors": []
+    },
+    {
       "started_at": 1792559987,
       "finished_at": 1792559990,
       "resumed": 0,
@@ -461,13 +473,13 @@
   ],
   "unprocessed": [],
   "last_run": {
-    "started_at": 1792559987,
-    "finished_at": 1792559990,
+    "started_at": 1792577960,
+    "finished_at": 1792578244,
     "resumed": 0,
-    "scanned": 14,
-    "due": 0,
-    "submitted": 0,
-    "done": 0,
+    "scanned": 6,
+    "due": 6,
+    "submitted": 6,
+    "done": 6,
     "pending": 0,
     "failed": 0,
     "errors": []
@@ -477,5 +489,5 @@
     "0x11b9e1d185ADd2b88dF872743734Db1124b80390",
     "0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55"
   ],
-  "saved_at": "2026-10-21T10:24:04.822Z"
+  "saved_at": "2026-10-21T10:24:04.833Z"
 }
