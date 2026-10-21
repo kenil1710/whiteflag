@@ -5,6 +5,8 @@ export const CHAIN_LABEL: Record<string, string> = { ethereum: "Ethereum", arbit
 export const EXPLORERS: Record<string, string> = { ethereum: "https://etherscan.io", arbitrum: "https://arbiscan.io" };
 export const txLink = (chain: string, h: string) => chain === "wfdemo" ? `/api/demochain/a?tx=${h}` : `${EXPLORERS[chain] ?? ""}/tx/${h}`;
 export const addrLink = (chain: string, a: string) => chain === "wfdemo" ? `https://explorer-studio-dev.genlayer.com/address/${a}` : `${EXPLORERS[chain] ?? ""}/address/${a}`;
+/** The wall clock in epoch seconds (a function, so render code stays free of direct Date.now calls). */
+export const nowS = (): number => Math.floor(Date.now() / 1000);
 export const studioTx = (h: string) => `https://explorer-studio-dev.genlayer.com/tx/${h}`;
 export const studioAddr = (a: string) => `https://explorer-studio-dev.genlayer.com/address/${a}`;
 

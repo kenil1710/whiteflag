@@ -1,24 +1,28 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { asReg, regAddr } from "@/lib/deployments";
-import { allProofs, offer as getOffer } from "@/lib/server";
-import { CHAIN_LABEL, addrLink, caseNo, gen, iso, money, nextEvent, pct, returnedOf, short, studioAddr, txLink, units, usd, incidentInfo } from "@/lib/format";
+import { PROOFS_PER_PAGE, proofsPage, offer as getOffer } from "@/lib/server";
+import { CHAIN_LABEL, addrLink, caseNo, gen, iso, money, nextEvent, pct, returnedOf, short, studioAddr, txLink, units, usd, incidentInfo, nowS } from "@/lib/format";
 import { Bar, Ext, Stamp } from "@/components/bits";
 import { Countdown } from "@/components/Countdown";
 import type { Proof } from "@/lib/types";
 
 export const revalidate = 30;
 
-export default async function Incident({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ r?: string }> }) {
+export default async function Incident({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ r?: string; p?: string }> }) {
   const id = Number((await params).id);
-  const r = asReg((await searchParams).r);
+  const sp = await searchParams;
+  const r = asReg(sp.r);
   const reg = regAddr(r);
   if (!Number.isInteger(id) || id <= 0) notFound();
   const o = await getOffer(reg, id);
   if (!o.found) notFound();
-  const proofs = await allProofs(reg, id);
+  // one page of proofs at a time (PROOFS_PER_PAGE), never all of them
+  const off = Math.max(0, Math.floor(Number(sp.p ?? 0) / PROOFS_PER_PAGE) * PROOFS_PER_PAGE || 0);
+  const pp = await proofsPage(reg, id, off);
+  const proofs: Proof[] = pp.items;
   const info = incidentInfo(o);
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowS();
   const ev = nextEvent(o, now);
   const meta = o.meta as { message_tx?: { chain: string; hash: string }; source?: string; deadline_basis?: string; hack_date?: string };
   const sym = (chain: string, token: string) => o.tokens.find((t) => t.chain === chain && t.token === token)?.symbol || (token === "native" ? "ETH" : short(token));
@@ -47,7 +51,7 @@ export default async function Incident({ params, searchParams }: { params: Promi
             <span className="mono small muted">of {money(stolenUsd)} stolen at the protocol&apos;s own weights</span>
           </div>
           <div className="grid-2" style={{ gap: 20 }}>
-            <div className="stat"><span className="caps">Bounty locked</span><div className="figure-md">{gen(o.bounty, 4)}</div><span className="mono small muted">GEN · {o.bounty_share_bps / 100}% share announced</span></div>
+            <div className="stat"><span className="caps">Bounty locked</span><div className="figure-md">{gen(o.bounty, 4)}</div><span className="mono small muted">GEN · declared share {o.bounty_share_bps / 100}% (informational: the payout is the locked bounty × the returned fraction)</span></div>
             <div className="stat"><span className="caps">Owed to exploiter addresses</span><div className="figure-md">{gen(o.owed, 4)}</div><span className="mono small muted">{o.status === "OPEN" ? "decided at settlement" : "GEN"}</span></div>
             <div className="stat"><span className="caps">Paid</span><div className="figure-md">{gen(o.claimed, 4)}</div><span className="mono small muted">{Object.keys(o.claims).length} of {Object.keys(o.shares).length} shares claimed</span></div>
             <div className="stat"><span className="caps">Refunded to the protocol</span><div className="figure-md">{gen((BigInt(o.refunded_at_settle) + BigInt(o.unclaimed_refunded)).toString(), 4)}</div><span className="mono small muted">GEN</span></div>
@@ -175,13 +179,20 @@ export default async function Incident({ params, searchParams }: { params: Promi
               </tbody>
             </table>
           </div>
+          {pp.total > PROOFS_PER_PAGE && (
+            <nav className="row" aria-label="proof pages" style={{ marginTop: 12, justifyContent: "space-between" }}>
+              {off > 0 ? <Link className="btn" href={`/incident/${id}?${new URLSearchParams({ ...(r === "demo" ? { r: "demo" } : {}), p: String(off - PROOFS_PER_PAGE) })}`}>← earlier</Link> : <span />}
+              <span className="mono small muted">proofs {off + 1}–{off + proofs.length} of {pp.total}</span>
+              {pp.next_offset !== -1 ? <Link className="btn" href={`/incident/${id}?${new URLSearchParams({ ...(r === "demo" ? { r: "demo" } : {}), p: String(off + PROOFS_PER_PAGE) })}`}>later →</Link> : <span />}
+            </nav>
+          )}
         </section>
 
         <section className="section">
           <div className="section-head"><h2>Terms, frozen</h2></div>
           <div className="table-wrap"><table className="ledger"><tbody>
             <tr><td className="caps">Return window</td><td className="mono">{iso(o.start)} → {iso(o.deadline)}{o.original_deadline !== o.deadline ? ` (originally ${iso(o.original_deadline)})` : ""}</td></tr>
-            <tr><td className="caps">Amendments</td><td className="mono">{o.amendments.length} recorded; {o.status === "OPEN" && Math.floor(Date.now() / 1000) < o.amendments_close_at ? `the protocol may extend the deadline (to ${iso(o.max_deadline)} at most) or add a recovery address until ${iso(o.amendments_close_at)}` : "closed: no extension or new recovery address is possible"} (rules: none in the final {o.deadline - o.amendments_close_at} s before the deadline or after it; extensions capped in total)</td></tr>
+            <tr><td className="caps">Amendments</td><td className="mono">{o.amendments.length} recorded; {o.status === "OPEN" && nowS() < o.amendments_close_at ? `the protocol may extend the deadline (to ${iso(o.max_deadline)} at most) or add a recovery address until ${iso(o.amendments_close_at)}` : "closed: no extension or new recovery address is possible"} (rules: none in the final {o.deadline - o.amendments_close_at} s before the deadline or after it; extensions capped in total)</td></tr>
             <tr><td className="caps">Submissions close</td><td className="mono">{iso(o.settle_at)}; settles then if no proof is PENDING (at once if 100% returned)</td></tr>
             <tr><td className="caps">Recovery window</td><td className="mono">until {iso(o.recover_until)}: anyone retries PENDING proofs; then settle always succeeds and leftover PENDING proofs are EXPIRED</td></tr>
             <tr><td className="caps">Claim window</td><td className="mono">{o.claim_window_s} s after settlement</td></tr>

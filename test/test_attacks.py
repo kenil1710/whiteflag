@@ -7,8 +7,8 @@ import unittest
 import fixtures as F
 import stub
 import world
-from fixtures import ETH, GEN, EXPLOITER, EXPLOITER2, RECOVERY, RECOVERY2, STRANGER, PROTOCOL, PAYEE, TOKEN, LOOKALIKE, \
-    NOW, START, DEADLINE, tok, pairs, TOPIC, topic_addr, word
+from fixtures import ETH, GEN, EXPLOITER, EXPLOITER2, RECOVERY, STRANGER, PROTOCOL, PAYEE, TOKEN, LOOKALIKE, \
+    NOW, tok, pairs, TOPIC, topic_addr, word
 
 Reverted = world.Reverted
 RG = F.RG
@@ -145,7 +145,7 @@ class FakeLogs(Base):
 
 class ProxyTokens(Base):
     def test_proxy_address_is_what_counts(self):
-        proxy, impl = F.addr(801), F.addr(802)
+        proxy = F.addr(801)
         oid = self.d.offer(tokens=json.dumps([tok(token=proxy, symbol="PRX")]))
         # the proxy emits the event (delegatecall keeps the proxy as log address)
         h = self.c.tx("ethereum", EXPLOITER, proxy, logs=[(proxy, EXPLOITER, RECOVERY, ETH)])

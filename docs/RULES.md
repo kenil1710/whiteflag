@@ -15,7 +15,7 @@ A protocol that was hacked calls `create_offer` and sends the bounty in GEN with
 | exploiter addresses | 1 to 24 (chain, address) pairs; a transaction counts only if it was sent from one |
 | recovery addresses | 1 to 24 (chain, address) pairs; no address may be both exploiter and recovery |
 | stolen tokens | 1 to 12 entries: chain, token (`native` or an ERC-20 contract address), decimals (0 to 18), stolen amount in base units, value weight (a positive integer the protocol picks) |
-| bounty share | 1 to 10000 basis points: the public share the protocol announced (informational) |
+| bounty share | 1 to 10000 basis points: the share the protocol declares publicly. **Informational only**: the payout is the locked bounty times the returned fraction, never computed from this number |
 | return window | `start` (not in the future) and `deadline` (after `start`, at most 3653 days later) |
 | payout rule | `EXPLOITER_OR_NAMED` (each exploiter address is paid to itself or to a beneficiary it committed on chain) or `EXPLOITER_ONLY` (paid to itself) |
 | claim window | set by the registry: 3600 s on the canonical registry, 180 s on the demo registry |

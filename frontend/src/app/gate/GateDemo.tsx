@@ -32,7 +32,10 @@ export function GateDemo() {
     const off = Math.max(0, first.total - 10);
     setAtts((await viewOf<Page<Att>>(gate, "get_attestations", [off, 10])).items.reverse());
   }
-  useEffect(() => { void ask(); void loadAtts().catch(() => undefined); }, [gate]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const t = setTimeout(() => { void ask(); void loadAtts().catch(() => undefined); }, 0);
+    return () => clearTimeout(t);
+  }, [gate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function attest() {
     if (!w.account) return;
@@ -45,7 +48,7 @@ export function GateDemo() {
     <div>
       <div className="form">
         <div className="grid-2" style={{ gap: 18 }}>
-          <div className="field"><label htmlFor="gp">Protocol address (the offer's creator you trust)</label><input id="gp" value={protocol} onChange={(e) => setProtocol(e.target.value)} placeholder="0x…" /></div>
+          <div className="field"><label htmlFor="gp">Protocol address (the offer&apos;s creator you trust)</label><input id="gp" value={protocol} onChange={(e) => setProtocol(e.target.value)} placeholder="0x…" /></div>
           <div className="field"><label htmlFor="gi">Incident</label><input id="gi" value={incident} onChange={(e) => setIncident(e.target.value)} placeholder="the incident name the protocol opened its offer under" /></div>
         </div>
         <div className="row"><button className="btn" disabled={!protocol.trim() || !incident.trim()} onClick={() => void ask()}>Ask the gate</button><span className="mono small muted">gate <a href={studioAddr(gate)}>{short(gate)}</a></span></div>

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useWallet } from "@/components/WalletProvider";
 import { Progress, WalletBar, useReg } from "@/components/client";
 import { send, viewOf } from "@/lib/contract";
-import { pct, short, txLink, units } from "@/lib/format";
+import { nowS, pct, short, txLink, units } from "@/lib/format";
 import type { OfferSummary, Page, Proof, TxProgress } from "@/lib/types";
 
 type Check = { chain: string; hash: string; verdict: string; detail?: string; credits?: { amount: string; token: string; log: number }[]; time?: number; from?: string; to?: string };
@@ -25,15 +25,18 @@ export function ProveForm() {
   const [pending, setPending] = useState<Proof[]>([]);
 
   useEffect(() => {
-    void viewOf<Page<OfferSummary>>(reg, "get_offers", [0, 50]).then((pg) => { setOffers(pg.items); if (!oid) { const o = pg.items.find((x) => x.status === "OPEN"); if (o) setOid(o.offer_id); } }).catch(() => setOffers([]));
+    // the newest 50 offers (one page), never every offer
+    void viewOf<Page<OfferSummary>>(reg, "get_offers", [0, 1])
+      .then((h) => viewOf<Page<OfferSummary>>(reg, "get_offers", [Math.max(0, h.total - 50), 50]))
+      .then((pg) => { const items = [...pg.items].reverse(); setOffers(items); if (!oid) { const o = items.find((x) => x.status === "OPEN"); if (o) setOid(o.offer_id); } }).catch(() => setOffers([]));
   }, [reg]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const offer = offers.find((o) => o.offer_id === oid);
   useEffect(() => {
-    if (!oid || !offer || offer.n_pending === 0) { setPending([]); return; }
     // PENDING proofs of this offer, newest pages first, bounded to three pages
     void (async () => {
       const out: Proof[] = [];
+      if (!oid || !offer || offer.n_pending === 0) { setPending(out); return; }
       for (let off = Math.max(offer.n_proofs - 50, 0), pages = 0; off >= 0 && pages < 3 && out.length < 5; off -= 50, pages++) {
         const pg = await viewOf<Page<Proof>>(reg, "get_proofs", [oid, off, 50]);
         out.push(...pg.items.filter((x) => x.status === "PENDING"));
@@ -85,7 +88,7 @@ export function ProveForm() {
           {offers.map((o) => <option key={o.offer_id} value={o.offer_id}>#{o.offer_id} {o.name} · {o.status === "OPEN" ? `open, ${pct(o.fraction_ppm)} back` : o.status.toLowerCase()}</option>)}
         </select>
         {offer && offer.status !== "OPEN" && <div className="hint bad">This offer is settled; it takes no more proofs.</div>}
-        {offer && offer.status === "OPEN" && Date.now() / 1000 > offer.settle_at && <div className="hint bad">Submissions closed {new Date(offer.settle_at * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC; only PENDING proofs can be retried, until {new Date(offer.recover_until * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC.</div>}
+        {offer && offer.status === "OPEN" && nowS() > offer.settle_at && <div className="hint bad">Submissions closed {new Date(offer.settle_at * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC; only PENDING proofs can be retried, until {new Date(offer.recover_until * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC.</div>}
         {pending.length > 0 && (
           <div className="hint">
             {pending.length} PENDING proof(s) on this offer ({pending.map((x) => `#${x.proof_id} ${x.reason}`).join(", ")}): an RPC error, the two RPCs disagreeing, or a block not final yet. Anyone can retry them until the recovery window ends.

@@ -5,7 +5,7 @@ import unittest
 
 import fixtures as F
 import world
-from fixtures import ETH, GEN, NOW, tok, EXPLOITER, RECOVERY, STRANGER
+from fixtures import ETH, NOW, tok, EXPLOITER, RECOVERY, STRANGER
 
 GT = F.GT
 Reverted = world.Reverted

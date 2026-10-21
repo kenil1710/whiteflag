@@ -15,7 +15,6 @@ import builtins
 import json
 import sys
 import types
-from datetime import datetime, timezone
 from pathlib import Path
 
 _UNSET = object()

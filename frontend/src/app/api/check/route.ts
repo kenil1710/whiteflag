@@ -6,7 +6,7 @@
  * against the contract). Advisory only: the validators' reading is what counts.
  */
 import { asReg, regAddr } from "@/lib/deployments";
-import { allProofs, offer } from "@/lib/server";
+import { proofsBounded, offer } from "@/lib/server";
 import { readBoth, judge } from "@/lib/verify.mjs";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,8 @@ export async function GET(req: Request) {
   const o = await offer(regAddr(r), id);
   if (!o.found) return Response.json({ error: "no such offer" }, { status: 404 });
   const used = new Set<string>();
-  for (const p of await allProofs(regAddr(r), id)) for (const c of p.credits) used.add(c.key);
+  // bounded: the first 500 proofs; beyond that the advice may miss an earlier count (the registry never does)
+  for (const p of (await proofsBounded(regAddr(r), id)).items) for (const c of p.credits) used.add(c.key);
   const results = [];
   for (const it of items) {
     if (!o.chains.includes(it.chain)) { results.push({ ...it, verdict: "CHAIN_NOT_IN_OFFER" }); continue; }

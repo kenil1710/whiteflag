@@ -46,7 +46,7 @@ export function CreateForm() {
       <div className="grid-2" style={{ gap: 18 }}>
         <div className="field"><label htmlFor="start">Return window start (UTC)</label><input id="start" type="datetime-local" value={f.start} onChange={set("start")} /></div>
         <div className="field"><label htmlFor="deadline">Deadline (UTC)</label><input id="deadline" type="datetime-local" value={f.deadline} onChange={set("deadline")} /></div>
-        <div className="field"><label htmlFor="share">Public bounty share (%)</label><input id="share" value={f.share} onChange={set("share")} /></div>
+        <div className="field"><label htmlFor="share">Declared bounty share (%, informational: the payout is the locked bounty × the returned fraction)</label><input id="share" value={f.share} onChange={set("share")} /></div>
         <div className="field"><label htmlFor="bounty">Bounty locked (GEN)</label><input id="bounty" value={f.bounty} onChange={set("bounty")} /></div>
         <div className="field"><label htmlFor="rule">Payout rule</label><select id="rule" value={f.rule} onChange={set("rule")}><option>EXPLOITER_OR_NAMED</option><option>EXPLOITER_ONLY</option></select></div>
         <div className="field"><label htmlFor="src">Source link (post-mortem, optional)</label><input id="src" value={f.source} onChange={set("source")} /></div>

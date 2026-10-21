@@ -1,33 +1,48 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useWallet } from "@/components/WalletProvider";
 import { Progress, WalletBar, useReg } from "@/components/client";
 import { Countdown } from "@/components/Countdown";
 import { send, viewOf } from "@/lib/contract";
-import { gen, iso, pct, short } from "@/lib/format";
+import { gen, iso, nowS, pct, short } from "@/lib/format";
 import type { Offer, OfferSummary, Page, TxProgress } from "@/lib/types";
+
+const PER_PAGE = 10;
 
 export function ClaimDesk() {
   const { reg, q } = useReg();
   const w = useWallet();
+  const router = useRouter();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [payout, setPayout] = useState("");
   const [p, setP] = useState<TxProgress | null>(null);
   const [due, setDue] = useState<(OfferSummary & { due: string })[]>([]);
 
+  const [page, setPage] = useState(0);
+  const [pages, setPages] = useState(1);
   const load = useCallback(async () => {
-    const pg = await viewOf<Page<OfferSummary>>(reg, "get_offers", [0, 50]);
-    const full = await Promise.all(pg.items.map((o) => viewOf<Offer>(reg, "get_offer", [o.offer_id])));
-    setOffers(full);
-    const d = await viewOf<Page<OfferSummary & { due: string }>>(reg, "get_due", [Math.floor(Date.now() / 1000), 0, 50]);
+    // one page of 10 offers, newest first; full offers are read only for that page
+    const head = await viewOf<Page<OfferSummary>>(reg, "get_offers", [0, 1]);
+    const n = Math.max(1, Math.ceil(head.total / PER_PAGE));
+    setPages(n);
+    const end = head.total - Math.min(page, n - 1) * PER_PAGE, start = Math.max(0, end - PER_PAGE);
+    const pg = end > 0 ? await viewOf<Page<OfferSummary>>(reg, "get_offers", [start, end - start]) : { items: [] as OfferSummary[] };
+    const full: Offer[] = [];
+    for (let i = 0; i < pg.items.length; i += 4) full.push(...(await Promise.all(pg.items.slice(i, i + 4).map((o) => viewOf<Offer>(reg, "get_offer", [o.offer_id])))));
+    setOffers(full.reverse());
+    const d = await viewOf<Page<OfferSummary & { due: string }>>(reg, "get_due", [nowS(), 0, 50]);
     setDue(d.items);
-  }, [reg]);
-  useEffect(() => { void load().catch(() => undefined); }, [load]);
+  }, [reg, page]);
+  useEffect(() => {
+    const t = setTimeout(() => void load().catch(() => undefined), 0);
+    return () => clearTimeout(t);
+  }, [load]);
 
   const me = w.account?.toLowerCase() ?? "";
   const mine = offers.filter((o) => o.exploiters.some((e) => e.address === me));
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowS();
 
   async function commit(o: Offer) {
     if (!w.account) return;
@@ -44,7 +59,7 @@ export function ClaimDesk() {
   }
   async function act(o: OfferSummary & { due: string }) {
     if (!w.account) return;
-    if (o.due === "RETRY_PENDING") { window.location.href = `/prove${q}${q ? "&" : "?"}offer=${o.offer_id}`; return; }
+    if (o.due === "RETRY_PENDING") { router.push(`/prove${q}${q ? "&" : "?"}offer=${o.offer_id}`); return; }
     const fn = o.due === "SETTLE" ? "settle" : "refund_unclaimed";
     const payee = o.due === "SETTLE" && o.fraction_ppm >= 1_000_000 ? null : o.protocol;
     await send(w.account, reg, fn, [o.offer_id], 0n, { payee, onProgress: setP,
@@ -57,8 +72,14 @@ export function ClaimDesk() {
       <WalletBar />
       {w.account && (
         <section className="section">
-          <div className="section-head"><h2>Offers that list {short(w.account)}</h2></div>
-          {mine.length === 0 && <p className="note">This address is not an exploiter address on any offer of this registry, so the registry will refuse its claim (NOT_AN_EXPLOITER_ADDRESS).</p>}
+          <div className="section-head"><h2>Offers that list {short(w.account)}</h2>
+            <span className="row mono small muted">
+              <button className="btn" disabled={page === 0} onClick={() => setPage(page - 1)}>← newer</button>
+              page {page + 1} / {pages}
+              <button className="btn" disabled={page >= pages - 1} onClick={() => setPage(page + 1)}>older →</button>
+            </span>
+          </div>
+          {mine.length === 0 && <p className="note">This address is not an exploiter address on any offer on this page, so the registry would refuse its claim there (NOT_AN_EXPLOITER_ADDRESS).</p>}
           {mine.map((o) => {
             const share = o.shares[me] ?? "0";
             const mineClaim = o.claims[me];

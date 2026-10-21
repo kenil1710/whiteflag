@@ -27,13 +27,41 @@ async function withTimeout<T>(work: Promise<T>, label: string, ms = READ_TIMEOUT
 }
 
 let freshReads = 0;
+/** Browser cache of view answers: 10 s, at most 300 entries (oldest dropped first). Bypassed while a write is being confirmed. */
+const viewCache = new Map<string, { at: number; value: unknown }>();
+const VIEW_CACHE_MS = 10_000;
+const VIEW_CACHE_MAX = 300;
+const RETRIES = 5;
+const rateLimited = (status: number, msg: string) => status === 429 || /rate limit|-32029|429|too many requests/i.test(msg);
+
 export async function viewOf<T>(address: string, fn: string, args: CalldataEncodable[] = []): Promise<T> {
-  const q = new URLSearchParams({ a: address, f: fn, args: JSON.stringify(args, (_k, v) => (typeof v === "bigint" ? v.toString() : v)) });
-  if (freshReads > 0) q.set("fresh", String(Date.now()));
-  const r = await withTimeout(fetch(`/api/view?${q}`), fn);
-  const j = await r.json();
-  if (!r.ok || j.error) throw new Error(j.error ?? `view ${fn} failed`);
-  return (typeof j.value === "string" ? JSON.parse(j.value) : j.value) as T;
+  const a = JSON.stringify(args, (_k, v) => (typeof v === "bigint" ? v.toString() : v));
+  const key = `${address.toLowerCase()}|${fn}|${a}`;
+  const hit = viewCache.get(key);
+  if (freshReads === 0 && hit && Date.now() - hit.at < VIEW_CACHE_MS) return hit.value as T;
+  let last: Error = new Error(`view ${fn} failed`);
+  for (let attempt = 0; attempt < RETRIES; attempt++) {
+    const q = new URLSearchParams({ a: address, f: fn, args: a });
+    if (freshReads > 0) q.set("fresh", String(Date.now()));
+    let status = 0, msg = "";
+    try {
+      const r = await withTimeout(fetch(`/api/view?${q}`), fn);
+      status = r.status;
+      const j = await r.json();
+      if (r.ok && !j.error) {
+        const value = (typeof j.value === "string" ? JSON.parse(j.value) : j.value) as T;
+        while (viewCache.size >= VIEW_CACHE_MAX) viewCache.delete(viewCache.keys().next().value as string);
+        viewCache.set(key, { at: Date.now(), value });
+        return value;
+      }
+      msg = String(j.error ?? `view ${fn} failed (${r.status})`);
+    } catch (e) { msg = String((e as Error).message ?? e); }
+    last = new Error(msg);
+    if (!rateLimited(status, msg) && status !== 502 && status !== 503 && status !== 0) break;
+    // exponential backoff with jitter on rate limits and transient upstream failures: 1 s, 2 s, 4 s, 8 s
+    await new Promise((res) => setTimeout(res, Math.round(1000 * 2 ** attempt * (1 + Math.random() * 0.3))));
+  }
+  throw last;
 }
 
 const STATUS_NAMES = ["PENDING", "PROPOSING", "COMMITTING", "REVEALING", "ACCEPTED", "FINALIZED", "UNDETERMINED", "CANCELED"];

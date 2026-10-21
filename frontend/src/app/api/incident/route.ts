@@ -44,7 +44,7 @@ export async function GET(req: Request) {
       id, registry: regAddr(r), incident: o.incident, name: o.name, status: o.status, fraction_ppm: o.fraction_ppm,
       bounty: o.bounty, owed: o.owed, paid: o.claimed, shares: o.shares, claims: o.claims, refunded: (BigInt(o.refunded_at_settle) + BigInt(o.unclaimed_refunded)).toString(),
       window: { start: o.start, deadline: o.deadline, settle_at: o.settle_at, settled_at: o.settled_at, claim_deadline: o.claim_deadline },
-      bounty_share_bps: o.bounty_share_bps, payout_rule: o.payout_rule, chains: o.chains, exploiters: o.exploiters, recoveries: o.recoveries,
+      bounty_share_bps: o.bounty_share_bps, bounty_share_informational: true, payout_rule: o.payout_rule, chains: o.chains, exploiters: o.exploiters, recoveries: o.recoveries,
       tokens: o.tokens, returned: o.returned, proofs: { total: o.n_proofs, counted: o.n_counted, rejected: o.n_rejected },
       gate: g, offer_message: info?.offer.message_tx ?? null, read_at: Math.floor(Date.now() / 1000), page: `${u.origin}/incident/${id}${r === "demo" ? "?r=demo" : ""}`,
     }, { headers: { "cache-control": "public, s-maxage=30" } });
