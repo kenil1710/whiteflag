@@ -1,0 +1,9 @@
+{
+  "base": "https://whiteflag-ledger.vercel.app",
+  "registry": "0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55",
+  "offers": {
+    "claim": 13,
+    "refund": 14
+  },
+  "finished_at": "2026-10-21T10:56:20.651Z"
+}

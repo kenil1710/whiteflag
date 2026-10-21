@@ -1,0 +1,97 @@
+2026-10-21T10:39:24.922Z e2e_protocol wallet 0x61fDDc115324464727454190FA0aA2Ca62f79716
+2026-10-21T10:39:25.206Z e2e_exploiter wallet 0x71b46Fe4164748a708d34EE2291B17B0Cc9614a6
+2026-10-21T10:39:26.069Z wallet 0x61fDDc eth_requestAccounts
+2026-10-21T10:39:26.082Z wallet 0x61fDDc wallet_switchEthereumChain
+2026-10-21T10:39:26.087Z wallet 0x61fDDc eth_chainId
+2026-10-21T10:39:26.087Z wallet 0x61fDDc eth_chainId
+2026-10-21T10:39:27.919Z screenshot 01-create-offer-form.png
+2026-10-21T10:39:32.385Z wallet 0x61fDDc eth_sendTransaction
+2026-10-21T10:39:43.908Z progress: ACCEPTED · Accepted and confirmed in contract state. Payouts arrive when the transaction finalizes. · 0x64088130…4a944999
+2026-10-21T10:39:48.183Z offer claim: #13 (e2e-claim-202610211039)
+2026-10-21T10:39:48.505Z screenshot 02-create-offer-accepted.png
+2026-10-21T10:39:51.133Z wallet 0x61fDDc eth_accounts
+2026-10-21T10:39:51.153Z wallet 0x61fDDc eth_chainId
+2026-10-21T10:39:58.911Z wallet 0x61fDDc eth_sendTransaction
+2026-10-21T10:40:10.704Z progress: ACCEPTED · Accepted. Re-reading the contract to confirm. · 0x4ae2e1db…475b4c00
+2026-10-21T10:40:17.840Z offer refund: #14 (e2e-refund-202610211039)
+2026-10-21T10:40:21.747Z wallet 0x61fDDc eth_accounts
+2026-10-21T10:40:21.750Z wallet 0x61fDDc eth_chainId
+2026-10-21T10:40:21.994Z screenshot 03-offer-case-file-open.png
+2026-10-21T10:42:26.075Z wallet 0x71b46F eth_requestAccounts
+2026-10-21T10:42:26.135Z wallet 0x71b46F wallet_switchEthereumChain
+2026-10-21T10:42:26.149Z wallet 0x71b46F eth_chainId
+2026-10-21T10:42:26.149Z wallet 0x71b46F eth_chainId
+2026-10-21T10:42:27.835Z screenshot 04-proofs-counted-and-rejected-form.png
+2026-10-21T10:42:33.422Z wallet 0x71b46F eth_sendTransaction
+2026-10-21T10:42:40.758Z progress: ACCEPTED · Accepted. Re-reading the contract to confirm. · 0xe93e3ee9…9be2036b
+2026-10-21T10:42:43.822Z screenshot 05-proofs-counted-and-rejected-recorded.png
+2026-10-21T10:42:48.243Z proofs of #13: COUNTED, REJECTED SENDER_NOT_EXPLOITER
+2026-10-21T10:42:52.126Z progress: FINALIZED · Finalized. · 0xe93e3ee9…9be2036b
+2026-10-21T10:42:52.290Z screenshot 06-transaction-finalized.png
+2026-10-21T10:42:52.359Z wallet 0x71b46F eth_accounts
+2026-10-21T10:42:52.366Z wallet 0x71b46F eth_chainId
+2026-10-21T10:43:02.595Z wallet 0x71b46F eth_accounts
+2026-10-21T10:43:02.611Z wallet 0x71b46F eth_chainId
+2026-10-21T10:43:12.795Z wallet 0x71b46F eth_accounts
+2026-10-21T10:43:12.811Z wallet 0x71b46F eth_chainId
+2026-10-21T10:43:23.009Z wallet 0x71b46F eth_accounts
+2026-10-21T10:43:23.022Z wallet 0x71b46F eth_chainId
+2026-10-21T10:43:33.236Z wallet 0x71b46F eth_accounts
+2026-10-21T10:43:33.248Z wallet 0x71b46F eth_chainId
+2026-10-21T10:43:43.483Z wallet 0x71b46F eth_accounts
+2026-10-21T10:43:43.498Z wallet 0x71b46F eth_chainId
+2026-10-21T10:43:53.704Z wallet 0x71b46F eth_accounts
+2026-10-21T10:43:53.714Z wallet 0x71b46F eth_chainId
+2026-10-21T10:44:03.917Z wallet 0x71b46F eth_accounts
+2026-10-21T10:44:03.926Z wallet 0x71b46F eth_chainId
+2026-10-21T10:44:14.114Z wallet 0x71b46F eth_accounts
+2026-10-21T10:44:14.123Z wallet 0x71b46F eth_chainId
+2026-10-21T10:44:24.591Z wallet 0x71b46F eth_accounts
+2026-10-21T10:44:24.602Z wallet 0x71b46F eth_chainId
+2026-10-21T10:44:34.805Z wallet 0x71b46F eth_accounts
+2026-10-21T10:44:34.815Z wallet 0x71b46F eth_chainId
+2026-10-21T10:44:45.039Z wallet 0x71b46F eth_accounts
+2026-10-21T10:44:45.055Z wallet 0x71b46F eth_chainId
+2026-10-21T10:45:04.873Z wallet 0x71b46F eth_sendTransaction
+2026-10-21T10:45:12.039Z progress: ACCEPTED · Accepted. Re-reading the contract to confirm. · 0x3acfee3a…eeebd5e5
+2026-10-21T10:45:15.919Z waiting 230 s for the settle time
+2026-10-21T10:45:45.928Z waiting 200 s for the settle time
+2026-10-21T10:46:15.943Z waiting 170 s for the settle time
+2026-10-21T10:46:45.951Z waiting 140 s for the settle time
+2026-10-21T10:47:15.968Z waiting 110 s for the settle time
+2026-10-21T10:47:45.982Z waiting 80 s for the settle time
+2026-10-21T10:48:15.990Z waiting 50 s for the settle time
+2026-10-21T10:48:45.998Z waiting 20 s for the settle time
+2026-10-21T10:49:09.413Z wallet 0x61fDDc eth_accounts
+2026-10-21T10:49:09.443Z wallet 0x61fDDc eth_chainId
+2026-10-21T10:51:11.565Z screenshot 07-settle-due.png
+2026-10-21T10:51:15.279Z wallet 0x61fDDc eth_sendTransaction
+2026-10-21T10:52:26.821Z progress: ACCEPTED · Accepted. Re-reading the contract to confirm. · 0xd81ce3d2…9dfb2422
+2026-10-21T10:52:27.166Z settled #13: {"status":"SETTLED_PARTIAL","owed":"250000000000000000","refunded_at_settle":"250000000000000000","shares":{"0x71b46fe4164748a708d34ee2291b17b0cc9614a6":"250000000000000000"}}
+2026-10-21T10:52:27.341Z wallet 0x61fDDc eth_accounts
+2026-10-21T10:52:27.371Z wallet 0x61fDDc eth_chainId
+2026-10-21T10:52:37.666Z wallet 0x61fDDc eth_sendTransaction
+2026-10-21T10:52:49.227Z progress: ACCEPTED · Accepted. Re-reading the contract to confirm. · 0xf46d7186…30dfdc82
+2026-10-21T10:52:49.822Z settled #14: {"status":"SETTLED_PARTIAL","owed":"250000000000000000","refunded_at_settle":"250000000000000000","shares":{"0x71b46fe4164748a708d34ee2291b17b0cc9614a6":"250000000000000000"}}
+2026-10-21T10:52:50.075Z wallet 0x71b46F eth_accounts
+2026-10-21T10:52:50.102Z wallet 0x71b46F eth_chainId
+2026-10-21T10:52:56.927Z screenshot 08-claim-own-share.png
+2026-10-21T10:53:00.726Z wallet 0x71b46F eth_sendTransaction
+2026-10-21T10:53:12.838Z progress: ACCEPTED · Accepted. Re-reading the contract to confirm. · 0x5b59706f…9668cc32
+2026-10-21T10:53:13.198Z screenshot 09-claim-accepted.png
+2026-10-21T10:53:13.832Z claim: {"0x71b46fe4164748a708d34ee2291b17b0cc9614a6":{"amount":"250000000000000000","at":1792579982,"to":"0x71b46fe4164748a708d34ee2291b17b0cc9614a6"}}
+2026-10-21T10:53:14.832Z waiting 150 s for the claim window
+2026-10-21T10:53:44.853Z waiting 120 s for the claim window
+2026-10-21T10:54:14.871Z waiting 90 s for the claim window
+2026-10-21T10:54:44.885Z waiting 60 s for the claim window
+2026-10-21T10:55:14.900Z waiting 30 s for the claim window
+2026-10-21T10:55:44.909Z waiting 0 s for the claim window
+2026-10-21T10:55:46.500Z wallet 0x61fDDc eth_accounts
+2026-10-21T10:55:46.540Z wallet 0x61fDDc eth_chainId
+2026-10-21T10:55:59.091Z wallet 0x61fDDc eth_sendTransaction
+2026-10-21T10:56:05.868Z progress: ACCEPTED · Accepted. Re-reading the contract to confirm. · 0xe815bb9d…ad36f1fd
+2026-10-21T10:56:06.073Z screenshot 10-refund-unclaimed-accepted.png
+2026-10-21T10:56:06.951Z refund: unclaimed_refunded 250000000000000000 of owed 250000000000000000
+2026-10-21T10:56:08.888Z wallet 0x61fDDc eth_accounts
+2026-10-21T10:56:08.898Z wallet 0x61fDDc eth_chainId
+2026-10-21T10:56:09.199Z screenshot 11-case-file-settled-and-claimed.png

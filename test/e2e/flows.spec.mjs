@@ -40,6 +40,17 @@ async function waitPhase(page, want, ms = 20 * 60_000) {
   return text;
 }
 
+/** Loads `path` until `locator(page)` is visible: lists come through the site's 20 s cache. */
+async function until(page, path, locator, tries = 18) {
+  for (let i = 0; i < tries; i++) {
+    await page.goto(path);
+    await connect(page);
+    if (await locator(page).isVisible({ timeout: 8000 }).catch(() => false)) return locator(page);
+    await page.waitForTimeout(10_000);
+  }
+  throw new Error(`not visible on ${path}`);
+}
+
 async function connect(page) {
   // the site remembers a connection, so after the first page the wallet may reconnect by itself
   const signed = page.getByText("Signed in as").first();
@@ -107,7 +118,13 @@ test("browser-wallet flows on the demo registry", async ({ browser }) => {
   // ---- 2. proofs from the exploiter wallet: one counted, one rejected --------------------------
   async function prove(id, hashes, name) {
     const page = X.page;
-    await page.goto(`/prove?r=demo&offer=${id}`);
+    // the offer list is read through the site's 20 s cache: reload until the new offer is listed
+    for (let i = 0; i < 12; i++) {
+      await page.goto(`/prove?r=demo&offer=${id}`);
+      if (await page.locator(`#offer option[value="${id}"]`).count().catch(() => 0)) break;
+      await page.waitForTimeout(10_000);
+    }
+    await page.locator("#offer").selectOption(String(id));
     await connect(page);
     await page.getByLabel(/^Transaction hashes/).fill(hashes.map((h) => `wfdemo:${h}`).join("\n"));
     if (name) await shot(page, name + "-form");
@@ -132,10 +149,8 @@ test("browser-wallet flows on the demo registry", async ({ browser }) => {
   const o1 = await view("get_offer", [ids.claim]);
   while (now() < o1.settle_at + 5) { note(`waiting ${o1.settle_at + 5 - now()} s for the settle time`); await P.page.waitForTimeout(Math.min(30, o1.settle_at + 6 - now()) * 1000); }
   for (const label of ["claim", "refund"]) {
-    await P.page.goto("/claim?r=demo");
-    await connect(P.page);
     const row = P.page.locator("tr", { hasText: `#${ids[label]} ` });
-    await expect(row.getByRole("button", { name: "Settle" })).toBeVisible({ timeout: 180_000 });
+    await until(P.page, "/claim?r=demo", () => row.getByRole("button", { name: "Settle" }));
     if (label === "claim") await shot(P.page, "settle-due");
     await row.getByRole("button", { name: "Settle" }).click();
     await waitPhase(P.page, "ACCEPTED");
@@ -143,10 +158,7 @@ test("browser-wallet flows on the demo registry", async ({ browser }) => {
   }
 
   // ---- 5. claim: the exploiter wallet claims its own share ------------------------------------------
-  await X.page.goto("/claim?r=demo");
-  await connect(X.page);
-  const claimBtn = X.page.getByRole("button", { name: /^Claim .* GEN$/ }).first();
-  await expect(claimBtn).toBeVisible({ timeout: 180_000 });
+  const claimBtn = await until(X.page, "/claim?r=demo", (pg) => pg.locator(".panel", { hasText: `#${ids.claim} ` }).getByRole("button", { name: /^Claim .* GEN$/ }));
   await shot(X.page, "claim-own-share");
   await claimBtn.click();
   await waitPhase(X.page, "ACCEPTED");
@@ -158,10 +170,8 @@ test("browser-wallet flows on the demo registry", async ({ browser }) => {
   // ---- 6. refund: the unclaimed share after the claim window ---------------------------------------
   const o2 = await view("get_offer", [ids.refund]);
   while (now() <= o2.claim_deadline + 5) { note(`waiting ${o2.claim_deadline + 5 - now()} s for the claim window`); await P.page.waitForTimeout(Math.min(30, o2.claim_deadline + 6 - now()) * 1000); }
-  await P.page.goto("/claim?r=demo");
-  await connect(P.page);
   const row = P.page.locator("tr", { hasText: `#${ids.refund} ` });
-  await expect(row.getByRole("button", { name: "Refund" })).toBeVisible({ timeout: 180_000 });
+  await until(P.page, "/claim?r=demo", () => row.getByRole("button", { name: "Refund" }));
   await row.getByRole("button", { name: "Refund" }).click();
   await waitPhase(P.page, "ACCEPTED");
   await shot(P.page, "refund-unclaimed-accepted");
