@@ -141,6 +141,15 @@ CHAINS = {
     "ethereum": (1, ("https://rpc.mevblocker.io", "https://eth-mainnet.public.blastapi.io")),
     "arbitrum": (42161, ("https://arb1.arbitrum.io/rpc", "https://arbitrum-one.public.blastapi.io")),
 }
+# DEMO registries only: a test chain served by the WhiteFlag site itself, so the
+# throwaway demo keys can send real signed returns and claim (no public testnet
+# funds needed). Both endpoints are run by the same operator; a CANONICAL
+# registry never accepts this chain. Its transactions are EIP-155 signed by the
+# demo keys (tools/verify_demochain.mjs recovers every sender).
+DEMO_CHAINS = {
+    "wfdemo": (357357, ("https://whiteflag-ledger.vercel.app/api/demochain/a",
+                        "https://whiteflag-ledger.vercel.app/api/demochain/b")),
+}
 TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 RPC_TRIES = 4
 BATCH_MAX = 12          # calls per JSON-RPC batch (every listed RPC answers 12 from GenVM)
@@ -271,9 +280,10 @@ def _raw(res: typing.Any) -> bytes:
 
 
 def rpc_url_allowed(url: str) -> bool:
-    for ch in CHAINS:
-        if url in CHAINS[ch][1]:
-            return True
+    for table in (CHAINS, DEMO_CHAINS):
+        for ch in table:
+            if url in table[ch][1]:
+                return True
     return False
 
 
@@ -441,11 +451,12 @@ def read_view(url: str, chain_id: int, hashes: list) -> list:
     return out
 
 
-def read_proofs(items: list) -> list:
+def read_proofs(items: list, table: dict) -> list:
     """[[chain, hash], ...] -> per item, read from BOTH RPCs of its chain:
     {"reason": ..., "detail": ...} on any error, a missing or pending
     transaction, or a disagreement; else {"read": projection, "final": the
-    block is at or below BOTH RPCs' finalized heads}."""
+    block is at or below BOTH RPCs' finalized heads}. table: the chains the
+    calling registry accepts."""
     out = [None for _ in items]
     chains = []
     for it in items:
@@ -453,15 +464,15 @@ def read_proofs(items: list) -> list:
             chains.append(it[0])
     for ch in chains:
         idx = [i for i in range(len(items)) if items[i][0] == ch]
-        if ch not in CHAINS:
+        if ch not in table:
             for i in idx:
                 out[i] = {"reason": "UNSUPPORTED_CHAIN", "detail": ""}
             continue
-        cid = CHAINS[ch][0]
+        cid = table[ch][0]
         hashes = [items[i][1] for i in idx]
         views = []
         failed = ""
-        for url in CHAINS[ch][1]:
+        for url in table[ch][1]:
             try:
                 views.append(read_view(url, cid, hashes))
             except ReadFailed as e:
@@ -785,6 +796,16 @@ class WhiteFlagRegistry(gl.contract.Contract):
 
     # --- helpers --------------------------------------------------------------
 
+    def _chains(self) -> dict:
+        """The chains this registry reads: the real ones, plus the demo chain on a DEMO registry."""
+        out = {}
+        for k in CHAINS:
+            out[k] = CHAINS[k]
+        if self.mode == "DEMO":
+            for k in DEMO_CHAINS:
+                out[k] = DEMO_CHAINS[k]
+        return out
+
     def _now(self) -> int:
         return _epoch_from_iso(gl.message.raw.get("datetime", ""))
 
@@ -881,7 +902,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
         chains = []
         for c in ch:
             cc = str(c).strip().lower()
-            if cc not in CHAINS:
+            if cc not in self._chains():
                 return self._refuse(value, "UNSUPPORTED_CHAIN")
             if cc not in chains:
                 chains.append(cc)
@@ -1027,8 +1048,10 @@ class WhiteFlagRegistry(gl.contract.Contract):
         """Every validator reads `frozen` ([chain, hash] pairs) from both RPCs
         of each chain; the agreed reads are judged. -> [[chain, hash, read, judgement]]."""
 
+        table = self._chains()
+
         def leader() -> list:
-            return read_proofs(frozen)
+            return read_proofs(frozen, table)
 
         def validator(res: gl.vm.Result) -> bool:
             if not isinstance(res, gl.vm.Return):
@@ -1036,7 +1059,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
             got = res.calldata
             if not isinstance(got, list) or len(got) != len(frozen):
                 return False
-            mine = read_proofs(frozen)
+            mine = read_proofs(frozen, table)
             for i in range(len(frozen)):
                 a = got[i]
                 b = mine[i]
@@ -1649,7 +1672,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 "finality_grace_s": int(self.finality_grace_s), "recovery_s": int(self.recovery_s),
                 "transient_reasons": list(TRANSIENT),
                 "last_send_at": int(self.last_send_at), "reasons": list(REASONS),
-                "chains": {k: {"chain_id": CHAINS[k][0], "rpcs": list(CHAINS[k][1])} for k in CHAINS}}
+                "chains": {k: {"chain_id": v[0], "rpcs": list(v[1]), "demo": k in DEMO_CHAINS} for k, v in self._chains().items()}}
 
     @gl.public.view
     def get_stats(self) -> typing.Any:

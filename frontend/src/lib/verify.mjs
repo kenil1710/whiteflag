@@ -2,7 +2,7 @@
 // (feasibility, the site's live check). It is the same rule as
 // WhiteFlagRegistry's read_proof()/judge(): test/test_meaning.py runs both on
 // the same fixtures. The contract's verdict is the one that counts.
-import { CHAINS, TRANSFER_TOPIC, rpc } from "./chains.mjs";
+import { CHAINS, DEMO_CHAINS, TRANSFER_TOPIC, rpc } from "./chains.mjs";
 
 const lc = (s) => String(s ?? "").toLowerCase();
 const isHash = (h) => /^0x[0-9a-f]{64}$/.test(lc(h));
@@ -37,7 +37,7 @@ export async function readOne(url, hash) {
 
 /** Both RPCs of `chain`; {reason} or {proj, finalized:[a,b], raw:[a,b]}. */
 export async function readBoth(chain, hash) {
-  const c = CHAINS[chain];
+  const c = CHAINS[chain] ?? DEMO_CHAINS[chain];
   if (!c) return { reason: "UNSUPPORTED_CHAIN" };
   if (!isHash(hash)) return { reason: "BAD_HASH" };
   let a, b;

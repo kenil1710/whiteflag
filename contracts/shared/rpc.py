@@ -22,9 +22,10 @@ def _raw(res: typing.Any) -> bytes:
 
 
 def rpc_url_allowed(url: str) -> bool:
-    for ch in CHAINS:
-        if url in CHAINS[ch][1]:
-            return True
+    for table in (CHAINS, DEMO_CHAINS):
+        for ch in table:
+            if url in table[ch][1]:
+                return True
     return False
 
 
@@ -192,11 +193,12 @@ def read_view(url: str, chain_id: int, hashes: list) -> list:
     return out
 
 
-def read_proofs(items: list) -> list:
+def read_proofs(items: list, table: dict) -> list:
     """[[chain, hash], ...] -> per item, read from BOTH RPCs of its chain:
     {"reason": ..., "detail": ...} on any error, a missing or pending
     transaction, or a disagreement; else {"read": projection, "final": the
-    block is at or below BOTH RPCs' finalized heads}."""
+    block is at or below BOTH RPCs' finalized heads}. table: the chains the
+    calling registry accepts."""
     out = [None for _ in items]
     chains = []
     for it in items:
@@ -204,15 +206,15 @@ def read_proofs(items: list) -> list:
             chains.append(it[0])
     for ch in chains:
         idx = [i for i in range(len(items)) if items[i][0] == ch]
-        if ch not in CHAINS:
+        if ch not in table:
             for i in idx:
                 out[i] = {"reason": "UNSUPPORTED_CHAIN", "detail": ""}
             continue
-        cid = CHAINS[ch][0]
+        cid = table[ch][0]
         hashes = [items[i][1] for i in idx]
         views = []
         failed = ""
-        for url in CHAINS[ch][1]:
+        for url in table[ch][1]:
             try:
                 views.append(read_view(url, cid, hashes))
             except ReadFailed as e:

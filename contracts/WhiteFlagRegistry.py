@@ -425,6 +425,16 @@ class WhiteFlagRegistry(gl.contract.Contract):
 
     # --- helpers --------------------------------------------------------------
 
+    def _chains(self) -> dict:
+        """The chains this registry reads: the real ones, plus the demo chain on a DEMO registry."""
+        out = {}
+        for k in CHAINS:
+            out[k] = CHAINS[k]
+        if self.mode == "DEMO":
+            for k in DEMO_CHAINS:
+                out[k] = DEMO_CHAINS[k]
+        return out
+
     def _now(self) -> int:
         return _epoch_from_iso(gl.message.raw.get("datetime", ""))
 
@@ -521,7 +531,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
         chains = []
         for c in ch:
             cc = str(c).strip().lower()
-            if cc not in CHAINS:
+            if cc not in self._chains():
                 return self._refuse(value, "UNSUPPORTED_CHAIN")
             if cc not in chains:
                 chains.append(cc)
@@ -667,8 +677,10 @@ class WhiteFlagRegistry(gl.contract.Contract):
         """Every validator reads `frozen` ([chain, hash] pairs) from both RPCs
         of each chain; the agreed reads are judged. -> [[chain, hash, read, judgement]]."""
 
+        table = self._chains()
+
         def leader() -> list:
-            return read_proofs(frozen)
+            return read_proofs(frozen, table)
 
         def validator(res: gl.vm.Result) -> bool:
             if not isinstance(res, gl.vm.Return):
@@ -676,7 +688,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
             got = res.calldata
             if not isinstance(got, list) or len(got) != len(frozen):
                 return False
-            mine = read_proofs(frozen)
+            mine = read_proofs(frozen, table)
             for i in range(len(frozen)):
                 a = got[i]
                 b = mine[i]
@@ -1289,7 +1301,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 "finality_grace_s": int(self.finality_grace_s), "recovery_s": int(self.recovery_s),
                 "transient_reasons": list(TRANSIENT),
                 "last_send_at": int(self.last_send_at), "reasons": list(REASONS),
-                "chains": {k: {"chain_id": CHAINS[k][0], "rpcs": list(CHAINS[k][1])} for k in CHAINS}}
+                "chains": {k: {"chain_id": v[0], "rpcs": list(v[1]), "demo": k in DEMO_CHAINS} for k, v in self._chains().items()}}
 
     @gl.public.view
     def get_stats(self) -> typing.Any:

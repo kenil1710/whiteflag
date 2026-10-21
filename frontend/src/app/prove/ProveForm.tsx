@@ -51,7 +51,7 @@ export function ProveForm() {
     });
   }
   const items = text.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean).map((s) => {
-    const m = s.match(/^(ethereum|arbitrum)[:/](0x[0-9a-fA-F]{64})$/);
+    const m = s.match(/^(ethereum|arbitrum|wfdemo)[:/](0x[0-9a-fA-F]{64})$/);
     return m ? { chain: m[1], hash: m[2].toLowerCase() } : { chain, hash: s.toLowerCase() };
   }).slice(0, 5);
   const bad = items.filter((i) => !/^0x[0-9a-f]{64}$/.test(i.hash));
@@ -94,7 +94,7 @@ export function ProveForm() {
         )}
       </div>
       <div className="field"><label htmlFor="chain">Chain for bare hashes</label>
-        <select id="chain" value={chain} onChange={(e) => setChain(e.target.value)}><option value="ethereum">Ethereum</option><option value="arbitrum">Arbitrum One</option></select></div>
+        <select id="chain" value={chain} onChange={(e) => setChain(e.target.value)}><option value="ethereum">Ethereum</option><option value="arbitrum">Arbitrum One</option>{q && <option value="wfdemo">WhiteFlag demo chain</option>}</select></div>
       <div className="field"><label htmlFor="tx">Transaction hashes (up to 5; one per line, or chain:hash)</label>
         <textarea id="tx" value={text} onChange={(e) => { setText(e.target.value); setChecks(null); }} placeholder={"0x...\narbitrum:0x..."} />
         {bad.length > 0 && <div className="hint bad">Not a transaction hash: {bad.map((b) => short(b.hash)).join(", ")}</div>}

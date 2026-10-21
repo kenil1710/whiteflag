@@ -204,6 +204,15 @@ class ChainTables(unittest.TestCase):
             hosts = [u.split("/")[2] for u in urls]
             self.assertNotEqual(hosts[0].split(".")[-2], hosts[1].split(".")[-2], name)
 
+    def test_demo_chain_tables_agree(self):
+        reg = __import__("fixtures").RG
+        js = (ROOT / "tools" / "lib" / "chains.mjs").read_text()
+        for name, (cid, urls) in reg.DEMO_CHAINS.items():
+            m = re.search(name + r": \{ id: (\d+), rpcs: \[([^\]]*)\]", js)
+            self.assertIsNotNone(m, name)
+            self.assertEqual((int(m.group(1)), json.loads("[" + m.group(2) + "]")), (cid, list(urls)))
+            self.assertNotIn(name, reg.CHAINS)
+
     def test_transfer_topic(self):
         reg = __import__("fixtures").RG
         js = (ROOT / "tools" / "lib" / "chains.mjs").read_text()

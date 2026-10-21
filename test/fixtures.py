@@ -40,8 +40,8 @@ USDC6 = addr(103)        # a 6-decimals token
 START = NOW - 30 * 86400
 DEADLINE = NOW - 20 * 86400
 BLOCK_TS = START + 86400          # a block inside the window
-FINALIZED = {"ethereum": 20_000_000, "arbitrum": 300_000_000}
-CHAIN_IDS = {"ethereum": 1, "arbitrum": 42161}
+FINALIZED = {"ethereum": 20_000_000, "arbitrum": 300_000_000, "wfdemo": 1_000}
+CHAIN_IDS = {"ethereum": 1, "arbitrum": 42161, "wfdemo": 357357}
 _n = [0]
 
 
@@ -68,9 +68,10 @@ class Chains:
             ch = stub.MockChain(CHAIN_IDS[name], fin, NOW - 900)
             ch.batch_cap = RG.BATCH_MAX
             self.c[name] = ch
-            for url in RG.CHAINS[name][1]:
+            table = RG.DEMO_CHAINS if name in RG.DEMO_CHAINS else RG.CHAINS
+            for url in table[name][1]:
                 stub.WEB.chains[url] = ch
-        self.next_block = {"ethereum": FINALIZED["ethereum"] - 1000, "arbitrum": FINALIZED["arbitrum"] - 1000}
+        self.next_block = {k: FINALIZED[k] - 500 for k in FINALIZED}
 
     def block(self, chain, ts, number=None):
         ch = self.c[chain]

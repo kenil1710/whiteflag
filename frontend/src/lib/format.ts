@@ -1,10 +1,10 @@
 import incidents from "./incidents.json";
 import type { Offer, OfferSummary, Token } from "./types";
 
-export const CHAIN_LABEL: Record<string, string> = { ethereum: "Ethereum", arbitrum: "Arbitrum One" };
+export const CHAIN_LABEL: Record<string, string> = { ethereum: "Ethereum", arbitrum: "Arbitrum One", wfdemo: "WhiteFlag demo chain" };
 export const EXPLORERS: Record<string, string> = { ethereum: "https://etherscan.io", arbitrum: "https://arbiscan.io" };
-export const txLink = (chain: string, h: string) => `${EXPLORERS[chain] ?? ""}/tx/${h}`;
-export const addrLink = (chain: string, a: string) => `${EXPLORERS[chain] ?? ""}/address/${a}`;
+export const txLink = (chain: string, h: string) => chain === "wfdemo" ? `/api/demochain/a?tx=${h}` : `${EXPLORERS[chain] ?? ""}/tx/${h}`;
+export const addrLink = (chain: string, a: string) => chain === "wfdemo" ? `https://explorer-studio-dev.genlayer.com/address/${a}` : `${EXPLORERS[chain] ?? ""}/address/${a}`;
 export const studioTx = (h: string) => `https://explorer-studio-dev.genlayer.com/tx/${h}`;
 export const studioAddr = (a: string) => `https://explorer-studio-dev.genlayer.com/address/${a}`;
 

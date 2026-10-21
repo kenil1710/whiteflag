@@ -44,6 +44,15 @@ CHAINS = {
     "ethereum": (1, ("https://rpc.mevblocker.io", "https://eth-mainnet.public.blastapi.io")),
     "arbitrum": (42161, ("https://arb1.arbitrum.io/rpc", "https://arbitrum-one.public.blastapi.io")),
 }
+# DEMO registries only: a test chain served by the WhiteFlag site itself, so the
+# throwaway demo keys can send real signed returns and claim (no public testnet
+# funds needed). Both endpoints are run by the same operator; a CANONICAL
+# registry never accepts this chain. Its transactions are EIP-155 signed by the
+# demo keys (tools/verify_demochain.mjs recovers every sender).
+DEMO_CHAINS = {
+    "wfdemo": (357357, ("https://whiteflag-ledger.vercel.app/api/demochain/a",
+                        "https://whiteflag-ledger.vercel.app/api/demochain/b")),
+}
 TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 RPC_TRIES = 4
 BATCH_MAX = 12          # calls per JSON-RPC batch (every listed RPC answers 12 from GenVM)

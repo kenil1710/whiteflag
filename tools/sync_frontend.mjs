@@ -1,5 +1,6 @@
 // Copies into frontend/src what the site must show exactly as the repository has it:
 // deployments.json -> lib/deployments.json, data/incidents.json -> lib/incidents.json,
+// data/demochain.json -> lib/demochain.json (the demo chain the DEMO registry reads),
 // tools/lib/{chains,verify}.mjs -> lib/ (the same rule the contract applies, for the live check),
 // docs/RULES.md -> content/RULES.md (rendered at /docs). tools/final_check.mjs fails if a copy drifts.
 //   node tools/sync_frontend.mjs [--check]
@@ -14,6 +15,7 @@ const deployments = JSON.stringify({ commit, network: dep.network, chain_id: dep
 const files = [
   ["frontend/src/lib/deployments.json", deployments],
   ["frontend/src/lib/incidents.json", readFileSync(root + "data/incidents.json", "utf8")],
+  ["frontend/src/lib/demochain.json", readFileSync(root + "data/demochain.json", "utf8")],
   ["frontend/src/lib/chains.mjs", readFileSync(root + "tools/lib/chains.mjs", "utf8")],
   ["frontend/src/lib/verify.mjs", readFileSync(root + "tools/lib/verify.mjs", "utf8")],
   ["frontend/src/content/RULES.md", readFileSync(root + "docs/RULES.md", "utf8")],

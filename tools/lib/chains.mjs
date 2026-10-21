@@ -5,6 +5,10 @@ export const CHAINS = {
   ethereum: { id: 1, rpcs: ["https://rpc.mevblocker.io", "https://eth-mainnet.public.blastapi.io"], explorer: "https://etherscan.io" },
   arbitrum: { id: 42161, rpcs: ["https://arb1.arbitrum.io/rpc", "https://arbitrum-one.public.blastapi.io"], explorer: "https://arbiscan.io" },
 };
+// DEMO registries only: the demo chain served by the site (contracts/shared/common.py DEMO_CHAINS)
+export const DEMO_CHAINS = {
+  wfdemo: { id: 357357, rpcs: ["https://whiteflag-ledger.vercel.app/api/demochain/a", "https://whiteflag-ledger.vercel.app/api/demochain/b"], explorer: "https://whiteflag-ledger.vercel.app/api/demochain/a?tx=" },
+};
 
 export const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 

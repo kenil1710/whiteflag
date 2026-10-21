@@ -1183,7 +1183,21 @@ class Views(Base):
     def test_config(self):
         c = self.d.w.view(self.d.reg, "get_config")
         self.assertEqual((c["mode"], c["claim_window_s"], c["contract"]), ("DEMO", 180, "WhiteFlagRegistry"))
-        self.assertEqual(set(c["chains"]), {"ethereum", "arbitrum"})
+        self.assertEqual(set(c["chains"]), {"ethereum", "arbitrum", "wfdemo"})
+        self.assertTrue(c["chains"]["wfdemo"]["demo"])
+
+    def test_demo_chain_only_on_a_demo_registry(self):
+        canon = F.Deployment("CANONICAL")
+        r = canon.create(chains=("wfdemo",))
+        self.assertEqual((r["ok"], r["reason"]), (False, "UNSUPPORTED_CHAIN"))
+        self.assertEqual(set(canon.w.view(canon.reg, "get_config")["chains"]), {"ethereum", "arbitrum"})
+
+    def test_demo_chain_return_counts_and_is_claimed(self):
+        oid = self.d.offer(chains=("wfdemo",), tokens=json.dumps([tok(chain="wfdemo", stolen=2 * ETH)]))
+        h = self.c.tx("wfdemo", EXPLOITER, RECOVERY, value=2 * ETH)
+        self.assertEqual(self.d.prove(oid, "wfdemo", h)["status"], "COUNTED")
+        self.assertEqual(self.d.settle(oid)["status"], "SETTLED_FULL")
+        self.assertEqual(self.d.claim(oid)["paid"], str(10 * GEN))
 
     def test_stats_counts_reasons(self):
         oid = self.d.offer()
