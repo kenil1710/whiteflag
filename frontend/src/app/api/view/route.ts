@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   const f = u.searchParams.get("f") ?? "";
   let args: unknown[] = [];
   try { args = JSON.parse(u.searchParams.get("args") ?? "[]"); } catch { return Response.json({ error: "bad args" }, { status: 400 }); }
-  if (!ALLOWED.has(a.toLowerCase()) || !/^(get_|check$|check_for$|is_favorable)/.test(f) || !Array.isArray(args) || args.length > 4) {
+  if (!ALLOWED.has(a.toLowerCase()) || !/^(get_|check_for$|is_favorable_for$)/.test(f) || !Array.isArray(args) || args.length > 4) {
     return Response.json({ error: "not a WhiteFlag view" }, { status: 400 });
   }
   try {

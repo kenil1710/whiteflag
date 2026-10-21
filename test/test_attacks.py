@@ -329,29 +329,28 @@ class ClaimFrontRunning(Base):
 
 
 class GateAttacks(Base):
-    def test_copycat_full_offer_fools_check_but_not_check_for(self):
+    def test_copycat_full_offer_never_reaches_the_gate(self):
         fake = self.d.offer(bounty=10 ** 15, sender=ATTACKER, incident="test-incident", exploiters=pairs(("ethereum", STRANGER)),
                             tokens=json.dumps([tok(stolen=1)]), deadline=NOW + 10 ** 6)
         self.d.prove(fake, "ethereum", self.native(1, frm=STRANGER))
         self.d.settle(fake)
-        self.assertTrue(self.d.w.view(self.d.gate, "check", fake)["favorable"])
-        s = self.d.w.view(self.d.gate, "check_for", fake, PROTOCOL)
-        self.assertEqual((s["favorable"], s["protocol"]), (False, ATTACKER))
-        self.assertFalse(self.d.w.view(self.d.gate, "is_favorable_for", fake, PROTOCOL))
+        s = self.d.w.view(self.d.gate, "check_for", PROTOCOL, "test-incident")
+        self.assertEqual((s["favorable"], s["offer_id"]), (False, self.oid))
+        self.assertFalse(self.d.w.view(self.d.gate, "is_favorable_for", PROTOCOL, "test-incident"))
 
     def test_check_for_the_right_protocol(self):
-        oid = self.d.offer(tokens=json.dumps([tok(stolen=1)]), deadline=NOW + 10 ** 6)
+        oid = self.d.offer(incident="right", tokens=json.dumps([tok(stolen=1)]), deadline=NOW + 10 ** 6)
         self.d.prove(oid, "ethereum", self.native(1))
         self.d.settle(oid)
-        self.assertTrue(self.d.w.view(self.d.gate, "is_favorable_for", oid, PROTOCOL))
+        self.assertTrue(self.d.w.view(self.d.gate, "is_favorable_for", PROTOCOL, "right"))
 
     def test_check_for_bad_address(self):
-        self.assertFalse(self.d.w.view(self.d.gate, "check_for", self.oid, "nope")["favorable"])
+        self.assertFalse(self.d.w.view(self.d.gate, "check_for", "nope", "test-incident")["favorable"])
 
     def test_registry_answer_without_protocol(self):
-        raw = {"found": True, "offer_id": 1, "status": "SETTLED_FULL", "bounty": "1", "owed": "1", "claimed": "0",
+        raw = {"found": True, "offer_id": 1, "incident": "x", "status": "SETTLED_FULL", "bounty": "1", "owed": "1", "claimed": "0",
                "refunded_at_settle": "0", "unclaimed_refunded": "0", "fraction_ppm": 1000000, "claim_deadline": 1}
-        self.assertEqual(F.GT.gate_state(raw, 1, 900000)["state"], "UNREADABLE")
+        self.assertEqual(F.GT.gate_state(raw, PROTOCOL, "x", 900000)["state"], "UNREADABLE")
 
 
 class Money(Base):

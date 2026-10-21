@@ -29,7 +29,9 @@ export async function GET(req: Request) {
   const r = asReg(u.searchParams.get("r"));
   if (!Number.isInteger(id) || id <= 0) return Response.json({ error: "id must be a positive integer" }, { status: 400 });
   try {
-    const [o, g] = await Promise.all([offer(regAddr(r), id), gateCheck(gateAddr(r), id)]);
+    const o = await offer(regAddr(r), id);
+    // the gate is asked the protocol-bound question: this offer's creator and incident
+    const g = o.found ? await gateCheck(gateAddr(r), o.protocol, o.incident) : null;
     if (u.searchParams.get("format") === "svg") {
       const state = o.found ? o.status : "NO_OFFER";
       const value = !o.found ? "no offer" : o.status === "OPEN" ? `open · ${(o.fraction_ppm / 1e4).toFixed(1)}% back` : `${state.slice(8).toLowerCase()} · ${(o.fraction_ppm / 1e4).toFixed(1)}% back`;

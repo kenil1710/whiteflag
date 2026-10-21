@@ -13,8 +13,8 @@ export function GateDemo() {
   const { gate } = useReg();
   const sp = useSearchParams();
   const w = useWallet();
-  const [id, setId] = useState(sp.get("offer") ?? "1");
-  const [protocol, setProtocol] = useState("");
+  const [incident, setIncident] = useState(sp.get("incident") ?? "");
+  const [protocol, setProtocol] = useState(sp.get("protocol") ?? "");
   const [s, setS] = useState<GateState | null>(null);
   const [err, setErr] = useState("");
   const [atts, setAtts] = useState<Att[]>([]);
@@ -22,8 +22,9 @@ export function GateDemo() {
 
   async function ask() {
     setErr(""); setS(null);
+    if (!protocol.trim() || !incident.trim()) return;
     try {
-      setS(protocol.trim() ? await viewOf<GateState>(gate, "check_for", [Number(id), protocol.trim()]) : await viewOf<GateState>(gate, "check", [Number(id)]));
+      setS(await viewOf<GateState>(gate, "check_for", [protocol.trim(), incident.trim()]));
     } catch (e) { setErr(String((e as Error).message)); }
   }
   async function loadAtts() {
@@ -36,7 +37,7 @@ export function GateDemo() {
   async function attest() {
     if (!w.account) return;
     const before = (await viewOf<Page<Att>>(gate, "get_attestations", [0, 1])).total;
-    await send(w.account, gate, "attest", [Number(id)], 0n, { onProgress: setP, confirm: async () => (await viewOf<Page<Att>>(gate, "get_attestations", [0, 1])).total > before });
+    await send(w.account, gate, "attest", [protocol.trim(), incident.trim()], 0n, { onProgress: setP, confirm: async () => (await viewOf<Page<Att>>(gate, "get_attestations", [0, 1])).total > before });
     void loadAtts();
   }
 
@@ -44,10 +45,10 @@ export function GateDemo() {
     <div>
       <div className="form">
         <div className="grid-2" style={{ gap: 18 }}>
-          <div className="field"><label htmlFor="gid">Offer id</label><input id="gid" value={id} onChange={(e) => setId(e.target.value)} /></div>
-          <div className="field"><label htmlFor="gp">Expected protocol address (optional)</label><input id="gp" value={protocol} onChange={(e) => setProtocol(e.target.value)} placeholder="0x… the offer must have been opened by" /></div>
+          <div className="field"><label htmlFor="gp">Protocol address (the offer's creator you trust)</label><input id="gp" value={protocol} onChange={(e) => setProtocol(e.target.value)} placeholder="0x…" /></div>
+          <div className="field"><label htmlFor="gi">Incident</label><input id="gi" value={incident} onChange={(e) => setIncident(e.target.value)} placeholder="the incident name the protocol opened its offer under" /></div>
         </div>
-        <div className="row"><button className="btn" onClick={() => void ask()}>Ask the gate</button><span className="mono small muted">gate <a href={studioAddr(gate)}>{short(gate)}</a></span></div>
+        <div className="row"><button className="btn" disabled={!protocol.trim() || !incident.trim()} onClick={() => void ask()}>Ask the gate</button><span className="mono small muted">gate <a href={studioAddr(gate)}>{short(gate)}</a></span></div>
       </div>
       {err && <p className="note note-flag">{err}</p>}
       {s && (
@@ -59,6 +60,7 @@ export function GateDemo() {
             <p className="small">{s.why}</p>
           </div>
           <div className="table-wrap"><table className="ledger"><tbody>
+            <tr><td className="caps">Offer</td><td className="mono">{s.offer_id || "—"}</td></tr>
             <tr><td className="caps">Returned</td><td className="mono">{pct(s.fraction_ppm)}</td></tr>
             <tr><td className="caps">Bounty</td><td className="mono">{gen(s.bounty)} GEN</td></tr>
             <tr><td className="caps">Owed · paid · refunded</td><td className="mono">{gen(s.owed)} · {gen(s.paid)} · {gen(s.refunded)}</td></tr>
@@ -70,11 +72,11 @@ export function GateDemo() {
       <section className="section">
         <div className="section-head"><h2>Attest on chain</h2><span className="mono small muted">stores the state with the time it was read</span></div>
         <WalletBar />
-        <div className="row" style={{ marginTop: 14 }}><button className="btn btn-flag" disabled={!w.account} onClick={() => void attest()}>Attest offer {id}</button></div>
+        <div className="row" style={{ marginTop: 14 }}><button className="btn btn-flag" disabled={!w.account} onClick={() => void attest()}>Attest {incident || "…"}</button></div>
         <Progress p={p} />
         <div className="table-wrap" style={{ marginTop: 20 }}><table className="ledger">
-          <thead><tr><th>#</th><th>Offer</th><th>State</th><th>Favorable</th><th>Read at</th><th>By</th></tr></thead>
-          <tbody>{atts.map((a) => <tr key={a.attestation_id}><td className="mono">{a.attestation_id}</td><td className="mono">{a.offer_id}</td><td className="mono small">{a.state}</td><td className={`mono small ${a.favorable ? "ok" : ""}`}>{String(a.favorable)}</td><td className="mono small">{iso(a.attested_at)}</td><td className="mono small">{short(a.attested_by)}</td></tr>)}
+          <thead><tr><th>#</th><th>Incident · offer</th><th>State</th><th>Favorable</th><th>Read at</th><th>By</th></tr></thead>
+          <tbody>{atts.map((a) => <tr key={a.attestation_id}><td className="mono">{a.attestation_id}</td><td className="mono small">{a.incident} · {a.offer_id || "—"}<div className="muted">{short(a.protocol)}</div></td><td className="mono small">{a.state}</td><td className={`mono small ${a.favorable ? "ok" : ""}`}>{String(a.favorable)}</td><td className="mono small">{iso(a.attested_at)}</td><td className="mono small">{short(a.attested_by)}</td></tr>)}
             {atts.length === 0 && <tr><td colSpan={6} className="muted">No attestation yet.</td></tr>}</tbody>
         </table></div>
       </section>

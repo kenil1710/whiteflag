@@ -29,13 +29,13 @@ class GateNeverFavorableOnMissingData(unittest.TestCase):
         for k in list(good().keys()):
             r = good()
             del r[k]
-            s = GT.gate_state(r, 1, 900000)
+            s = GT.gate_state(r, F.PROTOCOL, "x", 900000)
             self.assertFalse(s["favorable"], k)
             self.assertNotIn(s["state"], ("SETTLED_FULL", "SETTLED_PARTIAL"), k)
 
     def test_each_field_nulled(self):
         for k in list(good().keys()):
-            s = GT.gate_state(good(**{k: None}), 1, 900000)
+            s = GT.gate_state(good(**{k: None}), F.PROTOCOL, "x", 900000)
             self.assertFalse(s["favorable"], k)
 
     def test_each_field_wrong_type(self):
@@ -43,9 +43,8 @@ class GateNeverFavorableOnMissingData(unittest.TestCase):
             for junk in ([], {}, "abc", -5, True, 1.5):
                 if k == "found" and junk is True:
                     continue
-                s = GT.gate_state(good(**{k: junk}), 1, 900000)
-                if s["favorable"]:
-                    self.assertEqual(k, "incident", (k, junk))   # the label is informational only
+                s = GT.gate_state(good(**{k: junk}), F.PROTOCOL, "x", 900000)
+                self.assertFalse(s["favorable"] and k != "claim_deadline", (k, junk))
 
     def test_random_junk_never_favorable(self):
         rnd = random.Random(7)
@@ -53,7 +52,7 @@ class GateNeverFavorableOnMissingData(unittest.TestCase):
         keys = list(good().keys())
         for _ in range(3000):
             raw = {k: rnd.choice(vals) for k in keys if rnd.random() < 0.8}
-            s = GT.gate_state(raw, 1, 900000)
+            s = GT.gate_state(raw, F.PROTOCOL, "x", 900000)
             if s["favorable"]:
                 # favorable only if it is a complete, consistent settled answer
                 self.assertEqual(raw.get("found"), True)
@@ -61,10 +60,10 @@ class GateNeverFavorableOnMissingData(unittest.TestCase):
 
     def test_not_settled_states_never_favorable(self):
         for st in ("OPEN", "SETTLED_NONE", "RECOVERED", "", None):
-            self.assertFalse(GT.gate_state(good(status=st), 1, 1)["favorable"], st)
+            self.assertFalse(GT.gate_state(good(status=st), F.PROTOCOL, "x", 1)["favorable"], st)
 
     def test_no_offer_is_not_settled(self):
-        s = GT.gate_state({"found": False}, 9, 1)
+        s = GT.gate_state({"found": False}, F.PROTOCOL, "x", 1)
         self.assertEqual((s["state"], s["fraction_ppm"], s["paid"], s["refunded"]), ("NO_OFFER", 0, "0", "0"))
 
     def test_states_documented(self):
@@ -209,8 +208,8 @@ for _i in range(12):
         raw = good(status=rnd.choice(["SETTLED_FULL", "SETTLED_PARTIAL", "SETTLED_NONE", "OPEN"]))
         k = rnd.choice(list(raw.keys()))
         raw[k] = rnd.choice([None, "", "x", -1, [], {}])
-        s = GT.gate_state(raw, 1, 900000)
-        if k not in ("incident", "claim_deadline"):
+        s = GT.gate_state(raw, F.PROTOCOL, "x", 900000)
+        if k != "claim_deadline":
             self.assertFalse(s["favorable"], (k, raw[k]))
     setattr(GateNeverFavorableOnMissingData, "test_corrupted_answer_%02d" % _i, _t)
 

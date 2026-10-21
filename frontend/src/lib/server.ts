@@ -65,7 +65,7 @@ export async function allProofs(reg: string, id: number): Promise<Proof[]> {
 }
 
 export const offer = (reg: string, id: number) => view<Offer>(reg, "get_offer", [id]);
-export const gateCheck = (gate: string, id: number) => view<GateState>(gate, "check", [id]);
+export const gateCheck = (gate: string, protocol: string, incident: string) => view<GateState>(gate, "check_for", [protocol, incident]);
 export const stats = (reg: string) => view<Record<string, unknown>>(reg, "get_stats", []);
 export const config = (reg: string) => view<Record<string, unknown>>(reg, "get_config", []);
 

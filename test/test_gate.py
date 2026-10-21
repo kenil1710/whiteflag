@@ -20,8 +20,8 @@ def good(**over):
 
 
 class PureState(unittest.TestCase):
-    def st(self, raw, oid=1, ppm=900000):
-        return GT.gate_state(raw, oid, ppm)
+    def st(self, raw, ppm=900000, protocol=F.PROTOCOL, incident="x"):
+        return GT.gate_state(raw, protocol, incident, ppm)
 
     def test_no_offer(self):
         s = self.st({"found": False})
@@ -39,8 +39,18 @@ class PureState(unittest.TestCase):
     def test_empty_object_is_unreadable_not_no_offer(self):
         self.assertEqual(self.st({})["state"], "UNREADABLE")
 
-    def test_other_offer_id_unreadable(self):
-        self.assertEqual(self.st(good(offer_id=2))["state"], "UNREADABLE")
+    def test_answer_for_another_protocol_unreadable(self):
+        self.assertEqual(self.st(good(protocol=F.STRANGER))["state"], "UNREADABLE")
+
+    def test_answer_for_another_incident_unreadable(self):
+        self.assertEqual(self.st(good(incident="y"))["state"], "UNREADABLE")
+
+    def test_answer_without_offer_id_unreadable(self):
+        self.assertEqual(self.st(good(offer_id=0))["state"], "UNREADABLE")
+
+    def test_bad_protocol_never_favorable(self):
+        s = self.st(good(status="SETTLED_FULL", owed="100", refunded_at_settle="0", fraction_ppm=1000000), protocol="")
+        self.assertEqual((s["state"], s["favorable"]), ("UNREADABLE", False))
 
     def test_unknown_status(self):
         self.assertEqual(self.st(good(status="RECOVERED"))["state"], "UNREADABLE")
@@ -110,67 +120,118 @@ class PureState(unittest.TestCase):
 
 
 class OnRegistry(unittest.TestCase):
+    """The gate against a real registry: every question names the protocol and the incident."""
+
     def setUp(self):
         self.d = F.Deployment()
 
-    def check(self, oid):
-        return self.d.w.view(self.d.gate, "check", oid)
+    def check(self, protocol=F.PROTOCOL, incident="test-incident"):
+        return self.d.w.view(self.d.gate, "check_for", protocol, incident)
+
+    def fav(self, protocol=F.PROTOCOL, incident="test-incident"):
+        return self.d.w.view(self.d.gate, "is_favorable_for", protocol, incident)
+
+    def full_offer(self, sender=F.PROTOCOL, incident="test-incident", ex=EXPLOITER):
+        oid = self.d.offer(sender=sender, incident=incident, exploiters=F.pairs(("ethereum", ex)),
+                           tokens=json.dumps([tok(stolen=ETH)]), deadline=NOW + 10 ** 6)
+        self.d.prove(oid, "ethereum", self.d.chains.tx("ethereum", ex, RECOVERY, value=ETH))
+        self.d.settle(oid)
+        return oid
+
+    def test_unverified_views_are_gone(self):
+        for name in ("check", "is_favorable"):
+            self.assertFalse(hasattr(GT.SafeHarborGate, name), name)
 
     def test_no_offer(self):
-        self.assertEqual(self.check(7)["state"], "NO_OFFER")
-
-    def test_zero_id(self):
-        self.assertEqual(self.check(0)["state"], "NO_OFFER")
+        self.assertEqual(self.check()["state"], "NO_OFFER")
 
     def test_open(self):
         oid = self.d.offer()
-        self.assertEqual(self.check(oid)["state"], "OPEN")
+        s = self.check()
+        self.assertEqual((s["state"], s["offer_id"]), ("OPEN", oid))
 
     def test_open_at_100_not_favorable_until_settled(self):
         oid = self.d.offer(deadline=NOW + 10 ** 6, tokens=json.dumps([tok(stolen=ETH)]))
         self.d.prove(oid, "ethereum", self.d.chains.tx("ethereum", EXPLOITER, RECOVERY, value=ETH))
-        s = self.check(oid)
+        s = self.check()
         self.assertEqual((s["state"], s["favorable"], s["fraction_ppm"]), ("OPEN", False, 1000000))
         self.d.settle(oid)
-        self.assertEqual((self.check(oid)["state"], self.check(oid)["favorable"]), ("SETTLED_FULL", True))
+        self.assertEqual((self.check()["state"], self.fav()), ("SETTLED_FULL", True))
 
     def test_partial_and_none_from_registry(self):
-        a = self.d.offer(tokens=json.dumps([tok(stolen=10 * ETH)]))
-        b = self.d.offer()
+        a = self.d.offer(incident="a", tokens=json.dumps([tok(stolen=10 * ETH)]))
+        self.d.offer(incident="b")
         self.d.prove(a, "ethereum", self.d.chains.tx("ethereum", EXPLOITER, RECOVERY, value=9 * ETH))
         self.d.w.advance(100)
         self.d.settle(a)
-        self.d.settle(b)
-        self.assertEqual((self.check(a)["state"], self.check(a)["favorable"]), ("SETTLED_PARTIAL", True))
-        self.assertEqual((self.check(b)["state"], self.check(b)["favorable"]), ("SETTLED_NONE", False))
+        self.d.settle(a + 1)
+        self.assertEqual((self.check(incident="a")["state"], self.fav(incident="a")), ("SETTLED_PARTIAL", True))
+        self.assertEqual((self.check(incident="b")["state"], self.fav(incident="b")), ("SETTLED_NONE", False))
+
+    def test_copied_incident_created_by_another_address_is_never_found(self):
+        attacker = F.addr(900)
+        self.full_offer(sender=attacker, ex=STRANGER)        # a copy under the protocol's incident name, 100% "returned"
+        s = self.check()
+        self.assertEqual((s["state"], s["favorable"]), ("NO_OFFER", False))
+        self.assertFalse(self.fav())
+        # asking about the attacker's own offer names the attacker, which no consumer pins
+        self.assertTrue(self.fav(protocol=attacker))
+
+    def test_copy_does_not_shadow_the_real_offer(self):
+        real = self.d.offer(deadline=NOW + 10 ** 6)                      # the protocol's real offer: open, nothing back
+        self.full_offer(sender=F.addr(901), ex=STRANGER)                 # a favorable copy opened after it
+        s = self.check()
+        self.assertEqual((s["state"], s["offer_id"], s["favorable"]), ("OPEN", real, False))
+
+    def test_copy_before_the_real_offer_is_ignored_too(self):
+        self.full_offer(sender=F.addr(902), ex=STRANGER)
+        real = self.d.offer(deadline=NOW + 10 ** 6)
+        self.assertEqual(self.check()["offer_id"], real)
+
+    def test_latest_offer_of_the_protocol_for_the_incident(self):
+        self.d.offer()
+        second = self.full_offer()
+        s = self.check()
+        self.assertEqual((s["offer_id"], s["state"]), (second, "SETTLED_FULL"))
+
+    def test_incident_name_must_match_exactly(self):
+        self.full_offer()
+        self.assertFalse(self.fav(incident="Test-incident"))
+        self.assertFalse(self.fav(incident="test-incident "[:-1] + "x"))
+        self.assertTrue(self.fav(incident=" test-incident "))   # cleaned like the registry stores it
+
+    def test_bad_protocol_address(self):
+        self.full_offer()
+        for p in ("nope", "", "0x" + "0" * 40):
+            s = self.check(protocol=p)
+            self.assertEqual((s["state"], s["favorable"]), ("UNREADABLE", False), p)
 
     def test_registry_gone_is_unreadable(self):
-        oid = self.d.offer()
+        self.d.offer()
         del self.d.w.instances[self.d.reg]
-        s = self.check(oid)
+        s = self.check()
         self.assertEqual((s["state"], s["favorable"]), ("UNREADABLE", False))
-
-    def test_is_favorable(self):
-        self.assertFalse(self.d.w.view(self.d.gate, "is_favorable", 1))
 
     def test_attest_and_latest(self):
         oid = self.d.offer()
-        a = self.d.w.call(self.d.gate, "attest", oid, sender=STRANGER)
-        self.assertEqual((a["attestation_id"], a["state"]), (1, "OPEN"))
-        l = self.d.w.view(self.d.gate, "get_latest", oid)
+        a = self.d.w.call(self.d.gate, "attest", F.PROTOCOL, "test-incident", sender=STRANGER)
+        self.assertEqual((a["attestation_id"], a["state"], a["offer_id"]), (1, "OPEN", oid))
+        l = self.d.w.view(self.d.gate, "get_latest", F.PROTOCOL, "test-incident")
         self.assertEqual((l["found"], l["attested_by"]), (True, STRANGER))
 
     def test_latest_missing_is_not_a_state(self):
-        self.assertEqual(self.d.w.view(self.d.gate, "get_latest", 3), {"found": False, "offer_id": 3})
+        self.assertEqual(self.d.w.view(self.d.gate, "get_latest", F.PROTOCOL, "zz"),
+                         {"found": False, "protocol": F.PROTOCOL, "incident": "zz"})
 
-    def test_attest_no_offer_recorded_as_no_offer(self):
-        a = self.d.w.call(self.d.gate, "attest", 9)
-        self.assertEqual(a["state"], "NO_OFFER")
+    def test_attest_copied_incident_records_no_offer(self):
+        self.full_offer(sender=F.addr(903), ex=STRANGER)
+        a = self.d.w.call(self.d.gate, "attest", F.PROTOCOL, "test-incident")
+        self.assertEqual((a["state"], a["favorable"]), ("NO_OFFER", False))
 
     def test_attestations_pages(self):
-        oid = self.d.offer()
+        self.d.offer()
         for _ in range(5):
-            self.d.w.call(self.d.gate, "attest", oid)
+            self.d.w.call(self.d.gate, "attest", F.PROTOCOL, "test-incident")
         p = self.d.w.view(self.d.gate, "get_attestations", 2, 2)
         self.assertEqual(([x["attestation_id"] for x in p["items"]], p["next_offset"]), ([3, 4], 4))
 

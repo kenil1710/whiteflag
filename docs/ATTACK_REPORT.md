@@ -39,9 +39,11 @@ Tests: `Settle.test_return_just_before_deadline_still_counts`, `Settle.test_exac
 
 Anyone can open an offer under any incident name, give it a fake exploiter they control, "return" one wei and settle
 it FULL. A consumer contract asking only `is_favorable(offer_id)` for an id it did not pin to the protocol would be
-fooled. The gate now returns the offer's `protocol` (creator) and `incident`, and `check_for` /
-`is_favorable_for(offer_id, protocol)` are favorable only if the creator matches. An answer without a protocol
-address is `UNREADABLE`. Tests: `GateAttacks.*`.
+fooled. The gate no longer has any view that takes an offer id alone (`check` and `is_favorable` are removed):
+`check_for(protocol, incident)` / `is_favorable_for(protocol, incident)` ask the registry for the latest offer that
+`protocol` itself created under `incident`, so a copy opened by another address is never found, and an answer whose
+creator or incident differs is `UNREADABLE`. Tests: `GateAttacks.*`, `test_gate.OnRegistry.*` (copied incidents),
+Direct Mode `test/direct/test_gate_direct.py`.
 
 ### 4. Protocol stalls settlement (Medium, fixed by a cap)
 
@@ -105,4 +107,4 @@ These are inputs, not attacks; the docs say so plainly:
 - List only addresses the exploiter controls. A listed address can claim the bounty.
 - List the address that emits a token's Transfer events (the proxy, not the implementation).
 - The weights are the protocol's own valuation, frozen at creation.
-- A consumer of the gate pins the offer to the protocol's address (`check_for`), not just to an id.
+- A consumer of the gate names the protocol's address and the incident (`check_for(protocol, incident)`); no id-only view exists.

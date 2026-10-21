@@ -213,16 +213,16 @@ save();
 
 // ---- the gate in every state ---------------------------------------------------------
 o = await offer(e);
-for (const [label, id] of [["NO_OFFER", 999], ["OPEN", e], ["SETTLED_FULL", a], ["SETTLED_PARTIAL", b], ["SETTLED_NONE", c]]) {
-  const s = await G.view("check", [id]);
-  log(`gate check(${id}) expected ${label}: ${s.state}, favorable ${s.favorable}, ${s.fraction_ppm / 1e4}%, why: ${s.why}`);
-  (run.gate ??= []).push({ expected: label, offer: id, state: s.state, favorable: s.favorable, fraction_ppm: s.fraction_ppm, why: s.why });
-  await step(`gate-attest-${label}`, G, "attest", [id]);
+const INC = { OPEN: "demo-rejections", SETTLED_FULL: "demo-seneca-full", SETTLED_PARTIAL: "demo-gmx-partial", SETTLED_NONE: "demo-uwu-none", NO_OFFER: "demo-never-opened" };
+for (const [label, inc] of Object.entries(INC)) {
+  const s = await G.view("check_for", [A("protocol"), inc]);
+  log(`gate check_for(protocol, ${inc}) expected ${label}: ${s.state}, favorable ${s.favorable}, offer ${s.offer_id}, ${s.fraction_ppm / 1e4}%, why: ${s.why}`);
+  (run.gate ??= []).push({ expected: label, incident: inc, offer: s.offer_id, state: s.state, favorable: s.favorable, fraction_ppm: s.fraction_ppm, why: s.why });
+  await step(`gate-attest-${label}`, G, "attest", [A("protocol"), inc]);
 }
-const wrongProto = await G.view("check_for", [a, A("stranger")]);
-const rightProto = await G.view("check_for", [a, A("protocol")]);
-log(`gate check_for(A, stranger) favorable ${wrongProto.favorable} (${wrongProto.why}); check_for(A, protocol) favorable ${rightProto.favorable}`);
-run.gate.push({ expected: "check_for wrong protocol", favorable: wrongProto.favorable }, { expected: "check_for right protocol", favorable: rightProto.favorable });
+const copied = await G.view("check_for", [A("stranger"), INC.SETTLED_FULL]);
+log(`gate check_for(stranger, ${INC.SETTLED_FULL}) favorable ${copied.favorable} (${copied.state}: ${copied.why})`);
+run.gate.push({ expected: "check_for by an address that did not open it", state: copied.state, favorable: copied.favorable });
 save();
 
 // ---- close E (nothing but the one test ETH counted) ---------------------------------------

@@ -9,24 +9,27 @@ import typing
 # SafeHarborGate - what a consumer contract asks before it treats an incident
 # as resolved (re-enable a market, release an insurance payout, unpause).
 #
-# It reads one offer of its WhiteFlagRegistry and answers with a structured
-# state: NO_OFFER, OPEN, SETTLED_FULL, SETTLED_PARTIAL, SETTLED_NONE (or
-# UNREADABLE), the returned fraction, and the bounty owed, paid and refunded.
+# Anyone can open an offer under any incident name, so the gate never answers
+# about an offer id alone: every question names the PROTOCOL address that must
+# have created the offer and the INCIDENT it was opened under.
+# check_for(protocol, incident) asks the registry for the latest offer that
+# `protocol` itself created under `incident` (an offer copied by another
+# address under the same name is never found), re-checks that the answer
+# carries that creator and incident, and returns a structured state:
+# NO_OFFER, OPEN, SETTLED_FULL, SETTLED_PARTIAL, SETTLED_NONE (or UNREADABLE),
+# the returned fraction, and the bounty owed, paid and refunded.
 # `favorable` is true only for SETTLED_FULL, or SETTLED_PARTIAL at or above
 # the gate's threshold, read from a registry answer that is complete and
 # self-consistent. A missing offer, a failed read, a malformed answer or an
 # open offer is never favorable and never reported as settled or recovered.
 #
-# Anyone can open an offer under any incident name, so a consumer must pin
-# WHO opened it: check_for / is_favorable_for(offer_id, protocol) are
-# favorable only when the offer's creator is the expected protocol address.
-#
-# attest(offer_id) stores the state with the time it was read, so a consumer
-# can point at one on-chain record. Anyone may attest; it only reads.
+# attest(protocol, incident) stores the state with the time it was read, so a
+# consumer can point at one on-chain record. Anyone may attest; it only reads.
 
 VERSION = "1.0.0"
 STATES = ("NO_OFFER", "OPEN", "SETTLED_FULL", "SETTLED_PARTIAL", "SETTLED_NONE", "UNREADABLE")
 PAGE_MAX = 50
+MAX_NAME = 80
 
 # ==== shared helpers: contracts/shared/common.py, inlined by tools/build.py; edit there ====
 # The runner rejects the str replace method; slice around find() instead.
@@ -158,12 +161,20 @@ def _num(v: typing.Any) -> int:
     return _as_int(v, -1)
 
 
-def gate_state(raw: typing.Any, offer_id: int, min_ppm: int) -> dict:
-    """The registry's get_offer answer -> the gate's structured state. Pure:
-    tests call it on every malformed shape."""
-    base = {"offer_id": offer_id, "state": "UNREADABLE", "favorable": False, "fraction_ppm": 0,
-            "bounty": "0", "owed": "0", "paid": "0", "refunded": "0", "claim_deadline": 0, "protocol": "",
-            "incident": "", "why": ""}
+def gate_state(raw: typing.Any, protocol: str, incident: str, min_ppm: int) -> dict:
+    """The registry's get_offer_by(protocol, incident) answer -> the gate's
+    structured state. Pure: tests call it on every malformed shape. The answer
+    must be an offer created by `protocol` under `incident`, or nothing is
+    believed."""
+    base = {"offer_id": 0, "state": "UNREADABLE", "favorable": False, "fraction_ppm": 0,
+            "bounty": "0", "owed": "0", "paid": "0", "refunded": "0", "claim_deadline": 0, "protocol": protocol,
+            "incident": incident, "why": ""}
+    if protocol == "" or protocol == ZERO:
+        base["why"] = "bad protocol address"
+        return base
+    if incident == "":
+        base["why"] = "no incident"
+        return base
     if isinstance(raw, str):
         try:
             raw = json.loads(raw)
@@ -177,15 +188,15 @@ def gate_state(raw: typing.Any, offer_id: int, min_ppm: int) -> dict:
         base["state"] = "NO_OFFER"
         base["why"] = "the registry has no such offer"
         return base
-    if raw.get("found") is not True or _num(raw.get("offer_id")) != offer_id:
-        base["why"] = "registry answer is not this offer"
+    oid = _num(raw.get("offer_id"))
+    if raw.get("found") is not True or oid <= 0:
+        base["why"] = "registry answer is not an offer"
         return base
-    proto = _addr(raw.get("protocol", ""))
-    if proto == "" or not isinstance(raw.get("incident"), str):
-        base["why"] = "registry answer has no protocol address or incident"
+    if _addr(raw.get("protocol", "")) != protocol or not isinstance(raw.get("incident"), str) \
+            or raw.get("incident") != incident:
+        base["why"] = "registry answer is not an offer of this protocol and incident"
         return base
-    base["protocol"] = proto
-    base["incident"] = clean_text(raw.get("incident", ""), 80)
+    base["offer_id"] = oid
     st = raw.get("status")
     bounty = _num(raw.get("bounty"))
     owed = _num(raw.get("owed"))
@@ -213,15 +224,17 @@ def gate_state(raw: typing.Any, offer_id: int, min_ppm: int) -> dict:
         base["why"] = "registry status contradicts its fraction"
         return base
     fav = st == "SETTLED_FULL" or (st == "SETTLED_PARTIAL" and ppm >= min_ppm)
-    return {"offer_id": offer_id, "state": st, "favorable": fav, "fraction_ppm": ppm, "bounty": str(bounty),
+    return {"offer_id": oid, "state": st, "favorable": fav, "fraction_ppm": ppm, "bounty": str(bounty),
             "owed": str(owed), "paid": str(claimed), "refunded": str(back1 + back2), "claim_deadline": cd,
-            "protocol": proto, "incident": base["incident"],
+            "protocol": protocol, "incident": incident,
             "why": "settled by the registry" + ("" if fav else "; below the gate's threshold" if st == "SETTLED_PARTIAL" else "")}
 
 
 @gl.storage.allow
 @dataclass
 class Attestation:
+    protocol: str
+    incident: str
     offer_id: u64
     state: str
     favorable: bool
@@ -236,7 +249,7 @@ class SafeHarborGate(gl.contract.Contract):
     min_fraction_ppm: u64
     n_attest: u64
     attestations: gl.storage.TreeMap[u64, Attestation]
-    latest: gl.storage.TreeMap[u64, u64]
+    latest: gl.storage.TreeMap[str, u64]
 
     def __init__(self, registry: str, min_fraction_ppm: int) -> None:
         r = _addr(registry)
@@ -249,57 +262,43 @@ class SafeHarborGate(gl.contract.Contract):
         self.min_fraction_ppm = u64(m)
         self.n_attest = u64(0)
 
-    def _read(self, oid: int) -> dict:
-        if oid <= 0:
-            return gate_state({"found": False}, oid, int(self.min_fraction_ppm))
+    def _read(self, protocol: typing.Any, incident: typing.Any) -> dict:
+        want = _addr(protocol)
+        inc = clean_text(incident, MAX_NAME)
+        if want == "" or want == ZERO or inc == "":
+            return gate_state(None, want, inc, int(self.min_fraction_ppm))
         try:
-            raw = gl.contract.get_at(self.registry).view().get_offer(oid)
+            raw = gl.contract.get_at(self.registry).view().get_offer_by(want, inc)
         except Exception:
             raw = None
-        return gate_state(raw, oid, int(self.min_fraction_ppm))
+        return gate_state(raw, want, inc, int(self.min_fraction_ppm))
 
     @gl.public.view
-    def check(self, offer_id: int) -> typing.Any:
-        """The offer's state as read now. Never favorable on missing data."""
-        return self._read(_as_int(offer_id, 0))
+    def check_for(self, protocol: str, incident: str) -> typing.Any:
+        """The state of the latest offer `protocol` itself opened under
+        `incident`. Never favorable on missing data or for an offer anyone
+        else opened."""
+        return self._read(protocol, incident)
 
     @gl.public.view
-    def is_favorable(self, offer_id: int) -> bool:
-        return self._read(_as_int(offer_id, 0))["favorable"] is True
-
-    def _read_for(self, offer_id: typing.Any, protocol: typing.Any) -> dict:
-        s = self._read(_as_int(offer_id, 0))
-        want = _addr(protocol)
-        if want == "" or s["protocol"] != want:
-            s["favorable"] = False
-            s["why"] = "the offer was not opened by the expected protocol" if want != "" else "bad protocol address"
-        return s
-
-    @gl.public.view
-    def check_for(self, offer_id: int, protocol: str) -> typing.Any:
-        """check(), favorable only if the offer was opened by `protocol`."""
-        return self._read_for(offer_id, protocol)
-
-    @gl.public.view
-    def is_favorable_for(self, offer_id: int, protocol: str) -> bool:
-        return self._read_for(offer_id, protocol)["favorable"] is True
+    def is_favorable_for(self, protocol: str, incident: str) -> bool:
+        return self._read(protocol, incident)["favorable"] is True
 
     @gl.public.write
-    def attest(self, offer_id: int) -> typing.Any:
+    def attest(self, protocol: str, incident: str) -> typing.Any:
         now = _epoch_from_iso(gl.message.raw.get("datetime", ""))
         if now <= 0:
             raise gl.vm.UserError("REFUSED: NO_CLOCK")
-        oid = _as_int(offer_id, 0)
-        s = self._read(oid)
+        s = self._read(protocol, incident)
         # --- writes
         aid = int(self.n_attest) + 1
         self.attestations[u64(aid)] = Attestation(
-            offer_id=u64(max(oid, 0)), state=s["state"], favorable=bool(s["favorable"]),
-            fraction_ppm=u64(int(s["fraction_ppm"])), state_json=_canon(s), attested_at=u64(now),
-            attested_by=gl.message.sender_address.as_hex.lower())
+            protocol=s["protocol"], incident=s["incident"], offer_id=u64(int(s["offer_id"])), state=s["state"],
+            favorable=bool(s["favorable"]), fraction_ppm=u64(int(s["fraction_ppm"])), state_json=_canon(s),
+            attested_at=u64(now), attested_by=gl.message.sender_address.as_hex.lower())
         self.n_attest = u64(aid)
-        if oid > 0:
-            self.latest[u64(oid)] = u64(aid)
+        if s["protocol"] != "" and s["incident"] != "":
+            self.latest[s["protocol"] + "|" + s["incident"]] = u64(aid)
         out = dict(s)
         out["attestation_id"] = aid
         out["attested_at"] = now
@@ -323,12 +322,12 @@ class SafeHarborGate(gl.contract.Contract):
         return out
 
     @gl.public.view
-    def get_latest(self, offer_id: int) -> typing.Any:
-        """The latest attestation of an offer; NO attestation is not a state."""
-        oid = _as_int(offer_id, 0)
-        aid = self.latest.get(u64(max(oid, 0)))
+    def get_latest(self, protocol: str, incident: str) -> typing.Any:
+        """The latest attestation for (protocol, incident); NO attestation is not a state."""
+        k = _addr(protocol) + "|" + clean_text(incident, MAX_NAME)
+        aid = self.latest.get(k)
         if aid is None or int(aid) == 0:
-            return {"found": False, "offer_id": oid}
+            return {"found": False, "protocol": _addr(protocol), "incident": clean_text(incident, MAX_NAME)}
         out = self._att_view(self.attestations[aid], int(aid))
         out["found"] = True
         return out

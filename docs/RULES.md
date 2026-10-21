@@ -148,15 +148,18 @@ Counters change only after every check of a call has passed.
 
 ## 7. SafeHarborGate
 
-`check(offer_id)` reads the registry's `get_offer` and returns one of `NO_OFFER`, `OPEN`, `SETTLED_FULL`,
-`SETTLED_PARTIAL`, `SETTLED_NONE` or `UNREADABLE`, with the fraction, bounty, owed, paid, refunded, the offer's protocol
-address and incident. `favorable` is true only for `SETTLED_FULL`, or `SETTLED_PARTIAL` at or above the gate's
+The gate answers only protocol-bound questions; there is no view that takes an offer id alone.
+`check_for(protocol, incident)` reads the registry's `get_offer_by(protocol, incident)`, the latest offer that
+`protocol` itself created under `incident` (stored as cleaned text, at most 80 characters), re-checks that the answer
+carries that creator and incident, and returns one of `NO_OFFER`, `OPEN`, `SETTLED_FULL`, `SETTLED_PARTIAL`,
+`SETTLED_NONE` or `UNREADABLE`, with the offer id, fraction, bounty, owed, paid, refunded, protocol and incident. An
+offer another address opened under the same incident name is never found, before or after the real one. `favorable` is true only for `SETTLED_FULL`, or `SETTLED_PARTIAL` at or above the gate's
 threshold (900000 parts per million on both deployed gates), from an answer that is complete and adds up
 (owed + refund = bounty, paid + refunded-unclaimed <= owed, the status agrees with the fraction). A missing offer is
 `NO_OFFER`; a failed or malformed read is `UNREADABLE`; neither is ever favorable, and nothing is reported settled or
-recovered without the registry saying so. `check_for(offer_id, protocol)` and `is_favorable_for` are favorable only
-if the offer was created by `protocol`, because anyone can open an offer under any incident name. `attest(offer_id)`
-stores the state with the time it was read.
+recovered without the registry saying so. `is_favorable_for(protocol, incident)` returns `favorable` alone.
+`attest(protocol, incident)` stores the state with the time it was read; `get_latest(protocol, incident)` returns the
+latest such record.
 
 ## 8. Lists
 

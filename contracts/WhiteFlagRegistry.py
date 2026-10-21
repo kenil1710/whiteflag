@@ -380,6 +380,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
     used: gl.storage.TreeMap[str, u64]
     counted_tx: gl.storage.TreeMap[str, u64]
     pending_tx: gl.storage.TreeMap[str, u64]
+    by_incident: gl.storage.TreeMap[str, u64]
     rate: gl.storage.TreeMap[str, str]
     credits: gl.storage.TreeMap[str, u256]
     beneficiaries: gl.storage.TreeMap[str, str]
@@ -567,6 +568,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
             claimed=u256(0), unclaimed_refunded=u256(0),
             refunded_at=u64(0))
         self.n_offers = u64(oid)
+        self.by_incident[self._sender() + "|" + inc] = u64(oid)
         self.received_total = u256(int(self.received_total) + value)
         self.open_total = u256(int(self.open_total) + value)
         self._bump("offers")
@@ -1129,6 +1131,21 @@ class WhiteFlagRegistry(gl.contract.Contract):
         o = self._offer(offer_id)
         if o is None:
             return {"found": False, "offer_id": _as_int(offer_id, 0)}
+        out = self._full(o)
+        out["found"] = True
+        return out
+
+    @gl.public.view
+    def get_offer_by(self, protocol: str, incident: str) -> typing.Any:
+        """The latest offer that `protocol` itself created under `incident`
+        (incident as stored: clean_text, at most MAX_NAME characters). An offer
+        another address opened under the same name is never returned."""
+        a = _addr(protocol)
+        inc = clean_text(incident, MAX_NAME)
+        oid = int(self.by_incident.get(a + "|" + inc, u64(0))) if a != "" and inc != "" else 0
+        o = self.offers.get(u64(oid)) if oid > 0 else None
+        if o is None:
+            return {"found": False, "protocol": a, "incident": inc}
         out = self._full(o)
         out["found"] = True
         return out

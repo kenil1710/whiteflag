@@ -53,9 +53,10 @@ Each outcome was checked against public reporting and every outgoing transfer of
    the share its own weighted returns earned: paid to itself, or to a beneficiary it committed on chain from that
    address beforehand (nobody else can set or change it). A listed address that returned nothing gets nothing. After
    the claim window (1 h canonical), anyone refunds the unclaimed shares to the protocol. Every GEN has an exit.
-6. **SafeHarborGate.** Other contracts ask it whether an incident is resolved: NO_OFFER, OPEN, SETTLED_FULL,
-   SETTLED_PARTIAL, SETTLED_NONE (or UNREADABLE), never favorable on missing data, pinned to the protocol that opened
-   the offer with `check_for`.
+6. **SafeHarborGate.** Other contracts ask it whether an incident is resolved, always naming the protocol that must
+   have opened the offer: `check_for(protocol, incident)` / `is_favorable_for(protocol, incident)` answer NO_OFFER,
+   OPEN, SETTLED_FULL, SETTLED_PARTIAL, SETTLED_NONE (or UNREADABLE), never favorable on missing data. A copy of the
+   incident opened by another address is never found; no view takes an offer id alone.
 7. **Keeper.** A GitHub Actions job ([.github/workflows/keeper.yml](.github/workflows/keeper.yml)) settles, retries PENDING proofs and refunds
    on an hourly schedule with a 6-hourly fallback (GitHub starts scheduled runs late, sometimes by hours),
    checkpointing each step on the [keeper-state](https://github.com/kenil1710/whiteflag/tree/keeper-state)
@@ -104,8 +105,8 @@ its recipient ([docs/payouts.json](docs/payouts.json)).
 - Only submitted returns count. Nothing is discovered automatically: anyone may submit a return's transaction hash
   until the offer's settle time, and every submission is recorded COUNTED, REJECTED (permanent) or PENDING
   (transient, retried until the recovery window ends) with its reason. A return nobody submits in time is not counted.
-- An offer is the protocol's own statement of the incident. SafeHarborGate reports what the registry settled for one
-  offer id; a consumer pins the protocol address it trusts with `check_for`.
+- An offer is the protocol's own statement of the incident. SafeHarborGate reports what the registry settled for the
+  latest offer a given protocol address opened under a given incident name; the consumer names the protocol it trusts.
 - Chains: Ethereum and Arbitrum One, each read from two RPCs run by different operators. Adding a chain means adding
   two RPCs that serve old receipts and the `finalized` tag from GenVM under validator load.
 - The weights are the protocol's own valuation, frozen when the offer opens. A partial return of a token that later

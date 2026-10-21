@@ -9,9 +9,11 @@ export default function Page() {
       <div className="kicker"><span className="caps">SafeHarborGate, for other contracts</span></div>
       <h1>Is this incident resolved?</h1>
       <p className="lede" style={{ marginTop: 18 }}>A lending market reopening a pool, an insurer releasing a payout, a DAO lifting a pause: they ask the gate.
-        It answers from the registry only, and never favorably on missing, malformed or inconsistent data.</p>
+        Every question names the protocol address that must have opened the offer and the incident it was opened under; an
+        offer anyone else opened under the same name is never found. It answers from the registry only, and never favorably on
+        missing, malformed or inconsistent data.</p>
       <div className="panel mono small" style={{ marginTop: 26 }}>
-        check(offer_id) · check_for(offer_id, protocol) · is_favorable(offer_id) · is_favorable_for(offer_id, protocol) · attest(offer_id) · get_latest(offer_id)
+        check_for(protocol, incident) · is_favorable_for(protocol, incident) · attest(protocol, incident) · get_latest(protocol, incident)
       </div>
       <hr className="rule" />
       <Suspense><GateDemo /></Suspense>
