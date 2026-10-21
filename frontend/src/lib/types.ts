@@ -10,8 +10,17 @@ export type OfferSummary = {
 export type Offer = OfferSummary & {
   found: boolean; original_deadline: number; payout_rule: string; claim_window_s: number; exploiters: Pair[]; recoveries: Pair[];
   tokens: Token[]; returned: Record<string, string>; history: { at: number; what: string; [k: string]: unknown }[]; num: string; den: string;
-  settled_by: string; claimed_by: string; paid_to: string; claimed_at: number; refunded_at: number;
+  settled_by: string; refunded_at: number;
+  /** what each exploiter address returned, per "chain:token" */
+  returned_by: Record<string, Record<string, string>>;
+  /** each exploiter address's share of the owed bounty, set at settlement */
+  shares: Record<string, string>;
+  claims: Record<string, Claim>;
+  beneficiaries: Record<string, string>;
 };
+export type Claim = { amount: string; to: string; at: number };
+export type Claimant = { found: boolean; offer_id: number; address: string; listed: boolean; returned: Record<string, string>;
+  share: string; beneficiary: string; claim: Claim | null };
 export type Credit = { key: string; token: string; amount: string; from: string; to: string; log: number };
 export type Proof = {
   proof_id: number; offer_id: number; chain: string; tx_hash: string; submitter: string; submitted_at: number;

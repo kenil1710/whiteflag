@@ -48,8 +48,8 @@ export default async function Incident({ params, searchParams }: { params: Promi
           </div>
           <div className="grid-2" style={{ gap: 20 }}>
             <div className="stat"><span className="caps">Bounty locked</span><div className="figure-md">{gen(o.bounty, 4)}</div><span className="mono small muted">GEN · {o.bounty_share_bps / 100}% share announced</span></div>
-            <div className="stat"><span className="caps">Owed to the exploiter</span><div className="figure-md">{gen(o.owed, 4)}</div><span className="mono small muted">{o.status === "OPEN" ? "decided at settlement" : "GEN"}</span></div>
-            <div className="stat"><span className="caps">Paid</span><div className="figure-md">{gen(o.claimed, 4)}</div><span className="mono small muted">{o.paid_to ? <>to {short(o.paid_to)}</> : "GEN"}</span></div>
+            <div className="stat"><span className="caps">Owed to exploiter addresses</span><div className="figure-md">{gen(o.owed, 4)}</div><span className="mono small muted">{o.status === "OPEN" ? "decided at settlement" : "GEN"}</span></div>
+            <div className="stat"><span className="caps">Paid</span><div className="figure-md">{gen(o.claimed, 4)}</div><span className="mono small muted">{Object.keys(o.claims).length} of {Object.keys(o.shares).length} shares claimed</span></div>
             <div className="stat"><span className="caps">Refunded to the protocol</span><div className="figure-md">{gen((BigInt(o.refunded_at_settle) + BigInt(o.unclaimed_refunded)).toString(), 4)}</div><span className="mono small muted">GEN</span></div>
           </div>
         </div>
@@ -79,12 +79,38 @@ export default async function Incident({ params, searchParams }: { params: Promi
                 <div className="small">{gen(o.owed, 4)} GEN owed to the exploiter, {gen(o.refunded_at_settle, 4)} GEN refunded to the protocol in the same transaction.</div>
                 <div className="mono small muted">settled by {short(o.settled_by)}</div></li>
             )}
-            {o.claimed !== "0" && <li className="tl tl-green"><div className="tl-when">{iso(o.claimed_at)}</div><div className="tl-title">Claimed: {gen(o.claimed, 4)} GEN</div><div className="mono small">by {short(o.claimed_by)}, paid to <a href={studioAddr(o.paid_to)}>{short(o.paid_to)}</a></div></li>}
+            {Object.entries(o.claims).sort((a, b) => a[1].at - b[1].at).map(([who, c]) => (
+              <li key={who} className="tl tl-green"><div className="tl-when">{iso(c.at)}</div><div className="tl-title">Claimed: {gen(c.amount, 4)} GEN</div><div className="mono small">by {short(who)}, paid to <a href={studioAddr(c.to)}>{short(c.to)}</a></div></li>
+            ))}
             {o.unclaimed_refunded !== "0" && <li className="tl tl-grey"><div className="tl-when">{iso(o.refunded_at)}</div><div className="tl-title">Unclaimed after the window: {gen(o.unclaimed_refunded, 4)} GEN refunded</div><div className="mono small">to <a href={studioAddr(o.protocol)}>{short(o.protocol)}</a></div></li>}
-            {o.status !== "OPEN" && BigInt(o.owed) > 0n && o.claimed === "0" && o.unclaimed_refunded === "0" && (
-              <li className="tl tl-grey"><div className="tl-when">until {iso(o.claim_deadline)}</div><div className="tl-title">Claim window</div><div className="small">Only a listed exploiter address can claim; after the window the owed GEN goes back to the protocol.</div></li>
+            {o.status !== "OPEN" && BigInt(o.owed) > BigInt(o.claimed) && o.unclaimed_refunded === "0" && (
+              <li className="tl tl-grey"><div className="tl-when">until {iso(o.claim_deadline)}</div><div className="tl-title">Claim window</div><div className="small">Each exploiter address claims only the share its own returns earned; after the window the unclaimed shares go back to the protocol.</div></li>
             )}
           </ol>
+        </section>
+
+        <section className="section">
+          <div className="section-head"><h2>Exploiter addresses</h2><span className="mono small muted">each claims only what its own returns earned</span></div>
+          <div className="table-wrap">
+            <table className="ledger">
+              <thead><tr><th>Address</th><th>Returned</th><th className="num">Share (GEN)</th><th>Beneficiary</th><th>Claim</th></tr></thead>
+              <tbody>
+                {[...new Set(o.exploiters.map((e) => e.address))].map((a) => {
+                  const ret = Object.entries(o.returned_by[a] ?? {});
+                  const c = o.claims[a];
+                  return (
+                    <tr key={a}>
+                      <td className="mono small"><a href={studioAddr(a)}>{short(a)}</a></td>
+                      <td className="mono small">{ret.length === 0 ? "nothing" : ret.map(([k, v]) => { const [ch, tk] = k.split(":"); return `${units(v, dec(ch, tk))} ${sym(ch, tk)}`; }).join(", ")}</td>
+                      <td className="num mono small">{o.status === "OPEN" ? "at settlement" : gen(o.shares[a] ?? "0", 4)}</td>
+                      <td className="mono small">{o.beneficiaries[a] ? <a href={studioAddr(o.beneficiaries[a])}>{short(o.beneficiaries[a])}</a> : "itself"}</td>
+                      <td className="mono small">{c ? <>paid {gen(c.amount, 4)} to {short(c.to)}</> : o.shares[a] ? (o.unclaimed_refunded !== "0" ? "refunded" : "unclaimed") : "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section className="section">

@@ -17,7 +17,7 @@ A protocol that was hacked calls `create_offer` and sends the bounty in GEN with
 | stolen tokens | 1 to 12 entries: chain, token (`native` or an ERC-20 contract address), decimals (0 to 18), stolen amount in base units, value weight (a positive integer the protocol picks) |
 | bounty share | 1 to 10000 basis points: the public share the protocol announced (informational) |
 | return window | `start` (not in the future) and `deadline` (after `start`, at most 3653 days later) |
-| payout rule | `EXPLOITER_OR_NAMED` (paid to the claiming exploiter address or a payout address it names) or `EXPLOITER_ONLY` |
+| payout rule | `EXPLOITER_OR_NAMED` (each exploiter address is paid to itself or to a beneficiary it committed on chain) or `EXPLOITER_ONLY` (paid to itself) |
 | claim window | set by the registry: 3600 s on the canonical registry, 180 s on the demo registry |
 | bounty | the GEN sent with the call, at least 0.001 GEN (10^15 wei) |
 
@@ -93,11 +93,22 @@ time + claim window. Proofs are refused once an offer is settled.
 
 ## 5. Claim and refunds
 
-- `claim(offer_id, payout_to)`: the caller must be an exploiter address of the offer (on any of its chains), the offer
-  settled with something owed, not yet claimed or refunded, and the time at or before `claim_deadline`. Paid to the
-  caller, or to `payout_to` if the payout rule is `EXPLOITER_OR_NAMED`. If several exploiter addresses are listed,
-  the first claim takes the whole owed amount.
-- `refund_unclaimed(offer_id)`: anyone, after `claim_deadline`, if the owed amount was not claimed: it goes to the protocol.
+- **Attribution.** Every counted transfer is attributed to the exploiter address that sent it: the transaction's
+  sender for a native transfer, the Transfer log's `from` for a token. `returned_by` records, per exploiter address,
+  what it returned of each token.
+- **Shares.** At settlement each token's counted value, `min(returned, stolen) * weight`, is split between the
+  addresses that sent it in proportion to what each sent, and each address's share is `bounty * its part / den`
+  (floored). The rounding remainder, `bounty * num / den` minus the floored shares, goes to the largest contributor
+  (lowest address on a tie), so the shares add up to exactly the owed amount. A listed address that returned nothing
+  has no share.
+- `commit_beneficiary(offer_id, payout_to)`: optional, only under `EXPLOITER_OR_NAMED`. An exploiter address names,
+  from that address, where its share is paid. It is set once, before that address claims, and nobody (not even that
+  address) can change it.
+- `claim(offer_id)`: the caller must be an exploiter address of the offer (on any of its chains) with a share above
+  0, not yet claimed, the offer's unclaimed shares not refunded, and the time at or before `claim_deadline`. It pays
+  only the caller's own share, to its committed beneficiary or to itself. Another address's claim cannot take or
+  redirect it.
+- `refund_unclaimed(offer_id)`: anyone, after `claim_deadline`: every share not claimed goes to the protocol.
 - `withdraw_refund()`: GEN credited back by a refused `create_offer`, to the address that sent it.
 - `sweep_stray()`: anyone; GEN in the balance above what the ledger holds (value the runtime kept from a failing or
   non-payable call) goes to the deployer, never sooner than 172800 s (canonical) or 3600 s (demo) after the registry's
@@ -105,7 +116,7 @@ time + claim window. Proofs are refused once an offer is settled.
 
 Every payout is one external value message, posted in the transaction that marks it paid, funded by the caller's fee
 (an External message allocation for the recipient). Every state has an exit and every timeout leads to a refund:
-OPEN always becomes settled after `settle_at`; owed GEN is either claimed or refunded after the claim window.
+OPEN always becomes settled after `settle_at`; each owed share is either claimed or refunded after the claim window.
 
 ## 6. The ledger
 

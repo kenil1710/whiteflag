@@ -14,3 +14,4 @@ test/.state*.json
 frontend/.next/
 frontend/node_modules/
 scratch/
+.venv/

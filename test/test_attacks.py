@@ -301,14 +301,18 @@ class ClaimFrontRunning(Base):
 
     def test_stranger_cannot_redirect_a_pending_claim(self):
         oid = self.settled()
-        with self.assertRaises(Reverted):
-            self.d.claim(oid, ATTACKER, sender=PROTOCOL)
+        for who in (PROTOCOL, ATTACKER, RECOVERY):
+            with self.assertRaises(Reverted):
+                self.d.commit(oid, ATTACKER, sender=who)
         r = self.d.claim(oid, PAYEE)
         self.assertEqual(r["to"], PAYEE)
 
-    def test_payout_address_is_bound_to_the_call(self):
+    def test_payout_address_is_bound_to_the_commitment(self):
         oid = self.settled()
-        self.d.claim(oid, PAYEE, sender=EXPLOITER)
+        self.d.commit(oid, PAYEE, sender=EXPLOITER)
+        with self.assertRaises(Reverted):
+            self.d.commit(oid, ATTACKER, sender=EXPLOITER)
+        self.d.claim(oid, sender=EXPLOITER)
         self.assertEqual(self.d.sent_to(PAYEE), 5 * GEN)
         self.assertEqual(self.d.sent_to(ATTACKER), 0)
 

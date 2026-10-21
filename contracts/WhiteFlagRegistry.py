@@ -34,10 +34,13 @@ import typing
 # deadline + finality grace and created + minimum open time - or at once when
 # the fraction reaches 100%. OPEN -> SETTLED_FULL / SETTLED_PARTIAL /
 # SETTLED_NONE. The remainder (bounty - owed) goes back to the protocol in the
-# same transaction. CLAIM: only a listed exploiter address may claim, paid to
-# itself or (if the payout rule allows) to a payout address named in the same
-# call, until the claim window closes; after that anyone may refund the owed
-# amount to the protocol. No model is asked anything; no owner can intervene.
+# same transaction. Every counted transfer is attributed to the exploiter
+# address that sent it, and the owed bounty is split by each address's own
+# weighted returns. CLAIM: each listed exploiter address claims only its own
+# share, paid to itself or (if the payout rule allows) to a beneficiary it
+# committed on chain from that address beforehand - nobody else can set or
+# change it. After the claim window anyone may refund the unclaimed shares to
+# the protocol. No model is asked anything; no owner can intervene.
 #
 # RULES
 #   1. create_offer is the only payable method and never raises: a refusal
@@ -70,7 +73,7 @@ REASONS = ("UNSUPPORTED_CHAIN", "RPC_UNREADABLE", "RPC_DISAGREE", "WRONG_CHAIN_I
            "TX_FAILED", "NOT_FINALIZED", "BEFORE_OFFER_START", "AFTER_DEADLINE", "SENDER_NOT_EXPLOITER",
            "NO_RETURN_TO_RECOVERY", "ALREADY_COUNTED")
 COUNT_KEYS = ("offers", "create_refused", "extensions", "recoveries_added", "proofs_counted", "proofs_rejected",
-              "settled", "settled:" + ST_FULL, "settled:" + ST_PARTIAL, "settled:" + ST_NONE, "claims",
+              "settled", "settled:" + ST_FULL, "settled:" + ST_PARTIAL, "settled:" + ST_NONE, "claims", "beneficiaries",
               "unclaimed_refunds", "credit_withdrawals", "sweeps") + tuple("reject:" + r for r in REASONS)
 
 # mode -> (claim_window_s, min_open_s, rate_n, rate_window_s, sweep_delay_s, finality_grace_s)
@@ -185,6 +188,48 @@ def fraction_parts(tokens: list, returned: dict) -> list:
     return [num, den]
 
 
+def shares_of(tokens: list, returned: dict, returned_by: dict, bounty: int) -> dict:
+    """{exploiter address: owed} for a settlement. Each token's counted value,
+    min(returned, stolen) * weight, is split between the addresses that sent
+    it in proportion to what each sent; an address's share is bounty times its
+    part of the fraction. The rounding remainder (bounty * num // den minus the
+    floored shares) goes to the largest contributor (lowest address on a tie),
+    so the shares add up to exactly the owed amount. An address that returned
+    nothing gets no entry."""
+    parts = fraction_parts(tokens, returned)
+    num = parts[0]
+    den = parts[1]
+    if den <= 0 or num <= 0:
+        return {}
+    owed = (bounty * num) // den
+    if owed > bounty:
+        owed = bounty
+    nums = {}
+    for t in tokens:
+        k = t["chain"] + ":" + t["token"]
+        scale = 10 ** (18 - int(t["decimals"]))
+        stolen = int(t["stolen"]) * scale
+        total = int(returned.get(k, "0")) * scale
+        if total <= 0:
+            continue
+        counted = (total if total < stolen else stolen) * int(t["weight"])
+        for a in sorted(returned_by.keys()):
+            mine = int(returned_by[a].get(k, "0")) * scale
+            if mine > 0:
+                nums[a] = nums.get(a, 0) + (counted * mine) // total
+    out = {}
+    given = 0
+    top = ""
+    for a in sorted(nums.keys()):
+        out[a] = (bounty * nums[a]) // den
+        given += out[a]
+        if top == "" or nums[a] > nums[top]:
+            top = a
+    if top != "" and owed > given:
+        out[top] = out[top] + (owed - given)
+    return {a: out[a] for a in out if out[a] > 0}
+
+
 def judge(offer: dict, chain: str, h: str, r: dict, used: dict) -> dict:
     """The rule, on one consensus-agreed read. used: keys already counted
     (this offer, plus earlier items of the same submission). ->
@@ -259,6 +304,9 @@ class Offer:
     recoveries_json: str
     tokens_json: str
     returned_json: str
+    returned_by_json: str
+    shares_json: str
+    claims_json: str
     history_json: str
     n_proofs: u64
     n_counted: u64
@@ -272,9 +320,6 @@ class Offer:
     refunded_at_settle: u256
     claim_deadline: u64
     claimed: u256
-    claimed_by: str
-    paid_to: str
-    claimed_at: u64
     unclaimed_refunded: u256
     refunded_at: u64
 
@@ -317,6 +362,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
     counted_tx: gl.storage.TreeMap[str, u64]
     rate: gl.storage.TreeMap[str, str]
     credits: gl.storage.TreeMap[str, u256]
+    beneficiaries: gl.storage.TreeMap[str, str]
     counts: gl.storage.TreeMap[str, u64]
     received_total: u256
     open_total: u256
@@ -479,10 +525,11 @@ class WhiteFlagRegistry(gl.contract.Contract):
             created_at=u64(now), start=u64(s), deadline=u64(d), original_deadline=u64(d), bounty=u256(value),
             bounty_share_bps=u64(bps), payout_rule=rule, claim_window_s=u64(int(self.claim_window_s)),
             chains_json=_canon(chains), exploiters_json=_canon(ex), recoveries_json=_canon(rec),
-            tokens_json=_canon(toks), returned_json="{}", history_json="[]", n_proofs=u64(0),
+            tokens_json=_canon(toks), returned_json="{}", returned_by_json="{}", shares_json="{}", claims_json="{}",
+            history_json="[]", n_proofs=u64(0),
             n_counted=u64(0), n_rejected=u64(0), status=ST_OPEN, num="0", den="0", owed=u256(0),
             settled_at=u64(0), settled_by="", refunded_at_settle=u256(0), claim_deadline=u64(0),
-            claimed=u256(0), claimed_by="", paid_to="", claimed_at=u64(0), unclaimed_refunded=u256(0),
+            claimed=u256(0), unclaimed_refunded=u256(0),
             refunded_at=u64(0))
         self.n_offers = u64(oid)
         self.received_total = u256(int(self.received_total) + value)
@@ -656,6 +703,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
             results.append([ch, h, r, j])
         # --- writes
         returned = json.loads(o.returned_json)
+        returned_by = json.loads(o.returned_by_json)
         out = []
         for row in results:
             ch = row[0]
@@ -680,6 +728,9 @@ class WhiteFlagRegistry(gl.contract.Contract):
                     self.used[str(int(o.offer_id)) + "|" + c["key"]] = u64(pid)
                     tk = ch + ":" + c["token"]
                     returned[tk] = str(int(returned.get(tk, "0")) + int(c["amount"]))
+                    mine = returned_by.get(c["from"], {})
+                    mine[tk] = str(int(mine.get(tk, "0")) + int(c["amount"]))
+                    returned_by[c["from"]] = mine
                 self.counted_tx[str(int(o.offer_id)) + "|" + ch + ":" + h] = u64(pid)
                 o.n_counted = u64(int(o.n_counted) + 1)
                 self._bump("proofs_counted")
@@ -691,6 +742,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
                         "detail": "" if st == P_COUNTED else clean_text(r.get("detail", ""), 100),
                         "credits": j.get("credits", [])})
         o.returned_json = _canon(returned)
+        o.returned_by_json = _canon(returned_by)
         parts = fraction_parts(json.loads(o.tokens_json), returned)
         o.num = str(parts[0])
         o.den = str(parts[1])
@@ -717,9 +769,10 @@ class WhiteFlagRegistry(gl.contract.Contract):
         if not full and now < self._settle_at(o):
             raise gl.vm.UserError("REFUSED: TOO_EARLY_UNTIL_" + str(self._settle_at(o)))
         bounty = int(o.bounty)
-        owed = (bounty * parts[0]) // parts[1] if parts[1] > 0 else 0
-        if owed > bounty:
-            owed = bounty
+        shares = shares_of(json.loads(o.tokens_json), json.loads(o.returned_json), json.loads(o.returned_by_json), bounty)
+        owed = 0
+        for a in shares:
+            owed += shares[a]
         rest = bounty - owed
         if int(self.balance) < rest:
             raise gl.vm.UserError("REFUSED: REGISTRY_BALANCE_BELOW_REFUND")
@@ -729,6 +782,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
         o.num = str(parts[0])
         o.den = str(parts[1])
         o.owed = u256(owed)
+        o.shares_json = _canon({a: str(shares[a]) for a in shares})
         o.settled_at = u64(now)
         o.settled_by = self._sender()
         o.refunded_at_settle = u256(rest)
@@ -745,9 +799,46 @@ class WhiteFlagRegistry(gl.contract.Contract):
                 "fraction_ppm": (parts[0] * 1000000) // parts[1] if parts[1] > 0 else 0}
 
     @gl.public.write
-    def claim(self, offer_id: int, payout_to: str) -> typing.Any:
-        """A listed exploiter address claims the owed bounty, paid to itself or,
-        if the offer's payout rule allows, to `payout_to`."""
+    def commit_beneficiary(self, offer_id: int, payout_to: str) -> typing.Any:
+        """A listed exploiter address names, once, the address its share is
+        paid to. Only that exploiter address can set it, it cannot be changed,
+        and it must be set before the address claims. Refused under the
+        EXPLOITER_ONLY payout rule."""
+        now = self._now()
+        if now <= 0:
+            raise gl.vm.UserError("REFUSED: NO_CLOCK")
+        o = self._offer(offer_id)
+        if o is None:
+            raise gl.vm.UserError("REFUSED: NO_SUCH_OFFER")
+        who = self._sender()
+        if not self._is_exploiter(o, who):
+            raise gl.vm.UserError("REFUSED: NOT_AN_EXPLOITER_ADDRESS")
+        if o.payout_rule != RULE_OR_NAMED:
+            raise gl.vm.UserError("REFUSED: PAYOUT_RULE_IS_" + o.payout_rule)
+        a = _addr(payout_to)
+        if a == "" or a == ZERO:
+            raise gl.vm.UserError("REFUSED: BAD_PAYOUT_ADDRESS")
+        bk = str(int(o.offer_id)) + "|" + who
+        if self.beneficiaries.get(bk, "") != "":
+            raise gl.vm.UserError("REFUSED: BENEFICIARY_ALREADY_COMMITTED")
+        if json.loads(o.claims_json).get(who) is not None:
+            raise gl.vm.UserError("REFUSED: ALREADY_CLAIMED")
+        # --- writes
+        self.beneficiaries[bk] = a
+        h = json.loads(o.history_json)
+        h.append({"at": now, "what": "beneficiary", "exploiter": who, "address": a})
+        o.history_json = _canon(h)
+        self._bump("beneficiaries")
+        return {"ok": True, "offer_id": int(o.offer_id), "exploiter": who, "beneficiary": a}
+
+    def _share(self, o: Offer, who: str) -> int:
+        return _as_int(json.loads(o.shares_json).get(who, "0"), 0)
+
+    @gl.public.write
+    def claim(self, offer_id: int) -> typing.Any:
+        """A listed exploiter address claims ITS OWN share - the part of the
+        owed bounty earned by the returns it sent - paid to the beneficiary it
+        committed, or to itself."""
         now = self._now()
         if now <= 0:
             raise gl.vm.UserError("REFUSED: NO_CLOCK")
@@ -757,42 +848,36 @@ class WhiteFlagRegistry(gl.contract.Contract):
         who = self._sender()
         if o.status == ST_OPEN:
             raise gl.vm.UserError("REFUSED: NOT_SETTLED")
-        if int(o.owed) <= 0:
-            raise gl.vm.UserError("REFUSED: NOTHING_OWED")
         if not self._is_exploiter(o, who):
             raise gl.vm.UserError("REFUSED: NOT_AN_EXPLOITER_ADDRESS")
-        if int(o.claimed) > 0:
+        share = self._share(o, who)
+        if share <= 0:
+            raise gl.vm.UserError("REFUSED: NOTHING_OWED_TO_THIS_ADDRESS")
+        claims = json.loads(o.claims_json)
+        if claims.get(who) is not None:
             raise gl.vm.UserError("REFUSED: ALREADY_CLAIMED")
         if int(o.unclaimed_refunded) > 0:
             raise gl.vm.UserError("REFUSED: ALREADY_REFUNDED")
         if now > int(o.claim_deadline):
             raise gl.vm.UserError("REFUSED: CLAIM_WINDOW_CLOSED")
-        to = who
-        named = str(payout_to).strip()
-        if named != "":
-            a = _addr(named)
-            if a == "" or a == ZERO:
-                raise gl.vm.UserError("REFUSED: BAD_PAYOUT_ADDRESS")
-            if a != who and o.payout_rule != RULE_OR_NAMED:
-                raise gl.vm.UserError("REFUSED: PAYOUT_RULE_IS_" + o.payout_rule)
-            to = a
-        owed = int(o.owed)
-        if int(self.balance) < owed:
+        to = self.beneficiaries.get(str(int(o.offer_id)) + "|" + who, "")
+        if to == "":
+            to = who
+        if int(self.balance) < share:
             raise gl.vm.UserError("REFUSED: REGISTRY_BALANCE_BELOW_CLAIM")
         # --- writes
-        o.claimed = u256(owed)
-        o.claimed_by = who
-        o.paid_to = to
-        o.claimed_at = u64(now)
-        self.owed_total = u256(int(self.owed_total) - owed)
-        self.paid_total = u256(int(self.paid_total) + owed)
+        claims[who] = {"amount": str(share), "to": to, "at": now}
+        o.claims_json = _canon(claims)
+        o.claimed = u256(int(o.claimed) + share)
+        self.owed_total = u256(int(self.owed_total) - share)
+        self.paid_total = u256(int(self.paid_total) + share)
         self._bump("claims")
-        self._send(to, owed)
-        return {"ok": True, "offer_id": int(o.offer_id), "paid": str(owed), "to": to}
+        self._send(to, share)
+        return {"ok": True, "offer_id": int(o.offer_id), "exploiter": who, "paid": str(share), "to": to}
 
     @gl.public.write
     def refund_unclaimed(self, offer_id: int) -> typing.Any:
-        """Anyone, after the claim window: the owed bounty goes back to the protocol."""
+        """Anyone, after the claim window: every unclaimed share goes back to the protocol."""
         now = self._now()
         if now <= 0:
             raise gl.vm.UserError("REFUSED: NO_CLOCK")
@@ -803,23 +888,23 @@ class WhiteFlagRegistry(gl.contract.Contract):
             raise gl.vm.UserError("REFUSED: NOT_SETTLED")
         if int(o.owed) <= 0:
             raise gl.vm.UserError("REFUSED: NOTHING_OWED")
-        if int(o.claimed) > 0:
-            raise gl.vm.UserError("REFUSED: ALREADY_CLAIMED")
         if int(o.unclaimed_refunded) > 0:
             raise gl.vm.UserError("REFUSED: ALREADY_REFUNDED")
+        left = int(o.owed) - int(o.claimed)
+        if left <= 0:
+            raise gl.vm.UserError("REFUSED: ALREADY_CLAIMED")
         if now <= int(o.claim_deadline):
             raise gl.vm.UserError("REFUSED: CLAIM_WINDOW_OPEN_UNTIL_" + str(int(o.claim_deadline)))
-        owed = int(o.owed)
-        if int(self.balance) < owed:
+        if int(self.balance) < left:
             raise gl.vm.UserError("REFUSED: REGISTRY_BALANCE_BELOW_REFUND")
         # --- writes
-        o.unclaimed_refunded = u256(owed)
+        o.unclaimed_refunded = u256(left)
         o.refunded_at = u64(now)
-        self.owed_total = u256(int(self.owed_total) - owed)
-        self.refunded_total = u256(int(self.refunded_total) + owed)
+        self.owed_total = u256(int(self.owed_total) - left)
+        self.refunded_total = u256(int(self.refunded_total) + left)
         self._bump("unclaimed_refunds")
-        self._send(o.protocol, owed)
-        return {"ok": True, "offer_id": int(o.offer_id), "refunded": str(owed), "to": o.protocol}
+        self._send(o.protocol, left)
+        return {"ok": True, "offer_id": int(o.offer_id), "refunded": str(left), "to": o.protocol}
 
     @gl.public.write
     def withdraw_refund(self) -> typing.Any:
@@ -867,7 +952,7 @@ class WhiteFlagRegistry(gl.contract.Contract):
             if (d > 0 and n >= d) or now >= self._settle_at(o):
                 return "SETTLE"
             return ""
-        if int(o.owed) > 0 and int(o.claimed) == 0 and int(o.unclaimed_refunded) == 0 and now > int(o.claim_deadline):
+        if int(o.owed) > int(o.claimed) and int(o.unclaimed_refunded) == 0 and now > int(o.claim_deadline):
             return "REFUND_UNCLAIMED"
         return ""
 
@@ -893,13 +978,19 @@ class WhiteFlagRegistry(gl.contract.Contract):
         out["recoveries"] = json.loads(o.recoveries_json)
         out["tokens"] = json.loads(o.tokens_json)
         out["returned"] = json.loads(o.returned_json)
+        out["returned_by"] = json.loads(o.returned_by_json)
+        out["shares"] = json.loads(o.shares_json)
+        out["claims"] = json.loads(o.claims_json)
+        bens = {}
+        for e in json.loads(o.exploiters_json):
+            b = self.beneficiaries.get(str(int(o.offer_id)) + "|" + e["address"], "")
+            if b != "":
+                bens[e["address"]] = b
+        out["beneficiaries"] = bens
         out["history"] = json.loads(o.history_json)
         out["num"] = o.num
         out["den"] = o.den
         out["settled_by"] = o.settled_by
-        out["claimed_by"] = o.claimed_by
-        out["paid_to"] = o.paid_to
-        out["claimed_at"] = int(o.claimed_at)
         out["refunded_at"] = int(o.refunded_at)
         return out
 
@@ -988,6 +1079,19 @@ class WhiteFlagRegistry(gl.contract.Contract):
         out = self._proof_view(p)
         out["found"] = True
         return out
+
+    @gl.public.view
+    def get_claimant(self, offer_id: int, exploiter: str) -> typing.Any:
+        """One exploiter address's position in an offer: what it returned, its
+        share, its committed beneficiary and its claim."""
+        o = self._offer(offer_id)
+        a = _addr(exploiter)
+        if o is None:
+            return {"found": False, "offer_id": _as_int(offer_id, 0), "address": a}
+        return {"found": True, "offer_id": int(o.offer_id), "address": a, "listed": self._is_exploiter(o, a),
+                "returned": json.loads(o.returned_by_json).get(a, {}), "share": str(self._share(o, a)),
+                "beneficiary": self.beneficiaries.get(str(int(o.offer_id)) + "|" + a, ""),
+                "claim": json.loads(o.claims_json).get(a)}
 
     @gl.public.view
     def get_credit(self, who: str) -> typing.Any:

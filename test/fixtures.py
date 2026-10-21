@@ -153,7 +153,16 @@ class Deployment:
         return self.w.call(self.reg, "settle", oid, sender=sender)
 
     def claim(self, oid, payout_to="", sender=EXPLOITER):
-        return self.w.call(self.reg, "claim", oid, payout_to, sender=sender)
+        """claim(); a payout_to other than the sender is committed first (commit_beneficiary)."""
+        if payout_to != "" and payout_to.lower() != sender.lower():
+            self.commit(oid, payout_to, sender=sender)
+        return self.w.call(self.reg, "claim", oid, sender=sender)
+
+    def commit(self, oid, payout_to, sender=EXPLOITER):
+        return self.w.call(self.reg, "commit_beneficiary", oid, payout_to, sender=sender)
+
+    def claimant(self, oid, who):
+        return self.w.view(self.reg, "get_claimant", oid, who)
 
     def refund(self, oid, sender=KEEPER):
         return self.w.call(self.reg, "refund_unclaimed", oid, sender=sender)

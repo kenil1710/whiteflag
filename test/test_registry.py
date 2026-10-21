@@ -755,11 +755,12 @@ class Claim(Base):
         self.assertEqual(r["to"], PAYEE)
         self.assertEqual(self.d.sent_to(PAYEE), 5 * GEN)
         o = self.d.get(oid)
-        self.assertEqual((o["claimed_by"], o["paid_to"]), (EXPLOITER, PAYEE))
+        self.assertEqual(o["claims"][EXPLOITER], {"amount": str(5 * GEN), "to": PAYEE, "at": self.d.w.now()})
+        self.assertEqual(o["beneficiaries"], {EXPLOITER: PAYEE})
 
-    def test_second_exploiter_address_may_claim(self):
+    def test_listed_address_that_returned_nothing_gets_nothing(self):
         oid = self.settled()
-        self.assertEqual(self.d.claim(oid, sender=EXPLOITER2)["to"], EXPLOITER2)
+        self.refused(self.d.claim, oid, sender=EXPLOITER2, reason="NOTHING_OWED_TO_THIS_ADDRESS")
 
     def test_non_exploiter_refused(self):
         oid = self.settled()
@@ -777,9 +778,9 @@ class Claim(Base):
         oid = self.settled(rule="EXPLOITER_ONLY")
         self.refused(self.d.claim, oid, PAYEE, reason="PAYOUT_RULE_IS_EXPLOITER_ONLY")
 
-    def test_self_named_allowed_under_exploiter_only(self):
+    def test_self_claim_allowed_under_exploiter_only(self):
         oid = self.settled(rule="EXPLOITER_ONLY")
-        self.assertEqual(self.d.claim(oid, EXPLOITER)["to"], EXPLOITER)
+        self.assertEqual(self.d.claim(oid)["to"], EXPLOITER)
 
     def test_bad_payout_address(self):
         oid = self.settled()
@@ -800,7 +801,7 @@ class Claim(Base):
     def test_claim_twice(self):
         oid = self.settled()
         self.d.claim(oid)
-        self.refused(self.d.claim, oid, sender=EXPLOITER2, reason="ALREADY_CLAIMED")
+        self.refused(self.d.claim, oid, reason="ALREADY_CLAIMED")
 
     def test_claim_at_window_end_allowed(self):
         oid = self.settled()
@@ -865,7 +866,7 @@ class Claim(Base):
         self.d.claim(oid)
         o = self.d.get(oid)
         self.assertEqual(o["claimed"], str(5 * GEN))
-        self.assertGreater(o["claimed_at"], 0)
+        self.assertGreater(o["claims"][EXPLOITER]["at"], 0)
 
 
 # =============================================================================
@@ -1143,3 +1144,149 @@ class Views(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# =============================================================================
+# 9. claim fairness: each exploiter address claims only what its own returns earned
+# =============================================================================
+
+class ClaimFairness(Base):
+    EX3 = F.addr(300)
+
+    def offer3(self, **k):
+        return self.d.offer(bounty=k.pop("bounty", 12 * GEN), tokens=k.pop("tokens", json.dumps([tok(stolen=12 * ETH)])),
+                            exploiters=pairs(("ethereum", EXPLOITER), ("ethereum", EXPLOITER2), ("ethereum", self.EX3)), **k)
+
+    def settle(self, oid):
+        self.d.to_settle_time(oid)
+        return self.d.settle(oid)
+
+    def test_credits_are_attributed_to_the_sending_address(self):
+        oid = self.offer3()
+        self.d.prove(oid, "ethereum", self.native(3 * ETH))
+        self.d.prove(oid, "ethereum", self.native(6 * ETH, frm=EXPLOITER2))
+        o = self.d.get(oid)
+        self.assertEqual(o["returned_by"], {EXPLOITER: {"ethereum:native": str(3 * ETH)},
+                                            EXPLOITER2: {"ethereum:native": str(6 * ETH)}})
+
+    def test_multiple_contributing_addresses_split_by_their_own_returns(self):
+        oid = self.offer3()
+        self.d.prove(oid, "ethereum", self.native(3 * ETH))
+        self.d.prove(oid, "ethereum", self.native(6 * ETH, frm=EXPLOITER2))
+        r = self.settle(oid)
+        self.assertEqual(r["owed"], str(9 * GEN))
+        self.assertEqual(self.d.get(oid)["shares"], {EXPLOITER: str(3 * GEN), EXPLOITER2: str(6 * GEN)})
+        self.assertEqual(self.d.claim(oid)["paid"], str(3 * GEN))
+        self.assertEqual(self.d.claim(oid, sender=EXPLOITER2)["paid"], str(6 * GEN))
+        self.assertEqual(self.d.sent_to(EXPLOITER), 3 * GEN)
+        self.assertEqual(self.d.sent_to(EXPLOITER2), 6 * GEN)
+        self.assertTrue(self.d.ledger_ok())
+
+    def test_affiliated_listed_address_that_returned_nothing_gets_zero(self):
+        oid = self.offer3()
+        self.d.prove(oid, "ethereum", self.native(12 * ETH))
+        self.settle(oid)
+        self.assertEqual(self.d.claimant(oid, self.EX3)["share"], "0")
+        self.refused(self.d.claim, oid, sender=self.EX3, reason="NOTHING_OWED_TO_THIS_ADDRESS")
+        self.refused(self.d.claim, oid, sender=EXPLOITER2, reason="NOTHING_OWED_TO_THIS_ADDRESS")
+        self.assertEqual(self.d.claim(oid)["paid"], str(12 * GEN))
+
+    def test_competing_claimants_cannot_take_each_others_share(self):
+        oid = self.offer3()
+        self.d.prove(oid, "ethereum", self.native(4 * ETH))
+        self.d.prove(oid, "ethereum", self.native(4 * ETH, frm=EXPLOITER2))
+        self.settle(oid)
+        # EXPLOITER2 claims first: it gets its own 4, and EXPLOITER's 4 is untouched
+        self.assertEqual(self.d.claim(oid, sender=EXPLOITER2)["paid"], str(4 * GEN))
+        self.refused(self.d.claim, oid, sender=EXPLOITER2, reason="ALREADY_CLAIMED")
+        self.assertEqual(self.d.claim(oid)["paid"], str(4 * GEN))
+        self.assertEqual(self.d.sent_to(EXPLOITER2), 4 * GEN)
+        self.assertEqual(self.d.sent_to(EXPLOITER), 4 * GEN)
+
+    def test_claim_front_running_cannot_redirect(self):
+        """An attacker who sees EXPLOITER's commitment or claim pending cannot get
+        there first: commitments are only from the exploiter address itself, set
+        once, and a claim by anyone else pays only that address's own share."""
+        attacker = F.addr(301)
+        oid = self.offer3()
+        self.d.prove(oid, "ethereum", self.native(6 * ETH))
+        self.settle(oid)
+        for who in (attacker, PROTOCOL, RECOVERY, PROVER):
+            self.refused(self.d.commit, oid, attacker, sender=who, reason="NOT_AN_EXPLOITER_ADDRESS")
+        self.d.commit(oid, attacker, sender=EXPLOITER2)   # another listed address only binds its own (zero) share
+        self.d.commit(oid, PAYEE)
+        self.refused(self.d.commit, oid, attacker, reason="BENEFICIARY_ALREADY_COMMITTED")
+        self.refused(self.d.claim, oid, sender=attacker, reason="NOT_AN_EXPLOITER_ADDRESS")
+        self.refused(self.d.claim, oid, sender=EXPLOITER2, reason="NOTHING_OWED_TO_THIS_ADDRESS")
+        self.assertEqual(self.d.claim(oid)["to"], PAYEE)
+        self.assertEqual(self.d.sent_to(PAYEE), 6 * GEN)
+        self.assertEqual(self.d.sent_to(attacker), 0)
+
+    def test_commit_after_claim_refused(self):
+        oid = self.offer3()
+        self.d.prove(oid, "ethereum", self.native(6 * ETH))
+        self.settle(oid)
+        self.d.claim(oid)
+        self.refused(self.d.commit, oid, PAYEE, reason="ALREADY_CLAIMED")
+
+    def test_commit_before_settlement_is_kept(self):
+        oid = self.offer3()
+        self.d.commit(oid, PAYEE)
+        self.d.prove(oid, "ethereum", self.native(6 * ETH))
+        self.settle(oid)
+        self.assertEqual(self.d.claim(oid)["to"], PAYEE)
+
+    def test_commit_refused_under_exploiter_only(self):
+        oid = self.offer3(rule="EXPLOITER_ONLY")
+        self.refused(self.d.commit, oid, PAYEE, reason="PAYOUT_RULE_IS_EXPLOITER_ONLY")
+
+    def test_over_return_is_capped_and_split_pro_rata(self):
+        oid = self.offer3()   # 12 stolen
+        self.d.prove(oid, "ethereum", self.native(10 * ETH))
+        self.d.prove(oid, "ethereum", self.native(10 * ETH, frm=EXPLOITER2))
+        r = self.settle(oid)
+        self.assertEqual(r["status"], "SETTLED_FULL")
+        self.assertEqual(self.d.get(oid)["shares"], {EXPLOITER: str(6 * GEN), EXPLOITER2: str(6 * GEN)})
+
+    def test_weighted_tokens_split_by_value(self):
+        toks = json.dumps([tok(stolen=10 * ETH, weight=3000), tok(token=TOKEN, stolen=30000 * ETH, weight=1, symbol="TKN")])
+        oid = self.offer3(tokens=toks, bounty=6 * GEN)   # den = 30000 + 30000
+        self.d.prove(oid, "ethereum", self.native(10 * ETH))                       # 30000 by EXPLOITER
+        self.d.prove(oid, "ethereum", self.erc20(15000 * ETH, frm=EXPLOITER2))     # 15000 by EXPLOITER2
+        self.settle(oid)
+        # fraction 45000/60000; EXPLOITER earned 30000/60000 of 6, EXPLOITER2 15000/60000
+        self.assertEqual(self.d.get(oid)["shares"], {EXPLOITER: str(3 * GEN), EXPLOITER2: str(15 * GEN // 10)})
+
+    def test_log_transfer_attributed_to_log_sender_not_tx_sender(self):
+        oid = self.offer3()
+        h = self.c.tx("ethereum", EXPLOITER, TOKEN, logs=[(TOKEN, EXPLOITER2, RECOVERY, 5 * ETH)])
+        toks = json.dumps([tok(token=TOKEN, stolen=10 * ETH, symbol="TKN")])
+        oid = self.offer3(tokens=toks, bounty=10 * GEN)
+        self.d.prove(oid, "ethereum", h)
+        self.settle(oid)
+        self.assertEqual(self.d.get(oid)["shares"], {EXPLOITER2: str(5 * GEN)})
+
+    def test_rounding_dust_goes_to_largest_contributor_and_shares_add_up(self):
+        oid = self.offer3(bounty=10 ** 15 + 7, tokens=json.dumps([tok(stolen=3 * ETH)]))
+        self.d.prove(oid, "ethereum", self.native(1 * ETH))
+        self.d.prove(oid, "ethereum", self.native(1 * ETH, frm=EXPLOITER2))
+        self.d.prove(oid, "ethereum", self.native(1 * ETH, frm=self.EX3))
+        r = self.settle(oid)
+        o = self.d.get(oid)
+        self.assertEqual(r["status"], "SETTLED_FULL")
+        self.assertEqual(sum(int(v) for v in o["shares"].values()), int(o["bounty"]))
+        self.assertEqual(o["owed"], o["bounty"])
+
+    def test_partial_claims_then_refund_of_the_rest(self):
+        oid = self.offer3()
+        self.d.prove(oid, "ethereum", self.native(3 * ETH))
+        self.d.prove(oid, "ethereum", self.native(3 * ETH, frm=EXPLOITER2))
+        self.settle(oid)
+        self.d.claim(oid)
+        self.d.w.set_time(self.d.get(oid)["claim_deadline"] + 1)
+        self.refused(self.d.claim, oid, sender=EXPLOITER2, reason="CLAIM_WINDOW_CLOSED")
+        r = self.d.refund(oid, sender=STRANGER)
+        self.assertEqual(r["refunded"], str(3 * GEN))
+        self.assertEqual(self.d.sent_to(PROTOCOL), 6 * GEN + 3 * GEN)
+        self.assertEqual(self.d.balance(), 0)
+        self.assertTrue(self.d.ledger_ok())

@@ -45,8 +45,10 @@ Each outcome was checked against public reporting and every outgoing transfer of
 4. **Settlement.** Anyone settles at once at 100%, otherwise at the later of the deadline plus a finality grace (2 h)
    and the offer's creation plus a minimum open time (3 h):
    SETTLED_FULL, SETTLED_PARTIAL or SETTLED_NONE. The remainder goes back to the protocol in the same transaction.
-5. **Claim.** Only a listed exploiter address can claim, paid to itself or to a payout address named in the same call.
-   After the claim window (1 h canonical), anyone refunds the owed bounty to the protocol. Every GEN has an exit.
+5. **Claim.** Every counted transfer is attributed to the exploiter address that sent it, and each address claims only
+   the share its own weighted returns earned: paid to itself, or to a beneficiary it committed on chain from that
+   address beforehand (nobody else can set or change it). A listed address that returned nothing gets nothing. After
+   the claim window (1 h canonical), anyone refunds the unclaimed shares to the protocol. Every GEN has an exit.
 6. **SafeHarborGate.** Other contracts ask it whether an incident is resolved: NO_OFFER, OPEN, SETTLED_FULL,
    SETTLED_PARTIAL, SETTLED_NONE (or UNREADABLE), never favorable on missing data, pinned to the protocol that opened
    the offer with `check_for`.
@@ -104,7 +106,7 @@ its recipient ([docs/payouts.json](docs/payouts.json)).
   two RPCs that serve old receipts and the `finalized` tag from GenVM under validator load.
 - The weights are the protocol's own valuation, frozen when the offer opens. A partial return of a token that later
   changes price keeps the weight it had.
-- A listed exploiter address can claim the whole owed bounty; the protocol lists only addresses the exploiter controls.
+- Each listed exploiter address claims only its own share; listing an extra address the exploiter controls gives it nothing unless it returned funds.
 - Studio keeps GEN sent with a failing call, so `create_offer` never fails: a refused offer credits its GEN back for
   `withdraw_refund`, and GEN that reached the registry any other way can only be swept to the deployer.
 

@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     const info = incidentInfo(o);
     return Response.json({
       id, registry: regAddr(r), incident: o.incident, name: o.name, status: o.status, fraction_ppm: o.fraction_ppm,
-      bounty: o.bounty, owed: o.owed, paid: o.claimed, paid_to: o.paid_to, refunded: (BigInt(o.refunded_at_settle) + BigInt(o.unclaimed_refunded)).toString(),
+      bounty: o.bounty, owed: o.owed, paid: o.claimed, shares: o.shares, claims: o.claims, refunded: (BigInt(o.refunded_at_settle) + BigInt(o.unclaimed_refunded)).toString(),
       window: { start: o.start, deadline: o.deadline, settle_at: o.settle_at, settled_at: o.settled_at, claim_deadline: o.claim_deadline },
       bounty_share_bps: o.bounty_share_bps, payout_rule: o.payout_rule, chains: o.chains, exploiters: o.exploiters, recoveries: o.recoveries,
       tokens: o.tokens, returned: o.returned, proofs: { total: o.n_proofs, counted: o.n_counted, rejected: o.n_rejected },
