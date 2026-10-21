@@ -1,0 +1,11 @@
+{
+  "name": "whiteflag-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Browser-wallet end-to-end flows on the demo registry, recorded with Playwright (screenshots and video in docs/e2e/)",
+  "scripts": { "e2e": "playwright test" },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "viem": "2.38.0"
+  }
+}

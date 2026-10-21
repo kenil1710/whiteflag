@@ -61,7 +61,7 @@
       ],
       "recoveries": [
         {"chain": "ethereum", "address": "0x9e2b6378ee8ad2a4a95fe481d63caba8fb0ebbf9", "label": "Alchemix multisig"},
-        {"chain": "ethereum", "address": "0xbabe61887f1de2713c6f97e567623453d3c79f67", "label": "Curve deployer, sender of the joint offer (added after creation)", "added_later": true}
+        {"chain": "ethereum", "address": "0xbabe61887f1de2713c6f97e567623453d3c79f67", "label": "Curve deployer, sender of the joint offer (listed at creation: a historic offer cannot be amended)"}
       ],
       "tokens": [
         {"chain": "ethereum", "token": "0x0100546f2cd4c9d97f798ffc9755e47865ff7ee6", "symbol": "alETH", "decimals": 18, "stolen": "4821550464760440887778", "weight": 184000,

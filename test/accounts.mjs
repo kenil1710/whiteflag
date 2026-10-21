@@ -12,6 +12,8 @@
  *   stranger   anyone else: claims that must be refused
  *   keeper     the keeper bot signer (settle, refunds)
  *   probe      throwaway GenVM probes
+ *   e2e_protocol, e2e_exploiter, e2e_stranger
+ *              throwaway browser wallets of the Playwright flows (test/e2e)
  */
 import { createAccount } from "genlayer-js";
 import { randomBytes } from "node:crypto";
@@ -19,7 +21,8 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
 const target = new URL("./.accounts.json", import.meta.url);
 const force = process.argv.includes("--force");
-const ROLES = ["deployer", "protocol", "exploiter", "exploiter2", "payee", "prover", "stranger", "keeper", "probe"];
+const ROLES = ["deployer", "protocol", "exploiter", "exploiter2", "payee", "prover", "stranger", "keeper", "probe",
+  "e2e_protocol", "e2e_exploiter", "e2e_stranger"];
 const existing = existsSync(target) && !force ? JSON.parse(readFileSync(target, "utf8")) : {};
 const out = {};
 for (const role of ROLES) {

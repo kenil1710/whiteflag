@@ -1,0 +1,70 @@
+{
+  "network": "studiodev",
+  "chain_id": 61997,
+  "rpc": "https://studio-dev.genlayer.com/api",
+  "explorer": "https://explorer-studio-dev.genlayer.com/",
+  "contracts": {
+    "WhiteFlagRegistry": {
+      "address": "0x461399B65edA1C0634a47A658d34624eC4C24a31",
+      "deploy_tx": "0xa68a7c1ed6764fb5ce17ea50335eeceb0f73b08928eebb0c74829b631fac855f",
+      "file": "build/WhiteFlagRegistry.py",
+      "source": "contracts/WhiteFlagRegistry.py",
+      "commit": "ce7a77282beee2a8c9b121aa95ac9639388a64d0",
+      "bytes": 58000,
+      "sha256": "dba2a5da09d13de0640c302e66263102b106c9487430938d7ff68dbdc4c776cb",
+      "constructor_args": [
+        "CANONICAL"
+      ],
+      "deployer": "0xd663687D6cf172E849C84180d316757e33FD9f4e",
+      "deployed_at": "2026-10-19T11:35:24.775Z",
+      "mode": "CANONICAL"
+    },
+    "WhiteFlagRegistryDemo": {
+      "address": "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2",
+      "deploy_tx": "0xd4b0152dd8ad7d2e9625c308fb1f85fd4e65f522383bd6f5f7f03ab4ea4886e1",
+      "file": "build/WhiteFlagRegistry.py",
+      "source": "contracts/WhiteFlagRegistry.py",
+      "commit": "ce7a77282beee2a8c9b121aa95ac9639388a64d0",
+      "bytes": 58000,
+      "sha256": "dba2a5da09d13de0640c302e66263102b106c9487430938d7ff68dbdc4c776cb",
+      "constructor_args": [
+        "DEMO"
+      ],
+      "deployer": "0xd663687D6cf172E849C84180d316757e33FD9f4e",
+      "deployed_at": "2026-10-19T11:35:31.817Z",
+      "mode": "DEMO"
+    },
+    "SafeHarborGate": {
+      "address": "0x54035218daFDf7fB68F01cF36E70044f51878c75",
+      "deploy_tx": "0x2a97214569dfbd9cc8f1cbd0616c21b7bcd2d445228db850e31e25d1b94a5cf9",
+      "file": "build/SafeHarborGate.py",
+      "source": "contracts/SafeHarborGate.py",
+      "commit": "ce7a77282beee2a8c9b121aa95ac9639388a64d0",
+      "bytes": 13825,
+      "sha256": "f4b6411127c1f7b35e473333076f4cde6b472f19806fc15e2251d86bc41c7de0",
+      "constructor_args": [
+        "0x461399B65edA1C0634a47A658d34624eC4C24a31",
+        900000
+      ],
+      "deployer": "0xd663687D6cf172E849C84180d316757e33FD9f4e",
+      "deployed_at": "2026-10-19T11:35:37.581Z",
+      "mode": "CANONICAL"
+    },
+    "SafeHarborGateDemo": {
+      "address": "0x886095700276BA236Fc00cfd710AEb2f2d594E37",
+      "deploy_tx": "0x1453b2c32e51deb3bb438b05be1f38ca4f6a3afe74f5e3604c1d3d95ab983d4d",
+      "file": "build/SafeHarborGate.py",
+      "source": "contracts/SafeHarborGate.py",
+      "commit": "ce7a77282beee2a8c9b121aa95ac9639388a64d0",
+      "bytes": 13825,
+      "sha256": "f4b6411127c1f7b35e473333076f4cde6b472f19806fc15e2251d86bc41c7de0",
+      "constructor_args": [
+        "0xa06816B6CF6AA72c64027A84Dc04bfb708935Aa2",
+        900000
+      ],
+      "deployer": "0xd663687D6cf172E849C84180d316757e33FD9f4e",
+      "deployed_at": "2026-10-19T11:35:43.395Z",
+      "mode": "DEMO"
+    }
+  }
+}
