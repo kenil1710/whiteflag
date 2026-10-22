@@ -15,8 +15,8 @@
     },
     "0x11b9e1d185add2b88df872743734db1124b80390": {
       "cursor": 0,
-      "scans_completed": 8,
-      "last_scan_at": 1792645433,
+      "scans_completed": 9,
+      "last_scan_at": 1792646570,
       "total": 6
     },
     "0x0c5c9cb1826530a5a90ca1676ca0477f36fc9d55": {
@@ -781,5 +781,5 @@
     "0x11b9e1d185ADd2b88dF872743734Db1124b80390",
     "0x0c5c9cB1826530A5a90cA1676cA0477F36FC9D55"
   ],
-  "saved_at": "2026-10-22T05:03:55.572Z"
+  "saved_at": "2026-10-22T05:22:50.781Z"
 }
